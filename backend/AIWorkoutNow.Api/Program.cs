@@ -1,14 +1,18 @@
-using Amazon.Lambda.AspNetCoreServer;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
+// This file is for local development only
+// Lambda uses LambdaEntryPoint.cs
+
+using Amazon.DynamoDBv2;
+using AIWorkoutNow.Api.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// Swagger disabled - add Swashbuckle.AspNetCore package if needed
+// builder.Services.AddEndpointsApiExplorer();
+// builder.Services.AddSwaggerGen();
 
 // CORS
 builder.Services.AddCors(options =>
@@ -23,19 +27,19 @@ builder.Services.AddCors(options =>
 
 // JWT Authentication
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "your-secret-key-change-in-production";
-var key = Encoding.UTF8.GetBytes(jwtSecret);
+var key = System.Text.Encoding.UTF8.GetBytes(jwtSecret);
 
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
 })
 .AddJwtBearer(options =>
 {
-    options.TokenValidationParameters = new TokenValidationParameters
+    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
+        IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key),
         ValidateIssuer = false,
         ValidateAudience = false,
         ValidateLifetime = true,
@@ -46,7 +50,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 // Register services
-builder.Services.AddSingleton<IAmazonDynamoDB>(sp => new Amazon.DynamoDBv2.AmazonDynamoDBClient());
+builder.Services.AddSingleton<IAmazonDynamoDB>(sp => new AmazonDynamoDBClient());
 builder.Services.AddSingleton<IDynamoDBService, DynamoDBService>();
 builder.Services.AddSingleton<IAIService, OpenAIService>();
 builder.Services.AddSingleton<IEmailService, SESEmailService>();
@@ -57,22 +61,16 @@ builder.Services.AddSingleton<IAuthService, AuthService>();
 var app = builder.Build();
 
 // Configure pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Swagger disabled - uncomment if Swashbuckle.AspNetCore is added
+// if (app.Environment.IsDevelopment())
+// {
+//     app.UseSwagger();
+//     app.UseSwaggerUI();
+// }
 
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Lambda entry point - use RunAsLambda() for Lambda, app.Run() for local
-if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME")))
-{
-    return app.RunAsLambda();
-}
-
 app.Run();
-

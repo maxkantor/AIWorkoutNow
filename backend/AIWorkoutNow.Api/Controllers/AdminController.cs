@@ -65,7 +65,7 @@ public class AdminController : ControllerBase
 
     [Authorize]
     [HttpPost("send-email")]
-    public async Task<IActionResult> SendEmail([FromBody] SendEmailRequest request)
+    public async Task<IActionResult> SendEmail([FromBody] Models.SendEmailRequest request)
     {
         try
         {

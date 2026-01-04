@@ -38,20 +38,20 @@ public class SESEmailService : IEmailService
 
     public async Task SendEmailAsync(string to, string subject, string body)
     {
-        var request = new SendEmailRequest
+        var request = new Amazon.SimpleEmail.Model.SendEmailRequest
         {
             Source = _fromEmail,
-            Destination = new Destination
+            Destination = new Amazon.SimpleEmail.Model.Destination
             {
                 ToAddresses = new List<string> { to }
             },
-            Message = new Message
+            Message = new Amazon.SimpleEmail.Model.Message
             {
-                Subject = new Content(subject),
-                Body = new Body
+                Subject = new Amazon.SimpleEmail.Model.Content(subject),
+                Body = new Amazon.SimpleEmail.Model.Body
                 {
-                    Text = new Content(body),
-                    Html = new Content($"<html><body>{body.Replace("\n", "<br>")}</body></html>")
+                    Text = new Amazon.SimpleEmail.Model.Content(body),
+                    Html = new Amazon.SimpleEmail.Model.Content($"<html><body>{body.Replace("\n", "<br>")}</body></html>")
                 }
             }
         };

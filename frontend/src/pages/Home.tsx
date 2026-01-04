@@ -4,7 +4,7 @@ import WorkoutGenerator from '../components/WorkoutGenerator';
 import TokenPacks from '../components/TokenPacks';
 import AffiliateProducts from '../components/AffiliateProducts';
 import { getDeviceId, getStoredWorkouts, getTokenBalance } from '../utils/storage';
-import { generateWorkout, checkTokenBalance } from '../services/api';
+import { generateWorkout } from '../services/api';
 import './Home.css';
 
 function Home() {
@@ -12,14 +12,12 @@ function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tokenBalance, setTokenBalance] = useState<number | null>(null);
-  const [isFreeUser, setIsFreeUser] = useState(true);
   const [dailyLimitReached, setDailyLimitReached] = useState(false);
 
   useEffect(() => {
     const deviceId = getDeviceId();
     const balance = getTokenBalance(deviceId);
     setTokenBalance(balance);
-    setIsFreeUser(balance === null || balance === 0);
     
     // Check daily free limit
     const today = new Date().toISOString().split('T')[0];

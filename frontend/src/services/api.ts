@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.aiworkoutnow.com';
+const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'https://api.aiworkoutnow.com';
 
 export interface WorkoutPreferences {
   fitnessLevel: string;

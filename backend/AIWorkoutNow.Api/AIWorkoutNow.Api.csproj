@@ -7,18 +7,19 @@
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <AWSProjectType>Lambda</AWSProjectType>
     <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.AspNetCoreServer.Hosting" Version="1.5.0" />
     <PackageReference Include="Amazon.Lambda.Core" Version="2.2.0" />
-    <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.0.0" />
-    <PackageReference Include="AWSSDK.DynamoDB" Version="3.7.400.19" />
-    <PackageReference Include="AWSSDK.SimpleEmailService" Version="3.7.300.75" />
-    <PackageReference Include="AWSSDK.SSM" Version="3.7.300.75" />
+    <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.3.0" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.400.19" />
+    <PackageReference Include="AWSSDK.SimpleEmail" Version="3.7.300.75" />
+    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.7.301" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.3" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.0" />
   </ItemGroup>
 
 </Project>

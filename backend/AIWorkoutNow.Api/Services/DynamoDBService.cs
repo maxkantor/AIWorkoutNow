@@ -10,17 +10,27 @@ public class DynamoDBService : IDynamoDBService
 {
     private readonly IAmazonDynamoDB _dynamoDB;
     private readonly DynamoDBContext _context;
-    private readonly string _workoutsTable = "AIWorkoutNow-Workouts";
-    private readonly string _anonymousUsageTable = "AIWorkoutNow-AnonymousUsage";
-    private readonly string _userTokensTable = "AIWorkoutNow-UserTokens";
-    private readonly string _progressLogsTable = "AIWorkoutNow-ProgressLogs";
-    private readonly string _adminUsersTable = "AIWorkoutNow-AdminUsers";
-    private readonly string _contactMessagesTable = "AIWorkoutNow-ContactMessages";
+    private readonly string _workoutsTable;
+    private readonly string _anonymousUsageTable;
+    private readonly string _userTokensTable;
+    private readonly string _progressLogsTable;
+    private readonly string _adminUsersTable;
+    private readonly string _contactMessagesTable;
 
     public DynamoDBService(IAmazonDynamoDB dynamoDB)
     {
         _dynamoDB = dynamoDB;
         _context = new DynamoDBContext(_dynamoDB);
+        
+        // Get table prefix from environment variable or use default
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        
+        _workoutsTable = Environment.GetEnvironmentVariable("WORKOUTS_TABLE") ?? $"{tablePrefix}-Workouts";
+        _anonymousUsageTable = Environment.GetEnvironmentVariable("ANONYMOUS_USAGE_TABLE") ?? $"{tablePrefix}-AnonymousUsage";
+        _userTokensTable = Environment.GetEnvironmentVariable("USER_TOKENS_TABLE") ?? $"{tablePrefix}-UserTokens";
+        _progressLogsTable = Environment.GetEnvironmentVariable("PROGRESS_LOGS_TABLE") ?? $"{tablePrefix}-ProgressLogs";
+        _adminUsersTable = Environment.GetEnvironmentVariable("ADMIN_USERS_TABLE") ?? $"{tablePrefix}-AdminUsers";
+        _contactMessagesTable = Environment.GetEnvironmentVariable("CONTACT_MESSAGES_TABLE") ?? $"{tablePrefix}-ContactMessages";
     }
 
     public async Task SaveWorkoutAsync(Workout workout)
