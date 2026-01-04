@@ -38,14 +38,13 @@ fi
 
 cd ../../backend
 
-echo "🔨 Building .NET Lambda function..."
-cd AIWorkoutNow.Api
-dotnet publish -c Release -r linux-x64 --self-contained false -o publish
-
-echo "📦 Creating deployment package..."
-cd publish
-zip -r ../deployment-package.zip . > /dev/null
-cd ..
+# Check if pre-built package exists, otherwise build it
+if [ -f "lambda-deployment.zip" ]; then
+    echo "✅ Using existing Lambda deployment package: lambda-deployment.zip"
+else
+    echo "🔨 Building Lambda deployment package..."
+    ./build-lambda-package.sh
+fi
 
 echo "🚀 Deploying to Lambda..."
 
@@ -54,7 +53,7 @@ if aws lambda get-function --function-name $FUNCTION_NAME --region $REGION &>/de
     echo "Function exists, updating code..."
     aws lambda update-function-code \
         --function-name $FUNCTION_NAME \
-        --zip-file fileb://deployment-package.zip \
+        --zip-file fileb://lambda-deployment.zip \
         --region $REGION \
         --output json > /dev/null
     
@@ -72,10 +71,10 @@ else
     echo "Creating new Lambda function..."
     aws lambda create-function \
         --function-name $FUNCTION_NAME \
-        --runtime provided.al2023 \
+        --runtime dotnet8 \
         --role "$ROLE_ARN" \
-        --handler bootstrap \
-        --zip-file fileb://deployment-package.zip \
+        --handler "AIWorkoutNow.Api" \
+        --zip-file fileb://lambda-deployment.zip \
         --timeout 30 \
         --memory-size 512 \
         --region $REGION \
