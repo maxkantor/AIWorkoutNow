@@ -1,0 +1,217 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AIWorkoutNow Infrastructure - DynamoDB Tables, SSM Parameters, and IAM Roles'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: production
+    Description: Environment name
+
+Resources:
+  # DynamoDB Tables
+  WorkoutsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: AIWorkoutNow-Workouts
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: WorkoutId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: WorkoutId
+          KeyType: HASH
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  AnonymousUsageTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: AIWorkoutNow-AnonymousUsage
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: DeviceId
+          AttributeType: S
+        - AttributeName: Date
+          AttributeType: S
+      KeySchema:
+        - AttributeName: DeviceId
+          KeyType: HASH
+        - AttributeName: Date
+          KeyType: RANGE
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  UserTokensTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: AIWorkoutNow-UserTokens
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: DeviceId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: DeviceId
+          KeyType: HASH
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  ProgressLogsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: AIWorkoutNow-ProgressLogs
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: DeviceId
+          AttributeType: S
+        - AttributeName: Timestamp
+          AttributeType: S
+      KeySchema:
+        - AttributeName: DeviceId
+          KeyType: HASH
+        - AttributeName: Timestamp
+          KeyType: RANGE
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  AdminUsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: AIWorkoutNow-AdminUsers
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: AdminId
+          AttributeType: S
+        - AttributeName: Email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: AdminId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: EmailIndex
+          KeySchema:
+            - AttributeName: Email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  ContactMessagesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: AIWorkoutNow-ContactMessages
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: MessageId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: MessageId
+          KeyType: HASH
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  # SSM Parameters (placeholder - values should be set manually)
+  OpenAIApiKeyParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /aiworkoutnow/openai-api-key
+      Type: SecureString
+      Value: 'CHANGE_ME'
+      Description: OpenAI API Key
+
+  SESFromEmailParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /aiworkoutnow/ses-from-email
+      Type: String
+      Value: 'noreply@aiworkoutnow.com'
+      Description: SES From Email Address
+
+  SESAdminEmailParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /aiworkoutnow/ses-admin-email
+      Type: String
+      Value: 'admin@aiworkoutnow.com'
+      Description: SES Admin Email Address
+
+  JWTSecretParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /aiworkoutnow/jwt-secret
+      Type: SecureString
+      Value: 'CHANGE_ME'
+      Description: JWT Secret Key
+
+  # Lambda Execution Role
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: AIWorkoutNow-LambdaExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:GetItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - !GetAtt WorkoutsTable.Arn
+                  - !GetAtt AnonymousUsageTable.Arn
+                  - !GetAtt UserTokensTable.Arn
+                  - !GetAtt ProgressLogsTable.Arn
+                  - !GetAtt AdminUsersTable.Arn
+                  - !GetAtt ContactMessagesTable.Arn
+        - PolicyName: SSMAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                Resource:
+                  - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/aiworkoutnow/*'
+        - PolicyName: SESAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ses:SendEmail
+                  - ses:SendRawEmail
+                Resource: '*'
+
+Outputs:
+  LambdaExecutionRoleArn:
+    Description: ARN of the Lambda execution role
+    Value: !GetAtt LambdaExecutionRole.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-LambdaExecutionRoleArn'
+
+  WorkoutsTableName:
+    Description: Name of the Workouts table
+    Value: !Ref WorkoutsTable
+    Export:
+      Name: !Sub '${AWS::StackName}-WorkoutsTable'
+
