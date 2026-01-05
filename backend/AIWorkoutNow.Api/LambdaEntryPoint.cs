@@ -37,7 +37,8 @@ public class Startup
             {
                 policy.AllowAnyOrigin()
                       .AllowAnyMethod()
-                      .AllowAnyHeader();
+                      .AllowAnyHeader()
+                      .WithExposedHeaders("*");
             });
         });
 
@@ -85,10 +86,11 @@ public class Startup
         //     app.UseSwaggerUI();
         // }
 
+        // CORS must be before routing
         app.UseCors("AllowAll");
+        app.UseRouting();
         app.UseAuthentication();
         app.UseAuthorization();
-        app.UseRouting();
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
