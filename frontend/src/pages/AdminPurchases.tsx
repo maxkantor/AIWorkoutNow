@@ -38,11 +38,11 @@ function AdminPurchases() {
 
   const filteredPurchases = filter === 'all'
     ? purchases
-    : purchases.filter(p => p.status.toLowerCase() === filter.toLowerCase());
+    : purchases.filter(p => (p.status || p.paymentStatus).toLowerCase() === filter.toLowerCase());
 
   const totalRevenue = filteredPurchases
-    .filter(p => p.status === 'completed')
-    .reduce((sum, p) => sum + p.amount, 0);
+    .filter(p => (p.status || p.paymentStatus) === 'completed')
+    .reduce((sum, p) => sum + (p.amount || p.amountTotal), 0);
 
   if (loading) {
     return (
@@ -81,7 +81,7 @@ function AdminPurchases() {
             <div className="stat-card">
               <h3>Completed</h3>
               <p className="stat-value">
-                {filteredPurchases.filter(p => p.status === 'completed').length}
+                {filteredPurchases.filter(p => (p.status || p.paymentStatus) === 'completed').length}
               </p>
             </div>
           </div>
@@ -140,17 +140,17 @@ function AdminPurchases() {
                       <td>{purchase.customerName || purchase.deviceId.substring(0, 8)}</td>
                       <td>{purchase.customerEmail || '-'}</td>
                       <td>
-                        <span className="pack-badge">{purchase.packType}</span>
+                        <span className="pack-badge">{purchase.packType || purchase.planName}</span>
                       </td>
-                      <td className="amount">${purchase.amount.toFixed(2)}</td>
-                      <td>{purchase.tokensPurchased}</td>
+                      <td className="amount">${(purchase.amount || purchase.amountTotal).toFixed(2)}</td>
+                      <td>{purchase.tokensPurchased || '-'}</td>
                       <td>
-                        <span className={`status-badge status-${purchase.status.toLowerCase()}`}>
-                          {purchase.status}
+                        <span className={`status-badge status-${(purchase.status || purchase.paymentStatus).toLowerCase()}`}>
+                          {purchase.status || purchase.paymentStatus}
                         </span>
                       </td>
                       <td className="payment-id">
-                        {purchase.stripePaymentIntentId.substring(0, 20)}...
+                        {purchase.stripePaymentIntentId ? purchase.stripePaymentIntentId.substring(0, 20) + '...' : purchase.purchaseId.substring(0, 20) + '...'}
                       </td>
                       <td>
                         <Link

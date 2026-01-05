@@ -294,6 +294,9 @@ export interface CustomerSummary {
   totalSpent: number;
   lastActivity?: string;
   freeWorkoutsUsed: number;
+  email?: string;
+  name?: string;
+  firstSeen?: string;
 }
 
 export interface CustomerActivity {
@@ -313,6 +316,7 @@ export interface ContactMessage {
   message: string;
   createdAt: string;
   status?: string;
+  replies?: ContactReply[];
 }
 
 export interface ContactReply {
@@ -321,6 +325,9 @@ export interface ContactReply {
   adminEmail: string;
   replyMessage: string;
   repliedAt: string;
+  createdAt?: string;
+  sent?: boolean;
+  replyText?: string;
 }
 
 export interface StripePurchase {
@@ -333,6 +340,13 @@ export interface StripePurchase {
   paymentStatus: string;
   createdAt: string;
   expiresAt?: string;
+  status?: string;
+  amount?: number;
+  customerName?: string;
+  customerEmail?: string;
+  packType?: string;
+  tokensPurchased?: number;
+  stripePaymentIntentId?: string;
 }
 
 // CRM API Functions
@@ -368,8 +382,12 @@ export async function getCustomer(token: string, deviceId: string): Promise<Cust
   return response.json();
 }
 
-export async function getCustomerActivities(token: string, deviceId: string): Promise<CustomerActivity[]> {
-  const response = await fetch(`${API_BASE_URL}/admin/customers/${deviceId}/activities`, {
+export async function getCustomerActivities(token: string, deviceId: string, limit?: number): Promise<CustomerActivity[]> {
+  const url = limit 
+    ? `${API_BASE_URL}/admin/customers/${deviceId}/activities?limit=${limit}`
+    : `${API_BASE_URL}/admin/customers/${deviceId}/activities`;
+  
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -384,7 +402,7 @@ export async function getCustomerActivities(token: string, deviceId: string): Pr
   return response.json();
 }
 
-export async function resetUserTokens(token: string, deviceId: string, newTokenCount: number, reason?: string): Promise<void> {
+export async function resetUserTokens(token: string, deviceId: string, newTokenCount: number, oldTokenCount?: number, reason?: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/admin/customers/${deviceId}/reset-tokens`, {
     method: 'POST',
     headers: {
@@ -415,7 +433,7 @@ export async function getAllContacts(token: string): Promise<ContactMessage[]> {
   return response.json();
 }
 
-export async function getContact(token: string, messageId: string): Promise<ContactMessage> {
+export async function getContact(token: string, messageId: string): Promise<{ message: ContactMessage; replies: ContactReply[] }> {
   const response = await fetch(`${API_BASE_URL}/admin/contacts/${messageId}`, {
     method: 'GET',
     headers: {
@@ -431,14 +449,14 @@ export async function getContact(token: string, messageId: string): Promise<Cont
   return response.json();
 }
 
-export async function replyToContact(token: string, messageId: string, replyMessage: string, adminEmail: string): Promise<void> {
+export async function replyToContact(token: string, messageId: string, replyMessage: string, adminEmail?: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/admin/contacts/${messageId}/reply`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({ replyMessage, adminEmail }),
+    body: JSON.stringify({ replyMessage, adminEmail: adminEmail || 'admin@aiworkoutnow.com' }),
   });
 
   if (!response.ok) {
@@ -462,8 +480,12 @@ export async function getAllPurchases(token: string): Promise<StripePurchase[]> 
   return response.json();
 }
 
-export async function getAllActivities(token: string): Promise<CustomerActivity[]> {
-  const response = await fetch(`${API_BASE_URL}/admin/activities`, {
+export async function getAllActivities(token: string, limit?: number): Promise<CustomerActivity[]> {
+  const url = limit 
+    ? `${API_BASE_URL}/admin/activities?limit=${limit}`
+    : `${API_BASE_URL}/admin/activities`;
+  
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

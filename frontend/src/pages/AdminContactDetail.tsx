@@ -122,11 +122,11 @@ function AdminContactDetail() {
                     <div className="reply-header">
                       <span className="reply-admin">Admin</span>
                       <span className="reply-date">
-                        {new Date(reply.createdAt).toLocaleString()}
+                        {new Date(reply.createdAt || reply.repliedAt).toLocaleString()}
                       </span>
                       {reply.sent && <span className="reply-sent">✓ Sent</span>}
                     </div>
-                    <div className="reply-text">{reply.replyText}</div>
+                    <div className="reply-text">{reply.replyText || reply.replyMessage}</div>
                   </div>
                 ))}
               </div>
