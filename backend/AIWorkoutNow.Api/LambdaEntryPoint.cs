@@ -86,9 +86,8 @@ public class Startup
         //     app.UseSwaggerUI();
         // }
 
-        // CORS must be before routing
-        app.UseCors("AllowAll");
         app.UseRouting();
+        app.UseCors("AllowAll");
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseEndpoints(endpoints =>
