@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { saveWorkout } from '../utils/storage';
 import { getDeviceId } from '../utils/storage';
+import ProductRecommendations from './ProductRecommendations';
 import './WorkoutDisplay.css';
 
 interface WorkoutDisplayProps {
@@ -66,6 +67,11 @@ function WorkoutDisplay({ workout }: WorkoutDisplayProps) {
           </ul>
         </div>
       )}
+      
+      <ProductRecommendations 
+        products={workout.productRecommendations} 
+        workoutId={workout.workoutId}
+      />
       
       <div className="workout-footer">
         <p className="workout-meta">

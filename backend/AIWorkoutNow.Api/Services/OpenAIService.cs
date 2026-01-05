@@ -59,15 +59,22 @@ public class OpenAIService : IAIService
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         var response = await _httpClient.PostAsync("https://api.openai.com/v1/chat/completions", content);
-        response.EnsureSuccessStatusCode();
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new Exception($"OpenAI API error: {response.StatusCode} - {errorContent}");
+        }
 
         var responseJson = await response.Content.ReadAsStringAsync();
         var openAiResponse = JsonSerializer.Deserialize<OpenAIResponse>(responseJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
         if (openAiResponse?.Choices == null || openAiResponse.Choices.Length == 0)
-            throw new Exception("Invalid response from OpenAI");
+            throw new Exception($"Invalid response from OpenAI: {responseJson}");
 
-        var messageContent = openAiResponse.Choices[0].Message.Content;
+        var messageContent = openAiResponse.Choices[0].Message?.Content;
+        if (string.IsNullOrEmpty(messageContent))
+            throw new Exception($"Empty content in OpenAI response: {responseJson}");
 
         // Parse JSON response
         var workout = JsonSerializer.Deserialize<Workout>(messageContent, new JsonSerializerOptions
@@ -77,6 +84,29 @@ public class OpenAIService : IAIService
 
         if (workout == null)
             throw new Exception("Failed to parse AI response");
+
+        // Parse product recommendations if present (they come as raw JSON from AI)
+        if (workout.ProductRecommendations == null || workout.ProductRecommendations.Count == 0)
+        {
+            // Try to extract productRecommendations from the raw JSON
+            try
+            {
+                var jsonDoc = JsonDocument.Parse(messageContent);
+                if (jsonDoc.RootElement.TryGetProperty("productRecommendations", out var productsElement))
+                {
+                    var products = JsonSerializer.Deserialize<List<ProductRecommendation>>(
+                        productsElement.GetRawText(),
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                    );
+                    workout.ProductRecommendations = products;
+                }
+            }
+            catch
+            {
+                // If parsing fails, just continue without product recommendations
+                workout.ProductRecommendations = new List<ProductRecommendation>();
+            }
+        }
 
         // Generate hash for workout
         workout.Hash = GenerateWorkoutHash(workout);
@@ -111,8 +141,19 @@ Please provide a JSON response with the following structure:
       ""rest"": ""60 seconds""
     }}
   ],
-  ""tips"": [""Tip 1"", ""Tip 2""]
+  ""tips"": [""Tip 1"", ""Tip 2""],
+  ""productRecommendations"": [
+    {{
+      ""category"": ""Product category (e.g., Dumbbells, Resistance Bands, Yoga Mat)"",
+      ""searchKeywords"": ""Amazon search keywords (e.g., adjustable dumbbells set)"",
+      ""title"": ""Product title"",
+      ""description"": ""Why this product is recommended for this workout"",
+      ""reason"": ""Specific reason this product helps with this workout""
+    }}
+  ]
 }}
+
+For productRecommendations, suggest 2-4 relevant fitness products that would enhance this workout. Base recommendations on the workout type, equipment available, and exercises included. Use specific, searchable keywords that users would use on Amazon.
 
 Make sure the workout is safe, effective, and appropriate for the specified fitness level and equipment available.";
     }

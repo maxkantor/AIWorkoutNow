@@ -9,6 +9,17 @@ export interface WorkoutPreferences {
   goals: string[];
 }
 
+export interface ProductRecommendation {
+  asin: string;
+  title: string;
+  description?: string;
+  imageUrl?: string;
+  price?: string;
+  affiliateLink: string;
+  category: string;
+  reason?: string;
+}
+
 export interface WorkoutResponse {
   workoutId: string;
   title: string;
@@ -23,6 +34,7 @@ export interface WorkoutResponse {
     rest?: string;
   }>;
   tips?: string[];
+  productRecommendations?: ProductRecommendation[];
   createdAt: string;
   tokensRemaining?: number;
 }
@@ -116,3 +128,27 @@ export async function getAdminStats(token: string) {
   return response.json();
 }
 
+export async function trackAffiliateClick(
+  deviceId: string,
+  asin: string,
+  workoutId: string,
+  linkText?: string
+): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/track-affiliate-click`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      deviceId,
+      asin,
+      workoutId,
+      linkText,
+    }),
+  });
+
+  if (!response.ok) {
+    // Don't throw error - tracking failures shouldn't break the UI
+    console.error('Failed to track affiliate click');
+  }
+}

@@ -9,6 +9,7 @@ public class Workout
     public string Type { get; set; } = string.Empty;
     public List<Exercise> Exercises { get; set; } = new();
     public List<string>? Tips { get; set; }
+    public List<ProductRecommendation>? ProductRecommendations { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public int? TokensRemaining { get; set; }
 }

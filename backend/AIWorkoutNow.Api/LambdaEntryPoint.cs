@@ -73,6 +73,7 @@ public class Startup
         services.AddSingleton<ITokenService, TokenService>();
         services.AddSingleton<IConfigService, ConfigService>();
         services.AddSingleton<IAuthService, AuthService>();
+        services.AddSingleton<IAmazonAffiliateService, AmazonAffiliateService>();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

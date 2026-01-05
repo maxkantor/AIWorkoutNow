@@ -43,7 +43,15 @@ if [ -f "lambda-deployment.zip" ]; then
     echo "✅ Using existing Lambda deployment package: lambda-deployment.zip"
 else
     echo "🔨 Building Lambda deployment package..."
-    ./build-lambda-package.sh
+    # Try PowerShell script first on Windows, then bash script
+    if [ -f "build-lambda-package.ps1" ] && command -v powershell &> /dev/null; then
+        powershell -ExecutionPolicy Bypass -File build-lambda-package.ps1
+    elif [ -f "build-lambda-package.sh" ]; then
+        bash build-lambda-package.sh || ./build-lambda-package.sh
+    else
+        echo "❌ Build script not found"
+        exit 1
+    fi
 fi
 
 echo "🚀 Deploying to Lambda..."
@@ -57,10 +65,11 @@ if aws lambda get-function --function-name $FUNCTION_NAME --region $REGION &>/de
         --region $REGION \
         --output json > /dev/null
     
-    # Update environment variables
+    # Update environment variables and handler
     aws lambda update-function-configuration \
         --function-name $FUNCTION_NAME \
         --region $REGION \
+        --handler "AIWorkoutNow.Api::AIWorkoutNow.Api.LambdaEntryPoint::FunctionHandlerAsync" \
         --environment "Variables={TABLE_PREFIX=AIWorkoutNow}" \
         --timeout 30 \
         --memory-size 512 \
@@ -73,13 +82,13 @@ else
         --function-name $FUNCTION_NAME \
         --runtime dotnet8 \
         --role "$ROLE_ARN" \
-        --handler "AIWorkoutNow.Api" \
+        --handler "AIWorkoutNow.Api::AIWorkoutNow.Api.LambdaEntryPoint::FunctionHandlerAsync" \
         --zip-file fileb://lambda-deployment.zip \
         --timeout 30 \
         --memory-size 512 \
         --region $REGION \
         --environment "Variables={TABLE_PREFIX=AIWorkoutNow}" \
-        --architectures arm64 \
+        --architectures x86_64 \
         --output json > /dev/null
     
     echo "✅ Lambda function created!"

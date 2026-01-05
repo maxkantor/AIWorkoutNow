@@ -5,7 +5,7 @@ using AIWorkoutNow.Api.Models;
 namespace AIWorkoutNow.Api.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("contact")]
 public class ContactController : ControllerBase
 {
     private readonly IDynamoDBService _dynamoService;

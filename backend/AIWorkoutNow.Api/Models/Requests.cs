@@ -31,3 +31,11 @@ public class SendEmailRequest
     public string Body { get; set; } = string.Empty;
 }
 
+
+public class AffiliateClickRequest
+{
+    public string DeviceId { get; set; } = string.Empty;
+    public string ASIN { get; set; } = string.Empty;
+    public string WorkoutId { get; set; } = string.Empty;
+    public string? LinkText { get; set; }
+}
