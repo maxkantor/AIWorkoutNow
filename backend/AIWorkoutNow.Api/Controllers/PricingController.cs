@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Cors;
 using AIWorkoutNow.Api.Services;
 using AIWorkoutNow.Api.Models;
 
@@ -6,6 +7,7 @@ namespace AIWorkoutNow.Api.Controllers;
 
 [ApiController]
 [Route("")]
+[EnableCors("AllowAll")]
 public class PricingController : ControllerBase
 {
     private readonly IDynamoDBService _dynamoService;
