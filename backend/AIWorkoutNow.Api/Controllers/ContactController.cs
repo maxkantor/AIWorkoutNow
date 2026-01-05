@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Cors;
 using AIWorkoutNow.Api.Services;
 using AIWorkoutNow.Api.Models;
 

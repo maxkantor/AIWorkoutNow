@@ -737,37 +737,76 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task<List<PricingPlan>> GetAllPricingPlansAsync()
     {
-        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
-        var plansTable = $"{tablePrefix}-PricingPlans";
-        
-        var response = await _dynamoDB.ScanAsync(new ScanRequest
+        try
         {
-            TableName = plansTable,
-            FilterExpression = "IsActive = :active",
-            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+            var plansTable = $"{tablePrefix}-PricingPlans";
+            
+            Console.WriteLine($"[DynamoDBService] Getting pricing plans from table: {plansTable}");
+            
+            var response = await _dynamoDB.ScanAsync(new ScanRequest
             {
-                { ":active", new AttributeValue { BOOL = true } }
-            }
-        });
+                TableName = plansTable
+            });
 
-        return response.Items.Select(item => new PricingPlan
+            Console.WriteLine($"[DynamoDBService] Found {response.Items.Count} pricing plans");
+
+            if (response.Items.Count == 0)
+            {
+                Console.WriteLine("[DynamoDBService] No pricing plans found, returning empty list");
+                return new List<PricingPlan>();
+            }
+
+            var plans = new List<PricingPlan>();
+            foreach (var item in response.Items)
+            {
+                try
+                {
+                    // Only include active plans
+                    var isActive = item.ContainsKey("IsActive") ? item["IsActive"].BOOL : true;
+                    if (!isActive) continue;
+
+                    var plan = new PricingPlan
+                    {
+                        PlanId = item.ContainsKey("PlanId") ? item["PlanId"].S : Guid.NewGuid().ToString(),
+                        Name = item.ContainsKey("Name") ? item["Name"].S : "Unknown",
+                        Price = item.ContainsKey("Price") ? (item["Price"].N != null ? decimal.Parse(item["Price"].N) : decimal.Parse(item["Price"].S)) : 0,
+                        Currency = item.ContainsKey("Currency") ? item["Currency"].S : "USD",
+                        TokenCount = item.ContainsKey("TokenCount") && item["TokenCount"].N != null ? int.Parse(item["TokenCount"].N) : 0,
+                        IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL,
+                        UnlimitedDays = item.ContainsKey("UnlimitedDays") && item["UnlimitedDays"].N != null ? int.Parse(item["UnlimitedDays"].N) : null,
+                        DisplayOrder = item.ContainsKey("DisplayOrder") && item["DisplayOrder"].N != null ? int.Parse(item["DisplayOrder"].N) : 0,
+                        IsRecommended = item.ContainsKey("IsRecommended") && item["IsRecommended"].BOOL,
+                        BadgeText = item.ContainsKey("BadgeText") ? item["BadgeText"].S : null,
+                        MicroCopy = item.ContainsKey("MicroCopy") ? item["MicroCopy"].S : null,
+                        IsActive = isActive,
+                        StripePriceId = item.ContainsKey("StripePriceId") ? item["StripePriceId"].S : string.Empty,
+                        CreatedAt = item.ContainsKey("CreatedAt") ? DateTime.Parse(item["CreatedAt"].S) : DateTime.UtcNow,
+                        UpdatedAt = item.ContainsKey("UpdatedAt") ? DateTime.Parse(item["UpdatedAt"].S) : null
+                    };
+                    plans.Add(plan);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[DynamoDBService] Error parsing pricing plan item: {ex.Message}");
+                    // Skip this item and continue
+                }
+            }
+
+            Console.WriteLine($"[DynamoDBService] Returning {plans.Count} active pricing plans");
+            return plans.OrderBy(p => p.DisplayOrder).ToList();
+        }
+        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
-            PlanId = item["PlanId"].S,
-            Name = item["Name"].S,
-            Price = decimal.Parse(item["Price"].S),
-            Currency = item["Currency"].S,
-            TokenCount = item.ContainsKey("TokenCount") ? int.Parse(item["TokenCount"].N) : null,
-            IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL,
-            UnlimitedDays = item.ContainsKey("UnlimitedDays") ? int.Parse(item["UnlimitedDays"].N) : null,
-            DisplayOrder = int.Parse(item["DisplayOrder"].N),
-            IsRecommended = item.ContainsKey("IsRecommended") && item["IsRecommended"].BOOL,
-            BadgeText = item.ContainsKey("BadgeText") ? item["BadgeText"].S : null,
-            MicroCopy = item.ContainsKey("MicroCopy") ? item["MicroCopy"].S : null,
-            IsActive = item.ContainsKey("IsActive") ? item["IsActive"].BOOL : true,
-            StripePriceId = item["StripePriceId"].S,
-            CreatedAt = DateTime.Parse(item["CreatedAt"].S),
-            UpdatedAt = item.ContainsKey("UpdatedAt") ? DateTime.Parse(item["UpdatedAt"].S) : null
-        }).OrderBy(p => p.DisplayOrder).ToList();
+            Console.WriteLine("[DynamoDBService] PricingPlans table does not exist, returning empty list");
+            return new List<PricingPlan>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error getting pricing plans: {ex.Message}");
+            Console.WriteLine($"[DynamoDBService] Stack trace: {ex.StackTrace}");
+            throw;
+        }
     }
 
     public async Task<PricingPlan?> GetPricingPlanAsync(string planId)
