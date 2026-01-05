@@ -909,35 +909,48 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task<UserPurchase?> GetUserPurchaseAsync(string purchaseId)
     {
-        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
-        var purchasesTable = $"{tablePrefix}-UserPurchases";
-        
-        var response = await _dynamoDB.GetItemAsync(new GetItemRequest
+        try
         {
-            TableName = purchasesTable,
-            Key = new Dictionary<string, AttributeValue>
+            var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+            var purchasesTable = $"{tablePrefix}-UserPurchases";
+            
+            var response = await _dynamoDB.GetItemAsync(new GetItemRequest
             {
-                { "PurchaseId", new AttributeValue { S = purchaseId } }
-            }
-        });
+                TableName = purchasesTable,
+                Key = new Dictionary<string, AttributeValue>
+                {
+                    { "PurchaseId", new AttributeValue { S = purchaseId } }
+                }
+            });
 
-        if (!response.Item.Any())
-            return null;
+            if (!response.Item.Any())
+                return null;
 
-        var item = response.Item;
-        return new UserPurchase
+            var item = response.Item;
+            return new UserPurchase
+            {
+                PurchaseId = item["PurchaseId"].S,
+                DeviceId = item["DeviceId"].S,
+                PlanId = item["PlanId"].S,
+                StripeSessionId = item["StripeSessionId"].S,
+                StripePaymentIntentId = item["StripePaymentIntentId"].S,
+                Status = item["Status"].S,
+                PurchasedAt = DateTime.Parse(item["PurchasedAt"].S),
+                ExpiresAt = item.ContainsKey("ExpiresAt") ? DateTime.Parse(item["ExpiresAt"].S) : null,
+                TokensGranted = item.ContainsKey("TokensGranted") ? int.Parse(item["TokensGranted"].N) : null,
+                IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL
+            };
+        }
+        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
-            PurchaseId = item["PurchaseId"].S,
-            DeviceId = item["DeviceId"].S,
-            PlanId = item["PlanId"].S,
-            StripeSessionId = item["StripeSessionId"].S,
-            StripePaymentIntentId = item["StripePaymentIntentId"].S,
-            Status = item["Status"].S,
-            PurchasedAt = DateTime.Parse(item["PurchasedAt"].S),
-            ExpiresAt = item.ContainsKey("ExpiresAt") ? DateTime.Parse(item["ExpiresAt"].S) : null,
-            TokensGranted = item.ContainsKey("TokensGranted") ? int.Parse(item["TokensGranted"].N) : null,
-            IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL
-        };
+            Console.WriteLine("[DynamoDBService] UserPurchases table does not exist");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error getting user purchase: {ex.Message}");
+            return null;
+        }
     }
 
     public async Task<List<UserPurchase>> GetUserPurchasesAsync(string deviceId)
