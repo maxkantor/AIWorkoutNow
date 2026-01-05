@@ -753,8 +753,14 @@ public class DynamoDBService : IDynamoDBService
 
             if (response.Items.Count == 0)
             {
-                Console.WriteLine("[DynamoDBService] No pricing plans found, returning empty list");
-                return new List<PricingPlan>();
+                Console.WriteLine("[DynamoDBService] No pricing plans found, creating default plans");
+                await CreateDefaultPricingPlansAsync(plansTable);
+                // Retry scan after creating defaults
+                response = await _dynamoDB.ScanAsync(new ScanRequest
+                {
+                    TableName = plansTable
+                });
+                Console.WriteLine($"[DynamoDBService] After creating defaults, found {response.Items.Count} pricing plans");
             }
 
             var plans = new List<PricingPlan>();
@@ -798,8 +804,8 @@ public class DynamoDBService : IDynamoDBService
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
-            Console.WriteLine("[DynamoDBService] PricingPlans table does not exist, returning empty list");
-            return new List<PricingPlan>();
+            Console.WriteLine("[DynamoDBService] PricingPlans table does not exist, returning default plans");
+            return GetDefaultPricingPlans();
         }
         catch (Exception ex)
         {
@@ -987,6 +993,99 @@ public class DynamoDBService : IDynamoDBService
         }
 
         return total;
+    }
+
+    private List<PricingPlan> GetDefaultPricingPlans()
+    {
+        return new List<PricingPlan>
+        {
+            new PricingPlan
+            {
+                PlanId = "default-starter-boost",
+                Name = "Starter Boost",
+                Price = 1.99m,
+                Currency = "USD",
+                TokenCount = 10,
+                IsUnlimited = false,
+                DisplayOrder = 1,
+                IsRecommended = true,
+                BadgeText = "⭐ Most Popular",
+                MicroCopy = "Perfect to get started.",
+                IsActive = true,
+                StripePriceId = string.Empty,
+                CreatedAt = DateTime.UtcNow
+            },
+            new PricingPlan
+            {
+                PlanId = "default-regular-trainer",
+                Name = "Regular Trainer",
+                Price = 3.99m,
+                Currency = "USD",
+                TokenCount = 30,
+                IsUnlimited = false,
+                DisplayOrder = 2,
+                IsRecommended = false,
+                MicroCopy = "Best value for consistent training.",
+                IsActive = true,
+                StripePriceId = string.Empty,
+                CreatedAt = DateTime.UtcNow
+            },
+            new PricingPlan
+            {
+                PlanId = "default-power-user",
+                Name = "Power User",
+                Price = 5.99m,
+                Currency = "USD",
+                TokenCount = 70,
+                IsUnlimited = false,
+                DisplayOrder = 3,
+                IsRecommended = false,
+                MicroCopy = "Train hard, pay less per workout.",
+                IsActive = true,
+                StripePriceId = string.Empty,
+                CreatedAt = DateTime.UtcNow
+            },
+            new PricingPlan
+            {
+                PlanId = "default-unlimited-access",
+                Name = "Unlimited Access",
+                Price = 9.99m,
+                Currency = "USD",
+                TokenCount = 0,
+                IsUnlimited = true,
+                UnlimitedDays = 7,
+                DisplayOrder = 4,
+                IsRecommended = false,
+                MicroCopy = "Unlimited workouts. No recurring charges.",
+                IsActive = true,
+                StripePriceId = string.Empty,
+                CreatedAt = DateTime.UtcNow
+            }
+        };
+    }
+
+    private async Task CreateDefaultPricingPlansAsync(string plansTable)
+    {
+        try
+        {
+            var defaultPlans = GetDefaultPricingPlans();
+            foreach (var plan in defaultPlans)
+            {
+                try
+                {
+                    await SavePricingPlanAsync(plan);
+                    Console.WriteLine($"[DynamoDBService] Created default plan: {plan.Name}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[DynamoDBService] Failed to create default plan {plan.Name}: {ex.Message}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error creating default pricing plans: {ex.Message}");
+        }
     }
 }
 
