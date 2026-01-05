@@ -47,18 +47,29 @@ public class StripeController : ControllerBase
             var successUrl = $"{apiBaseUrl}/payment-success?session_id={{CHECKOUT_SESSION_ID}}";
             var cancelUrl = $"{apiBaseUrl}/payment-cancel";
 
+            // Create checkout session with amount directly (no need for pre-created products/prices)
+            var amountInCents = (int)(plan.Price * 100); // Convert to cents
+            
             var formData = new List<KeyValuePair<string, string>>
             {
                 new("mode", "payment"),
                 new("success_url", successUrl),
                 new("cancel_url", cancelUrl),
                 new("payment_method_types[]", "card"),
-                new("line_items[0][price]", plan.StripePriceId),
+                new("line_items[0][price_data][currency]", plan.Currency.ToLower()),
+                new("line_items[0][price_data][unit_amount]", amountInCents.ToString()),
+                new("line_items[0][price_data][product_data][name]", plan.Name),
                 new("line_items[0][quantity]", "1"),
                 new("metadata[deviceId]", request.DeviceId),
                 new("metadata[planId]", plan.PlanId),
                 new("allow_promotion_codes", "true")
             };
+            
+            // Add description if available
+            if (!string.IsNullOrEmpty(plan.MicroCopy))
+            {
+                formData.Add(new("line_items[0][price_data][product_data][description]", plan.MicroCopy));
+            }
 
             var content = new FormUrlEncodedContent(formData);
             var response = await httpClient.PostAsync(stripeApiUrl, content);

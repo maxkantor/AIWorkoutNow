@@ -14,7 +14,7 @@ public class PricingPlan
     public string? BadgeText { get; set; }
     public string? MicroCopy { get; set; }
     public bool IsActive { get; set; } = true;
-    public string StripePriceId { get; set; } = string.Empty; // Stripe Price ID for checkout
+    public string StripePriceId { get; set; } = string.Empty; // Optional: Pre-created Stripe Price ID (not required)
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 }

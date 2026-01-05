@@ -55,18 +55,16 @@ aws ssm put-parameter \
   --region us-east-1
 ```
 
-### 3. Create Stripe Products & Prices
+### 3. Pricing Plans (No Stripe Products Needed!)
 
-For each pricing plan in your Admin CRM:
+**You don't need to create Stripe products or prices manually!**
 
-1. Go to Stripe Dashboard → Products
-2. Create a product for each plan (e.g., "Starter Boost", "Regular Trainer")
-3. Create a **Price** for each product:
-   - Type: **One-time**
-   - Amount: Set the price (e.g., $1.99 = 199 cents)
-   - Currency: USD
-4. Copy the **Price ID** (starts with `price_`)
-5. In Admin CRM, set the `StripePriceId` for each pricing plan
+The system creates checkout sessions dynamically using the price and plan name from your Admin CRM. Just configure your pricing plans in the Admin CRM with:
+- Plan name
+- Price (in USD)
+- Token count or unlimited flag
+
+The checkout session will be created automatically with the correct amount.
 
 ### 4. Configure Webhook Endpoint
 
@@ -143,6 +141,6 @@ Switch to live keys when ready:
 - View webhook events in Stripe Dashboard
 
 ### Checkout session fails
-- Verify StripePriceId is set correctly in pricing plans
-- Check Price ID exists in Stripe Dashboard
-- Ensure Price is active and in correct currency
+- Verify plan price is set correctly in Admin CRM
+- Check plan name is not empty
+- Ensure currency is valid (USD, EUR, etc.)
