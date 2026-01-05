@@ -402,7 +402,7 @@ export async function getCustomerActivities(token: string, deviceId: string, lim
   return response.json();
 }
 
-export async function resetUserTokens(token: string, deviceId: string, newTokenCount: number, oldTokenCount?: number, reason?: string): Promise<void> {
+export async function resetUserTokens(token: string, deviceId: string, newTokenCount: number, _oldTokenCount?: number, reason?: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/admin/customers/${deviceId}/reset-tokens`, {
     method: 'POST',
     headers: {
