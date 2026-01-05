@@ -28,6 +28,7 @@ body {
   color: var(--text-primary);
   background-color: var(--bg-secondary);
   line-height: 1.6;
+  font-size: 16px;
 }
 
 code {
@@ -36,9 +37,15 @@ code {
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 1rem;
+  }
 }
 
 .btn {

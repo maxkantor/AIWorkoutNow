@@ -13,6 +13,7 @@ function PricingPlans({ showHeader = true, compact = false }: PricingPlansProps)
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showAllPlans, setShowAllPlans] = useState(false);
 
   useEffect(() => {
     loadPlans();
@@ -74,10 +75,10 @@ function PricingPlans({ showHeader = true, compact = false }: PricingPlansProps)
       )}
 
       <div className={`pricing-grid ${compact ? 'compact-grid' : ''}`}>
-        {plans.map((plan) => (
+        {plans.map((plan, index) => (
           <div
             key={plan.planId}
-            className={`pricing-card ${plan.isRecommended ? 'recommended' : ''}`}
+            className={`pricing-card ${plan.isRecommended ? 'recommended' : ''} ${showAllPlans || index < 2 ? 'show-all' : ''}`}
           >
             {plan.isRecommended && (
               <div className="recommended-badge">
@@ -124,10 +125,32 @@ function PricingPlans({ showHeader = true, compact = false }: PricingPlansProps)
         ))}
       </div>
 
-      <div className="pricing-footer">
-        <p>No login. No subscription. Pay once.</p>
-        <p className="comparison">Other fitness apps charge $10–$30/month. We don't.</p>
-      </div>
+      {plans.length > 2 && !showAllPlans && (
+        <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+          <button
+            onClick={() => setShowAllPlans(true)}
+            style={{
+              padding: '0.5rem 1.5rem',
+              background: 'transparent',
+              border: '2px solid #667eea',
+              color: '#667eea',
+              borderRadius: '6px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontSize: '0.9rem'
+            }}
+          >
+            Show All Plans
+          </button>
+        </div>
+      )}
+
+      {showHeader && (
+        <div className="pricing-footer">
+          <p>No login. No subscription. Pay once.</p>
+          <p className="comparison">Other fitness apps charge $10–$30/month. We don't.</p>
+        </div>
+      )}
     </section>
   );
 }

@@ -8,6 +8,13 @@ interface LayoutProps {
 }
 
 function Layout({ children }: LayoutProps) {
+  const scrollToGenerator = () => {
+    const generator = document.querySelector('.workout-generator');
+    if (generator) {
+      generator.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <div className="layout">
       <header className="header">
@@ -16,10 +23,9 @@ function Layout({ children }: LayoutProps) {
             <Link to="/" className="logo">
               <h1>AIWorkoutNow</h1>
             </Link>
-            <nav className="nav">
-              <Link to="/about">About</Link>
-              <Link to="/contact">Contact</Link>
-            </nav>
+            <button className="header-cta" onClick={scrollToGenerator}>
+              Get Free Workouts
+            </button>
           </div>
         </div>
       </header>

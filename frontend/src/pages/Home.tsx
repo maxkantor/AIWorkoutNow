@@ -155,20 +155,28 @@ function Home() {
       
       <div className="home">
         <div className="container">
-          {/* Free Tier Banner */}
-          {freeWorkoutsRemaining > 0 && (
-            <div className="free-tier-banner">
-              <span className="banner-icon">🎁</span>
-              <span className="banner-text">3 Free AI Workouts — No Signup Required</span>
-            </div>
-          )}
+          <div className="home-layout">
+            <div className="home-main">
+              {/* Free Tier Banner */}
+              {freeWorkoutsRemaining > 0 && (
+                <div className="free-tier-banner">
+                  <span className="banner-icon">🎁</span>
+                  <span className="banner-text">3 Free AI Workouts — No Signup Required</span>
+                </div>
+              )}
 
-          <div className="hero">
-            <h1>Get Your Personalized AI Workout</h1>
+              <div className="hero">
+            <h1>Instant AI Workouts. No Signup.</h1>
             <p className="hero-subtitle">
-              No signup required. Get instant, personalized workout plans powered by AI.
+              No account. No subscription. Just train.
             </p>
             
+            <div className="trust-signals">
+              <span>🎁 3 Free Workouts</span>
+              <span>🚫 No Signup</span>
+              <span>💳 One-Time Payment</span>
+            </div>
+
             {/* Access Status Display */}
             {!checkingAccess && (
               <div className="access-status">
@@ -196,49 +204,50 @@ function Home() {
                 )}
               </div>
             )}
+          </div>
 
-            {/* Trust Copy */}
-            <div className="trust-copy">
-              <p>✨ Instant AI-generated workouts</p>
-              <p>💳 One-time payment</p>
-              <p>🚫 No signup required</p>
+              <WorkoutGenerator
+                onGenerate={handleGenerateWorkout}
+                loading={loading}
+                error={error}
+                workout={workout}
+                disabled={!canGenerate && !checkingAccess}
+              />
+
+              {workout && (
+                <AffiliateProducts workoutType={workout.type || 'general'} />
+              )}
+
+              {/* SEO Content Sections (Hidden visually but present for SEO) */}
+              <div className="seo-content" style={{ display: 'none' }}>
+                <h2>AI Workout Generator Without Signup</h2>
+                <p>
+                  Get personalized AI-generated workouts instantly without creating an account. 
+                  Start with 3 free workouts and unlock more with one-time payments. No subscriptions, no commitments.
+                </p>
+
+                <h2>Personalized Home & Gym Workouts</h2>
+                <p>
+                  Our AI creates custom workout plans tailored to your fitness level, available equipment, 
+                  and personal goals. Whether you're at home or in the gym, get workouts that fit your needs.
+                </p>
+
+                <h2>Best AI Fitness App for Busy People</h2>
+                <p>
+                  No time for long signup processes? AIWorkoutNow gives you instant access to professional-quality 
+                  workout plans. Get started in seconds, not minutes.
+                </p>
+              </div>
+            </div>
+
+            <div className="home-sidebar">
+              <PricingPlans showHeader={false} compact={true} />
             </div>
           </div>
 
-          <WorkoutGenerator
-            onGenerate={handleGenerateWorkout}
-            loading={loading}
-            error={error}
-            workout={workout}
-            disabled={!canGenerate && !checkingAccess}
-          />
-
-          {workout && (
-            <AffiliateProducts workoutType={workout.type || 'general'} />
-          )}
-
-          {/* SEO Content Sections (Hidden visually but present for SEO) */}
-          <div className="seo-content" style={{ display: 'none' }}>
-            <h2>AI Workout Generator Without Signup</h2>
-            <p>
-              Get personalized AI-generated workouts instantly without creating an account. 
-              Start with 3 free workouts and unlock more with one-time payments. No subscriptions, no commitments.
-            </p>
-
-            <h2>Personalized Home & Gym Workouts</h2>
-            <p>
-              Our AI creates custom workout plans tailored to your fitness level, available equipment, 
-              and personal goals. Whether you're at home or in the gym, get workouts that fit your needs.
-            </p>
-
-            <h2>Best AI Fitness App for Busy People</h2>
-            <p>
-              No time for long signup processes? AIWorkoutNow gives you instant access to professional-quality 
-              workout plans. Get started in seconds, not minutes.
-            </p>
+          <div className="home-full-width">
+            <PricingPlans showHeader={true} />
           </div>
-
-          <PricingPlans showHeader={true} />
         </div>
       </div>
 

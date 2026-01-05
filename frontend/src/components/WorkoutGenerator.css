@@ -1,49 +1,86 @@
 .workout-generator {
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
 .workout-form {
   background-color: var(--bg-primary);
-  padding: 2rem;
-  border-radius: 0.75rem;
-  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
   font-weight: 600;
   color: var(--text-primary);
+  font-size: 0.9rem;
 }
 
 .error-message {
-  padding: 1rem;
+  padding: 0.75rem;
   background-color: #fee2e2;
   border: 1px solid var(--error-color);
-  border-radius: 0.5rem;
+  border-radius: 6px;
   color: #991b1b;
   margin-bottom: 1rem;
+  font-size: 0.9rem;
 }
 
-@media (max-width: 768px) {
+.workout-form .btn {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+/* Desktop: 2-column layout */
+@media (min-width: 1025px) {
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+
   .workout-form {
-    padding: 1.5rem;
+    padding: 2rem;
+  }
+}
+
+/* Tablet */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .workout-form {
+    padding: 1.25rem;
   }
   
   .form-grid {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 0.875rem;
+  }
+
+  .workout-form .btn {
+    position: sticky;
+    bottom: 1rem;
+    z-index: 10;
   }
 }
 
