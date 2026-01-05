@@ -12,5 +12,8 @@ public interface IConfigService
     int GetTokensPerMonthPack();
     int GetTokensPerChallengePack();
     int GetTokensPerAnnualPack();
+    Task<string> GetStripeSecretKeyAsync();
+    Task<string> GetStripeWebhookSecretAsync();
+    string GetApiBaseUrl();
 }
 

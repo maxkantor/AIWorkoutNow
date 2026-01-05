@@ -38,18 +38,32 @@ public class WorkoutController : ControllerBase
             var deviceId = request.DeviceId;
             var isFreeUser = request.IsFreeUser;
 
-            // Check daily free limit for free users
+            // Check access: free tier (3 total), unlimited, or tokens
+            // Check for active unlimited access first (shared across both branches)
+            var activeUnlimitedPurchase = await _dynamoService.GetActiveUnlimitedPurchaseAsync(deviceId);
+            
             if (isFreeUser)
             {
-                Console.WriteLine("[WorkoutController] Checking daily free limit...");
-                var today = DateTime.UtcNow.Date.ToString("yyyy-MM-dd");
-                var usage = await _dynamoService.GetAnonymousUsageAsync(deviceId, today);
-                Console.WriteLine($"[WorkoutController] Usage retrieved: {(usage != null ? usage.Count.ToString() : "null")}");
-                var dailyLimit = _configService.GetDailyFreeWorkoutLimit();
-
-                if (usage != null && usage.Count >= dailyLimit)
+                Console.WriteLine("[WorkoutController] Checking free tier (3 total workouts)...");
+                
+                if (activeUnlimitedPurchase != null)
                 {
-                    return BadRequest(new { message = "Daily free workout limit reached. Purchase a token pack for unlimited workouts!" });
+                    Console.WriteLine("[WorkoutController] User has active unlimited access");
+                    // User has unlimited, proceed
+                }
+                else
+                {
+                    // Check total free workouts (3 total, not daily)
+                    var totalFreeWorkouts = await _dynamoService.GetTotalFreeWorkoutsAsync(deviceId);
+                    Console.WriteLine($"[WorkoutController] Total free workouts used: {totalFreeWorkouts}");
+                    
+                    if (totalFreeWorkouts >= 3)
+                    {
+                        return BadRequest(new { 
+                            message = "You've used your 3 free workouts. Unlock more AI workouts instantly!",
+                            code = "FREE_TIER_EXHAUSTED"
+                        });
+                    }
                 }
             }
             else
@@ -60,7 +74,14 @@ public class WorkoutController : ControllerBase
                 Console.WriteLine($"[WorkoutController] Token balance: {(tokenBalance != null ? tokenBalance.TokensRemaining.ToString() : "null")}");
                 if (tokenBalance == null || tokenBalance.TokensRemaining <= 0)
                 {
-                    return BadRequest(new { message = "Insufficient tokens. Please purchase a token pack." });
+                    // Also check for unlimited access
+                    if (activeUnlimitedPurchase == null)
+                    {
+                        return BadRequest(new { 
+                            message = "Insufficient tokens. Please purchase a token pack.",
+                            code = "INSUFFICIENT_TOKENS"
+                        });
+                    }
                 }
             }
 
@@ -97,13 +118,47 @@ public class WorkoutController : ControllerBase
             await _dynamoService.SaveWorkoutAsync(workout);
             Console.WriteLine("[WorkoutController] Workout saved");
 
-            // Update usage or deduct token
-            if (isFreeUser)
+            // Track activity
+            try
             {
-                Console.WriteLine("[WorkoutController] Incrementing anonymous usage...");
+                await _dynamoService.SaveCustomerActivityAsync(new CustomerActivity
+                {
+                    DeviceId = deviceId,
+                    ActivityType = "workout_generated",
+                    Description = $"Generated {request.WorkoutType} workout ({request.Duration} min, {request.FitnessLevel} level)",
+                    WorkoutId = workout.WorkoutId,
+                    Details = new Dictionary<string, object>
+                    {
+                        { "workoutType", request.WorkoutType },
+                        { "duration", request.Duration },
+                        { "fitnessLevel", request.FitnessLevel },
+                        { "equipment", request.Equipment },
+                        { "isFreeUser", request.IsFreeUser }
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[WorkoutController] Failed to save activity: {ex.Message}");
+                // Don't fail the request if activity tracking fails
+            }
+
+            // Update usage or deduct token
+            // Re-check unlimited access (in case it was granted during this request)
+            var currentUnlimitedPurchase = await _dynamoService.GetActiveUnlimitedPurchaseAsync(deviceId);
+            if (currentUnlimitedPurchase != null)
+            {
+                Console.WriteLine("[WorkoutController] User has unlimited access - no deduction needed");
+                workout.TokensRemaining = null; // Unlimited
+            }
+            else if (isFreeUser)
+            {
+                Console.WriteLine("[WorkoutController] Incrementing free workout usage...");
                 var today = DateTime.UtcNow.Date.ToString("yyyy-MM-dd");
                 await _dynamoService.IncrementAnonymousUsageAsync(deviceId, today);
-                Console.WriteLine("[WorkoutController] Usage incremented");
+                var totalUsed = await _dynamoService.GetTotalFreeWorkoutsAsync(deviceId);
+                workout.TokensRemaining = 3 - totalUsed; // Show remaining free workouts
+                Console.WriteLine($"[WorkoutController] Free workouts remaining: {workout.TokensRemaining}");
             }
             else
             {

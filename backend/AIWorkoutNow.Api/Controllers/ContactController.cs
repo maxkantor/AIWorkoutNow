@@ -32,6 +32,28 @@ public class ContactController : ControllerBase
 
             await _dynamoService.SaveContactMessageAsync(message);
 
+            // Track activity (use email as deviceId for contact submissions)
+            try
+            {
+                await _dynamoService.SaveCustomerActivityAsync(new CustomerActivity
+                {
+                    DeviceId = request.Email, // Use email as identifier for contact submissions
+                    ActivityType = "contact_submitted",
+                    Description = $"Contact form submitted from {request.Email}",
+                    ContactMessageId = message.MessageId,
+                    Details = new Dictionary<string, object>
+                    {
+                        { "email", request.Email },
+                        { "messageLength", request.Message.Length }
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ContactController] Failed to save activity: {ex.Message}");
+                // Don't fail the request if activity tracking fails
+            }
+
             // Send email notification
             await _emailService.SendContactNotificationAsync(message);
 

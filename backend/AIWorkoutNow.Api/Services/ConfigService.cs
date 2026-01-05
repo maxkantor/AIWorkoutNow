@@ -15,5 +15,46 @@ public class ConfigService : IConfigService
     public int GetTokensPerMonthPack() => int.Parse(Environment.GetEnvironmentVariable("TOKENS_PER_MONTH_PACK") ?? "30");
     public int GetTokensPerChallengePack() => int.Parse(Environment.GetEnvironmentVariable("TOKENS_PER_CHALLENGE_PACK") ?? "7");
     public int GetTokensPerAnnualPack() => int.Parse(Environment.GetEnvironmentVariable("TOKENS_PER_ANNUAL_PACK") ?? "365");
+
+    public async Task<string> GetStripeSecretKeyAsync()
+    {
+        var ssm = new Amazon.SimpleSystemsManagement.AmazonSimpleSystemsManagementClient();
+        try
+        {
+            var response = await ssm.GetParameterAsync(new Amazon.SimpleSystemsManagement.Model.GetParameterRequest
+            {
+                Name = "/aiworkoutnow/stripe-secret-key",
+                WithDecryption = true
+            });
+            return response.Parameter.Value;
+        }
+        catch
+        {
+            return Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY") ?? "";
+        }
+    }
+
+    public async Task<string> GetStripeWebhookSecretAsync()
+    {
+        var ssm = new Amazon.SimpleSystemsManagement.AmazonSimpleSystemsManagementClient();
+        try
+        {
+            var response = await ssm.GetParameterAsync(new Amazon.SimpleSystemsManagement.Model.GetParameterRequest
+            {
+                Name = "/aiworkoutnow/stripe-webhook-secret",
+                WithDecryption = true
+            });
+            return response.Parameter.Value;
+        }
+        catch
+        {
+            return Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SECRET") ?? "";
+        }
+    }
+
+    public string GetApiBaseUrl()
+    {
+        return Environment.GetEnvironmentVariable("API_BASE_URL") ?? "https://api.aiworkoutnow.com";
+    }
 }
 

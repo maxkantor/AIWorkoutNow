@@ -31,11 +31,22 @@ public class SendEmailRequest
     public string Body { get; set; } = string.Empty;
 }
 
-
 public class AffiliateClickRequest
 {
     public string DeviceId { get; set; } = string.Empty;
     public string ASIN { get; set; } = string.Empty;
     public string WorkoutId { get; set; } = string.Empty;
     public string? LinkText { get; set; }
+}
+
+public class ContactReplyRequest
+{
+    public string ReplyText { get; set; } = string.Empty;
+}
+
+public class ResetTokensRequest
+{
+    public int NewTokenCount { get; set; }
+    public int PreviousTokenCount { get; set; }
+    public string? Reason { get; set; }
 }

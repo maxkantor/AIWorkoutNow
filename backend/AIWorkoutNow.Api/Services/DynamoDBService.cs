@@ -266,10 +266,688 @@ public class DynamoDBService : IDynamoDBService
         });
         stats.TotalWorkouts = workoutsResponse.Count;
 
-        // Token purchases would be tracked separately (e.g., via Stripe webhooks)
-        stats.TokenPurchases = 0;
+        // Count token purchases from Stripe purchases table
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var purchasesTable = $"{tablePrefix}-StripePurchases";
+        try
+        {
+            var purchasesResponse = await _dynamoDB.ScanAsync(new ScanRequest
+            {
+                TableName = purchasesTable,
+                Select = Select.COUNT
+            });
+            stats.TokenPurchases = purchasesResponse.Count;
+        }
+        catch
+        {
+            stats.TokenPurchases = 0;
+        }
 
         return stats;
+    }
+
+    // CRM Methods
+    public async Task<List<ContactMessage>> GetAllContactMessagesAsync()
+    {
+        var response = await _dynamoDB.ScanAsync(new ScanRequest
+        {
+            TableName = _contactMessagesTable
+        });
+
+        return response.Items.Select(item => new ContactMessage
+        {
+            MessageId = item["MessageId"].S,
+            Email = item["Email"].S,
+            Message = item["Message"].S,
+            CreatedAt = DateTime.Parse(item["CreatedAt"].S)
+        }).OrderByDescending(m => m.CreatedAt).ToList();
+    }
+
+    public async Task<ContactMessage?> GetContactMessageAsync(string messageId)
+    {
+        var response = await _dynamoDB.GetItemAsync(new GetItemRequest
+        {
+            TableName = _contactMessagesTable,
+            Key = new Dictionary<string, AttributeValue>
+            {
+                { "MessageId", new AttributeValue { S = messageId } }
+            }
+        });
+
+        if (!response.Item.Any())
+            return null;
+
+        return new ContactMessage
+        {
+            MessageId = response.Item["MessageId"].S,
+            Email = response.Item["Email"].S,
+            Message = response.Item["Message"].S,
+            CreatedAt = DateTime.Parse(response.Item["CreatedAt"].S)
+        };
+    }
+
+    public async Task SaveContactReplyAsync(ContactReply reply)
+    {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var repliesTable = $"{tablePrefix}-ContactReplies";
+        
+        var document = new Document();
+        document["ReplyId"] = reply.ReplyId;
+        document["MessageId"] = reply.MessageId;
+        document["AdminId"] = reply.AdminId;
+        document["ReplyText"] = reply.ReplyText;
+        document["CreatedAt"] = reply.CreatedAt.ToString("O");
+        document["Sent"] = reply.Sent;
+
+        await _dynamoDB.PutItemAsync(new PutItemRequest
+        {
+            TableName = repliesTable,
+            Item = document.ToAttributeMap()
+        });
+    }
+
+    public async Task<List<ContactReply>> GetContactRepliesAsync(string messageId)
+    {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var repliesTable = $"{tablePrefix}-ContactReplies";
+        
+        var response = await _dynamoDB.ScanAsync(new ScanRequest
+        {
+            TableName = repliesTable,
+            FilterExpression = "MessageId = :msgId",
+            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":msgId", new AttributeValue { S = messageId } }
+            }
+        });
+
+        return response.Items.Select(item => new ContactReply
+        {
+            ReplyId = item["ReplyId"].S,
+            MessageId = item["MessageId"].S,
+            AdminId = item["AdminId"].S,
+            ReplyText = item["ReplyText"].S,
+            CreatedAt = DateTime.Parse(item["CreatedAt"].S),
+            Sent = item.ContainsKey("Sent") && item["Sent"].BOOL
+        }).OrderBy(r => r.CreatedAt).ToList();
+    }
+
+    public async Task SaveStripePurchaseAsync(StripePurchase purchase)
+    {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var purchasesTable = $"{tablePrefix}-StripePurchases";
+        
+        var document = new Document();
+        document["PurchaseId"] = purchase.PurchaseId;
+        document["DeviceId"] = purchase.DeviceId;
+        document["StripeCustomerId"] = purchase.StripeCustomerId;
+        document["StripePaymentIntentId"] = purchase.StripePaymentIntentId;
+        document["StripeSessionId"] = purchase.StripeSessionId;
+        document["PackType"] = purchase.PackType;
+        document["Amount"] = purchase.Amount.ToString("F2");
+        document["Currency"] = purchase.Currency;
+        document["TokensPurchased"] = purchase.TokensPurchased;
+        document["Status"] = purchase.Status;
+        document["CreatedAt"] = purchase.CreatedAt.ToString("O");
+        if (purchase.CompletedAt.HasValue)
+            document["CompletedAt"] = purchase.CompletedAt.Value.ToString("O");
+        if (!string.IsNullOrEmpty(purchase.CustomerEmail))
+            document["CustomerEmail"] = purchase.CustomerEmail;
+        if (!string.IsNullOrEmpty(purchase.CustomerName))
+            document["CustomerName"] = purchase.CustomerName;
+
+        await _dynamoDB.PutItemAsync(new PutItemRequest
+        {
+            TableName = purchasesTable,
+            Item = document.ToAttributeMap()
+        });
+    }
+
+    public async Task<List<StripePurchase>> GetAllStripePurchasesAsync()
+    {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var purchasesTable = $"{tablePrefix}-StripePurchases";
+        
+        var response = await _dynamoDB.ScanAsync(new ScanRequest
+        {
+            TableName = purchasesTable
+        });
+
+        return response.Items.Select(item => new StripePurchase
+        {
+            PurchaseId = item["PurchaseId"].S,
+            DeviceId = item["DeviceId"].S,
+            StripeCustomerId = item["StripeCustomerId"].S,
+            StripePaymentIntentId = item["StripePaymentIntentId"].S,
+            StripeSessionId = item["StripeSessionId"].S,
+            PackType = item["PackType"].S,
+            Amount = decimal.Parse(item["Amount"].S),
+            Currency = item["Currency"].S,
+            TokensPurchased = int.Parse(item["TokensPurchased"].N),
+            Status = item["Status"].S,
+            CreatedAt = DateTime.Parse(item["CreatedAt"].S),
+            CompletedAt = item.ContainsKey("CompletedAt") ? DateTime.Parse(item["CompletedAt"].S) : null,
+            CustomerEmail = item.ContainsKey("CustomerEmail") ? item["CustomerEmail"].S : null,
+            CustomerName = item.ContainsKey("CustomerName") ? item["CustomerName"].S : null
+        }).OrderByDescending(p => p.CreatedAt).ToList();
+    }
+
+    public async Task<List<StripePurchase>> GetPurchasesByDeviceIdAsync(string deviceId)
+    {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var purchasesTable = $"{tablePrefix}-StripePurchases";
+        
+        var response = await _dynamoDB.ScanAsync(new ScanRequest
+        {
+            TableName = purchasesTable,
+            FilterExpression = "DeviceId = :deviceId",
+            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":deviceId", new AttributeValue { S = deviceId } }
+            }
+        });
+
+        return response.Items.Select(item => new StripePurchase
+        {
+            PurchaseId = item["PurchaseId"].S,
+            DeviceId = item["DeviceId"].S,
+            StripeCustomerId = item["StripeCustomerId"].S,
+            StripePaymentIntentId = item["StripePaymentIntentId"].S,
+            StripeSessionId = item["StripeSessionId"].S,
+            PackType = item["PackType"].S,
+            Amount = decimal.Parse(item["Amount"].S),
+            Currency = item["Currency"].S,
+            TokensPurchased = int.Parse(item["TokensPurchased"].N),
+            Status = item["Status"].S,
+            CreatedAt = DateTime.Parse(item["CreatedAt"].S),
+            CompletedAt = item.ContainsKey("CompletedAt") ? DateTime.Parse(item["CompletedAt"].S) : null,
+            CustomerEmail = item.ContainsKey("CustomerEmail") ? item["CustomerEmail"].S : null,
+            CustomerName = item.ContainsKey("CustomerName") ? item["CustomerName"].S : null
+        }).OrderByDescending(p => p.CreatedAt).ToList();
+    }
+
+    public async Task SaveCustomerActivityAsync(CustomerActivity activity)
+    {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var activitiesTable = $"{tablePrefix}-CustomerActivities";
+        
+        var document = new Document();
+        document["ActivityId"] = activity.ActivityId;
+        document["DeviceId"] = activity.DeviceId;
+        document["ActivityType"] = activity.ActivityType;
+        document["Description"] = activity.Description;
+        document["Timestamp"] = activity.Timestamp.ToString("O");
+        if (!string.IsNullOrEmpty(activity.WorkoutId))
+            document["WorkoutId"] = activity.WorkoutId;
+        if (!string.IsNullOrEmpty(activity.PurchaseId))
+            document["PurchaseId"] = activity.PurchaseId;
+        if (!string.IsNullOrEmpty(activity.ContactMessageId))
+            document["ContactMessageId"] = activity.ContactMessageId;
+
+        await _dynamoDB.PutItemAsync(new PutItemRequest
+        {
+            TableName = activitiesTable,
+            Item = document.ToAttributeMap()
+        });
+    }
+
+    public async Task<List<CustomerActivity>> GetCustomerActivitiesAsync(string deviceId, int limit = 50)
+    {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var activitiesTable = $"{tablePrefix}-CustomerActivities";
+        
+        var response = await _dynamoDB.ScanAsync(new ScanRequest
+        {
+            TableName = activitiesTable,
+            FilterExpression = "DeviceId = :deviceId",
+            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":deviceId", new AttributeValue { S = deviceId } }
+            }
+        });
+
+        return response.Items.Select(item => new CustomerActivity
+        {
+            ActivityId = item["ActivityId"].S,
+            DeviceId = item["DeviceId"].S,
+            ActivityType = item["ActivityType"].S,
+            Description = item["Description"].S,
+            Timestamp = DateTime.Parse(item["Timestamp"].S),
+            WorkoutId = item.ContainsKey("WorkoutId") ? item["WorkoutId"].S : null,
+            PurchaseId = item.ContainsKey("PurchaseId") ? item["PurchaseId"].S : null,
+            ContactMessageId = item.ContainsKey("ContactMessageId") ? item["ContactMessageId"].S : null
+        }).OrderByDescending(a => a.Timestamp).Take(limit).ToList();
+    }
+
+    public async Task<List<CustomerActivity>> GetAllActivitiesAsync(int limit = 100)
+    {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var activitiesTable = $"{tablePrefix}-CustomerActivities";
+        
+        var response = await _dynamoDB.ScanAsync(new ScanRequest
+        {
+            TableName = activitiesTable
+        });
+
+        return response.Items.Select(item => new CustomerActivity
+        {
+            ActivityId = item["ActivityId"].S,
+            DeviceId = item["DeviceId"].S,
+            ActivityType = item["ActivityType"].S,
+            Description = item["Description"].S,
+            Timestamp = DateTime.Parse(item["Timestamp"].S),
+            WorkoutId = item.ContainsKey("WorkoutId") ? item["WorkoutId"].S : null,
+            PurchaseId = item.ContainsKey("PurchaseId") ? item["PurchaseId"].S : null,
+            ContactMessageId = item.ContainsKey("ContactMessageId") ? item["ContactMessageId"].S : null
+        }).OrderByDescending(a => a.Timestamp).Take(limit).ToList();
+    }
+
+    public async Task<List<CustomerSummary>> GetAllCustomersAsync()
+    {
+        var customers = new Dictionary<string, CustomerSummary>();
+        
+        // Get all device IDs from anonymous usage
+        var freeUsersResponse = await _dynamoDB.ScanAsync(new ScanRequest
+        {
+            TableName = _anonymousUsageTable
+        });
+        
+        foreach (var item in freeUsersResponse.Items)
+        {
+            var deviceId = item["DeviceId"].S;
+            if (!customers.ContainsKey(deviceId))
+            {
+                customers[deviceId] = new CustomerSummary
+                {
+                    DeviceId = deviceId,
+                    IsPaidUser = false,
+                    TokensRemaining = 0,
+                    TotalWorkouts = 0,
+                    TotalPurchases = 0,
+                    TotalSpent = 0
+                };
+            }
+        }
+
+        // Get all paid users
+        var paidUsersResponse = await _dynamoDB.ScanAsync(new ScanRequest
+        {
+            TableName = _userTokensTable
+        });
+        
+        foreach (var item in paidUsersResponse.Items)
+        {
+            var deviceId = item["DeviceId"].S;
+            if (!customers.ContainsKey(deviceId))
+            {
+                customers[deviceId] = new CustomerSummary
+                {
+                    DeviceId = deviceId,
+                    IsPaidUser = true,
+                    TokensRemaining = int.Parse(item["TokensRemaining"].N),
+                    TotalWorkouts = 0,
+                    TotalPurchases = 0,
+                    TotalSpent = 0
+                };
+            }
+            else
+            {
+                customers[deviceId].IsPaidUser = true;
+                customers[deviceId].TokensRemaining = int.Parse(item["TokensRemaining"].N);
+            }
+        }
+
+        // Get workout counts per device
+        var workoutsResponse = await _dynamoDB.ScanAsync(new ScanRequest
+        {
+            TableName = _workoutsTable
+        });
+        
+        // Note: This is simplified - in production, you'd want to track deviceId in workouts
+        // For now, we'll count total workouts
+
+        // Get purchase data
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var purchasesTable = $"{tablePrefix}-StripePurchases";
+        
+        try
+        {
+            var purchasesResponse = await _dynamoDB.ScanAsync(new ScanRequest
+            {
+                TableName = purchasesTable
+            });
+            
+            foreach (var item in purchasesResponse.Items)
+            {
+                var deviceId = item["DeviceId"].S;
+                if (customers.ContainsKey(deviceId))
+                {
+                    customers[deviceId].TotalPurchases++;
+                    customers[deviceId].TotalSpent += decimal.Parse(item["Amount"].S);
+                    if (string.IsNullOrEmpty(customers[deviceId].Email) && item.ContainsKey("CustomerEmail"))
+                        customers[deviceId].Email = item["CustomerEmail"].S;
+                    if (string.IsNullOrEmpty(customers[deviceId].Name) && item.ContainsKey("CustomerName"))
+                        customers[deviceId].Name = item["CustomerName"].S;
+                }
+            }
+        }
+        catch
+        {
+            // Table might not exist yet
+        }
+
+        return customers.Values.OrderByDescending(c => c.LastActivity ?? c.FirstSeen).ToList();
+    }
+
+    public async Task<CustomerSummary?> GetCustomerSummaryAsync(string deviceId)
+    {
+        var summary = new CustomerSummary
+        {
+            DeviceId = deviceId,
+            IsPaidUser = false,
+            TokensRemaining = 0,
+            TotalWorkouts = 0,
+            TotalPurchases = 0,
+            TotalSpent = 0
+        };
+
+        // Check if paid user
+        var tokens = await GetUserTokensAsync(deviceId);
+        if (tokens != null)
+        {
+            summary.IsPaidUser = true;
+            summary.TokensRemaining = tokens.TokensRemaining;
+        }
+
+        // Get purchases
+        var purchases = await GetPurchasesByDeviceIdAsync(deviceId);
+        summary.TotalPurchases = purchases.Count;
+        summary.TotalSpent = purchases.Sum(p => p.Amount);
+        if (purchases.Any())
+        {
+            summary.Email = purchases.First().CustomerEmail;
+            summary.Name = purchases.First().CustomerName;
+        }
+
+        // Get activities
+        var activities = await GetCustomerActivitiesAsync(deviceId, 10);
+        summary.RecentActivities = activities;
+        if (activities.Any())
+        {
+            summary.LastActivity = activities.First().Timestamp;
+            summary.FirstSeen = activities.Last().Timestamp;
+        }
+
+        return summary;
+    }
+
+    public async Task ResetUserTokensAsync(string deviceId, int newTokenCount)
+    {
+        var tokens = await GetUserTokensAsync(deviceId);
+        if (tokens == null)
+        {
+            tokens = new UserTokens
+            {
+                DeviceId = deviceId,
+                TokensRemaining = newTokenCount
+            };
+        }
+        else
+        {
+            tokens.TokensRemaining = newTokenCount;
+        }
+
+        await SaveUserTokensAsync(tokens);
+    }
+
+    // Pricing Plan Methods
+    public async Task SavePricingPlanAsync(PricingPlan plan)
+    {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var plansTable = $"{tablePrefix}-PricingPlans";
+        
+        var document = new Document();
+        document["PlanId"] = plan.PlanId;
+        document["Name"] = plan.Name;
+        document["Price"] = plan.Price.ToString("F2");
+        document["Currency"] = plan.Currency;
+        if (plan.TokenCount.HasValue)
+            document["TokenCount"] = plan.TokenCount.Value;
+        document["IsUnlimited"] = plan.IsUnlimited;
+        if (plan.UnlimitedDays.HasValue)
+            document["UnlimitedDays"] = plan.UnlimitedDays.Value;
+        document["DisplayOrder"] = plan.DisplayOrder;
+        document["IsRecommended"] = plan.IsRecommended;
+        if (!string.IsNullOrEmpty(plan.BadgeText))
+            document["BadgeText"] = plan.BadgeText;
+        if (!string.IsNullOrEmpty(plan.MicroCopy))
+            document["MicroCopy"] = plan.MicroCopy;
+        document["IsActive"] = plan.IsActive;
+        document["StripePriceId"] = plan.StripePriceId;
+        document["CreatedAt"] = plan.CreatedAt.ToString("O");
+        if (plan.UpdatedAt.HasValue)
+            document["UpdatedAt"] = plan.UpdatedAt.Value.ToString("O");
+
+        await _dynamoDB.PutItemAsync(new PutItemRequest
+        {
+            TableName = plansTable,
+            Item = document.ToAttributeMap()
+        });
+    }
+
+    public async Task<List<PricingPlan>> GetAllPricingPlansAsync()
+    {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var plansTable = $"{tablePrefix}-PricingPlans";
+        
+        var response = await _dynamoDB.ScanAsync(new ScanRequest
+        {
+            TableName = plansTable,
+            FilterExpression = "IsActive = :active",
+            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":active", new AttributeValue { BOOL = true } }
+            }
+        });
+
+        return response.Items.Select(item => new PricingPlan
+        {
+            PlanId = item["PlanId"].S,
+            Name = item["Name"].S,
+            Price = decimal.Parse(item["Price"].S),
+            Currency = item["Currency"].S,
+            TokenCount = item.ContainsKey("TokenCount") ? int.Parse(item["TokenCount"].N) : null,
+            IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL,
+            UnlimitedDays = item.ContainsKey("UnlimitedDays") ? int.Parse(item["UnlimitedDays"].N) : null,
+            DisplayOrder = int.Parse(item["DisplayOrder"].N),
+            IsRecommended = item.ContainsKey("IsRecommended") && item["IsRecommended"].BOOL,
+            BadgeText = item.ContainsKey("BadgeText") ? item["BadgeText"].S : null,
+            MicroCopy = item.ContainsKey("MicroCopy") ? item["MicroCopy"].S : null,
+            IsActive = item.ContainsKey("IsActive") ? item["IsActive"].BOOL : true,
+            StripePriceId = item["StripePriceId"].S,
+            CreatedAt = DateTime.Parse(item["CreatedAt"].S),
+            UpdatedAt = item.ContainsKey("UpdatedAt") ? DateTime.Parse(item["UpdatedAt"].S) : null
+        }).OrderBy(p => p.DisplayOrder).ToList();
+    }
+
+    public async Task<PricingPlan?> GetPricingPlanAsync(string planId)
+    {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var plansTable = $"{tablePrefix}-PricingPlans";
+        
+        var response = await _dynamoDB.GetItemAsync(new GetItemRequest
+        {
+            TableName = plansTable,
+            Key = new Dictionary<string, AttributeValue>
+            {
+                { "PlanId", new AttributeValue { S = planId } }
+            }
+        });
+
+        if (!response.Item.Any())
+            return null;
+
+        var item = response.Item;
+        return new PricingPlan
+        {
+            PlanId = item["PlanId"].S,
+            Name = item["Name"].S,
+            Price = decimal.Parse(item["Price"].S),
+            Currency = item["Currency"].S,
+            TokenCount = item.ContainsKey("TokenCount") ? int.Parse(item["TokenCount"].N) : null,
+            IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL,
+            UnlimitedDays = item.ContainsKey("UnlimitedDays") ? int.Parse(item["UnlimitedDays"].N) : null,
+            DisplayOrder = int.Parse(item["DisplayOrder"].N),
+            IsRecommended = item.ContainsKey("IsRecommended") && item["IsRecommended"].BOOL,
+            BadgeText = item.ContainsKey("BadgeText") ? item["BadgeText"].S : null,
+            MicroCopy = item.ContainsKey("MicroCopy") ? item["MicroCopy"].S : null,
+            IsActive = item.ContainsKey("IsActive") ? item["IsActive"].BOOL : true,
+            StripePriceId = item["StripePriceId"].S,
+            CreatedAt = DateTime.Parse(item["CreatedAt"].S),
+            UpdatedAt = item.ContainsKey("UpdatedAt") ? DateTime.Parse(item["UpdatedAt"].S) : null
+        };
+    }
+
+    public async Task DeletePricingPlanAsync(string planId)
+    {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var plansTable = $"{tablePrefix}-PricingPlans";
+        
+        await _dynamoDB.DeleteItemAsync(new DeleteItemRequest
+        {
+            TableName = plansTable,
+            Key = new Dictionary<string, AttributeValue>
+            {
+                { "PlanId", new AttributeValue { S = planId } }
+            }
+        });
+    }
+
+    public async Task SaveUserPurchaseAsync(UserPurchase purchase)
+    {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var purchasesTable = $"{tablePrefix}-UserPurchases";
+        
+        var document = new Document();
+        document["PurchaseId"] = purchase.PurchaseId;
+        document["DeviceId"] = purchase.DeviceId;
+        document["PlanId"] = purchase.PlanId;
+        document["StripeSessionId"] = purchase.StripeSessionId;
+        document["StripePaymentIntentId"] = purchase.StripePaymentIntentId;
+        document["Status"] = purchase.Status;
+        document["PurchasedAt"] = purchase.PurchasedAt.ToString("O");
+        if (purchase.ExpiresAt.HasValue)
+            document["ExpiresAt"] = purchase.ExpiresAt.Value.ToString("O");
+        if (purchase.TokensGranted.HasValue)
+            document["TokensGranted"] = purchase.TokensGranted.Value;
+        document["IsUnlimited"] = purchase.IsUnlimited;
+
+        await _dynamoDB.PutItemAsync(new PutItemRequest
+        {
+            TableName = purchasesTable,
+            Item = document.ToAttributeMap()
+        });
+    }
+
+    public async Task<UserPurchase?> GetUserPurchaseAsync(string purchaseId)
+    {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var purchasesTable = $"{tablePrefix}-UserPurchases";
+        
+        var response = await _dynamoDB.GetItemAsync(new GetItemRequest
+        {
+            TableName = purchasesTable,
+            Key = new Dictionary<string, AttributeValue>
+            {
+                { "PurchaseId", new AttributeValue { S = purchaseId } }
+            }
+        });
+
+        if (!response.Item.Any())
+            return null;
+
+        var item = response.Item;
+        return new UserPurchase
+        {
+            PurchaseId = item["PurchaseId"].S,
+            DeviceId = item["DeviceId"].S,
+            PlanId = item["PlanId"].S,
+            StripeSessionId = item["StripeSessionId"].S,
+            StripePaymentIntentId = item["StripePaymentIntentId"].S,
+            Status = item["Status"].S,
+            PurchasedAt = DateTime.Parse(item["PurchasedAt"].S),
+            ExpiresAt = item.ContainsKey("ExpiresAt") ? DateTime.Parse(item["ExpiresAt"].S) : null,
+            TokensGranted = item.ContainsKey("TokensGranted") ? int.Parse(item["TokensGranted"].N) : null,
+            IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL
+        };
+    }
+
+    public async Task<List<UserPurchase>> GetUserPurchasesAsync(string deviceId)
+    {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var purchasesTable = $"{tablePrefix}-UserPurchases";
+        
+        var response = await _dynamoDB.ScanAsync(new ScanRequest
+        {
+            TableName = purchasesTable,
+            FilterExpression = "DeviceId = :deviceId",
+            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":deviceId", new AttributeValue { S = deviceId } }
+            }
+        });
+
+        return response.Items.Select(item => new UserPurchase
+        {
+            PurchaseId = item["PurchaseId"].S,
+            DeviceId = item["DeviceId"].S,
+            PlanId = item["PlanId"].S,
+            StripeSessionId = item["StripeSessionId"].S,
+            StripePaymentIntentId = item["StripePaymentIntentId"].S,
+            Status = item["Status"].S,
+            PurchasedAt = DateTime.Parse(item["PurchasedAt"].S),
+            ExpiresAt = item.ContainsKey("ExpiresAt") ? DateTime.Parse(item["ExpiresAt"].S) : null,
+            TokensGranted = item.ContainsKey("TokensGranted") ? int.Parse(item["TokensGranted"].N) : null,
+            IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL
+        }).OrderByDescending(p => p.PurchasedAt).ToList();
+    }
+
+    public async Task<UserPurchase?> GetActiveUnlimitedPurchaseAsync(string deviceId)
+    {
+        var purchases = await GetUserPurchasesAsync(deviceId);
+        var now = DateTime.UtcNow;
+        
+            return purchases.FirstOrDefault(p => 
+            p.IsUnlimited && 
+            p.Status == "completed" && 
+            (p.ExpiresAt == null || p.ExpiresAt > now));
+    }
+
+    public async Task<int> GetTotalFreeWorkoutsAsync(string deviceId)
+    {
+        // Count total workouts generated by this device
+        // We'll track this via anonymous usage across all dates
+        var response = await _dynamoDB.ScanAsync(new ScanRequest
+        {
+            TableName = _anonymousUsageTable,
+            FilterExpression = "DeviceId = :deviceId",
+            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":deviceId", new AttributeValue { S = deviceId } }
+            }
+        });
+
+        // Sum up all counts across all dates
+        int total = 0;
+        foreach (var item in response.Items)
+        {
+            if (item.ContainsKey("Count"))
+            {
+                total += int.Parse(item["Count"].N);
+            }
+        }
+
+        return total;
     }
 }
 

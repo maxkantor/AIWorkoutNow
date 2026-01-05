@@ -15,7 +15,33 @@ public interface IDynamoDBService
     Task SaveAdminUserAsync(AdminUser admin);
     Task<AdminUser?> GetAdminUserAsync(string email);
     Task SaveContactMessageAsync(ContactMessage message);
+    Task<List<ContactMessage>> GetAllContactMessagesAsync();
+    Task<ContactMessage?> GetContactMessageAsync(string messageId);
+    Task SaveContactReplyAsync(ContactReply reply);
+    Task<List<ContactReply>> GetContactRepliesAsync(string messageId);
     Task<AdminStats> GetAdminStatsAsync();
+    
+    // CRM Methods
+    Task SaveStripePurchaseAsync(StripePurchase purchase);
+    Task<List<StripePurchase>> GetAllStripePurchasesAsync();
+    Task<List<StripePurchase>> GetPurchasesByDeviceIdAsync(string deviceId);
+    Task SaveCustomerActivityAsync(CustomerActivity activity);
+    Task<List<CustomerActivity>> GetCustomerActivitiesAsync(string deviceId, int limit = 50);
+    Task<List<CustomerActivity>> GetAllActivitiesAsync(int limit = 100);
+    Task<List<CustomerSummary>> GetAllCustomersAsync();
+    Task<CustomerSummary?> GetCustomerSummaryAsync(string deviceId);
+    Task ResetUserTokensAsync(string deviceId, int newTokenCount);
+    
+    // Pricing Plan Methods
+    Task SavePricingPlanAsync(PricingPlan plan);
+    Task<List<PricingPlan>> GetAllPricingPlansAsync();
+    Task<PricingPlan?> GetPricingPlanAsync(string planId);
+    Task DeletePricingPlanAsync(string planId);
+    Task SaveUserPurchaseAsync(UserPurchase purchase);
+    Task<UserPurchase?> GetUserPurchaseAsync(string purchaseId);
+    Task<List<UserPurchase>> GetUserPurchasesAsync(string deviceId);
+    Task<UserPurchase?> GetActiveUnlimitedPurchaseAsync(string deviceId);
+    Task<int> GetTotalFreeWorkoutsAsync(string deviceId);
 }
 
 public class AdminStats
