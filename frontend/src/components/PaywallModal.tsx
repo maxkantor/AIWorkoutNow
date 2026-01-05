@@ -9,7 +9,7 @@ interface PaywallModalProps {
   onPurchaseComplete?: () => void;
 }
 
-function PaywallModal({ isOpen, onClose, onPurchaseComplete }: PaywallModalProps) {
+function PaywallModal({ isOpen, onClose, onPurchaseComplete: _onPurchaseComplete }: PaywallModalProps) {
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
