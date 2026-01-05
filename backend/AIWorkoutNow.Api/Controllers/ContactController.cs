@@ -7,7 +7,6 @@ namespace AIWorkoutNow.Api.Controllers;
 
 [ApiController]
 [Route("contact")]
-[EnableCors("AllowAll")]
 public class ContactController : ControllerBase
 {
     private readonly IDynamoDBService _dynamoService;
