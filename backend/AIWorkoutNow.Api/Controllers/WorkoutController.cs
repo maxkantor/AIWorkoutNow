@@ -170,10 +170,17 @@ public class WorkoutController : ControllerBase
             }
 
             Console.WriteLine("[WorkoutController] Returning success response");
+            Console.WriteLine("[WorkoutController] Returning success response");
             return Ok(workout);
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"[WorkoutController] Error in GenerateWorkout: {ex.Message}");
+            Console.WriteLine($"[WorkoutController] Stack trace: {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"[WorkoutController] Inner exception: {ex.InnerException.Message}");
+            }
             return StatusCode(500, new { message = "Failed to generate workout", error = ex.Message });
         }
     }

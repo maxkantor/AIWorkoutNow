@@ -70,7 +70,7 @@ public class PricingController : ControllerBase
                 hasFreeAccess,
                 freeWorkoutsRemaining,
                 hasUnlimitedAccess,
-                unlimitedExpiresAt = unlimitedPurchase?.ExpiresAt,
+                unlimitedExpiresAt = unlimitedPurchase?.ExpiresAt?.ToString("O"),
                 hasTokenAccess,
                 tokensRemaining = tokens?.TokensRemaining ?? 0,
                 canGenerateWorkout = hasFreeAccess || hasUnlimitedAccess || hasTokenAccess
@@ -78,6 +78,8 @@ public class PricingController : ControllerBase
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"[PricingController] Error in GetUserAccessStatus: {ex.Message}");
+            Console.WriteLine($"[PricingController] Stack trace: {ex.StackTrace}");
             return StatusCode(500, new { message = "Failed to get access status", error = ex.Message });
         }
     }
