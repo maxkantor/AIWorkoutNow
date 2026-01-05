@@ -78,7 +78,7 @@ function PricingPlans({ showHeader = true, compact = false }: PricingPlansProps)
         {plans.map((plan, index) => (
           <div
             key={plan.planId}
-            className={`pricing-card ${plan.isRecommended ? 'recommended' : ''} ${showAllPlans || index < 2 ? 'show-all' : ''}`}
+            className={`pricing-card ${plan.isRecommended ? 'recommended' : ''} ${showAllPlans || index < 2 || compact ? '' : 'hidden-mobile'}`}
           >
             {plan.isRecommended && (
               <div className="recommended-badge">

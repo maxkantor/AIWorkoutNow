@@ -262,11 +262,11 @@
     padding: 1.25rem;
   }
 
-  .pricing-card:not(:nth-child(-n+2)) {
+  .pricing-grid .pricing-card.hidden-mobile {
     display: none;
   }
 
   .pricing-card.show-all {
-    display: flex;
+    display: flex !important;
   }
 }
