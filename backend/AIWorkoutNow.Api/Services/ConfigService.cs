@@ -18,12 +18,13 @@ public class ConfigService : IConfigService
 
     public async Task<string> GetStripeSecretKeyAsync()
     {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
         var ssm = new Amazon.SimpleSystemsManagement.AmazonSimpleSystemsManagementClient();
         try
         {
             var response = await ssm.GetParameterAsync(new Amazon.SimpleSystemsManagement.Model.GetParameterRequest
             {
-                Name = "/aiworkoutnow/stripe-secret-key",
+                Name = $"/{tablePrefix}/stripe-secret-key",
                 WithDecryption = true
             });
             return response.Parameter.Value;
@@ -36,12 +37,13 @@ public class ConfigService : IConfigService
 
     public async Task<string> GetStripeWebhookSecretAsync()
     {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
         var ssm = new Amazon.SimpleSystemsManagement.AmazonSimpleSystemsManagementClient();
         try
         {
             var response = await ssm.GetParameterAsync(new Amazon.SimpleSystemsManagement.Model.GetParameterRequest
             {
-                Name = "/aiworkoutnow/stripe-webhook-secret",
+                Name = $"/{tablePrefix}/stripe-webhook-secret",
                 WithDecryption = true
             });
             return response.Parameter.Value;
@@ -49,6 +51,25 @@ public class ConfigService : IConfigService
         catch
         {
             return Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SECRET") ?? "";
+        }
+    }
+
+    public async Task<string> GetStripePublishableKeyAsync()
+    {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var ssm = new Amazon.SimpleSystemsManagement.AmazonSimpleSystemsManagementClient();
+        try
+        {
+            var response = await ssm.GetParameterAsync(new Amazon.SimpleSystemsManagement.Model.GetParameterRequest
+            {
+                Name = $"/{tablePrefix}/stripe-publishable-key",
+                WithDecryption = false // Publishable key doesn't need encryption
+            });
+            return response.Parameter.Value;
+        }
+        catch
+        {
+            return Environment.GetEnvironmentVariable("STRIPE_PUBLISHABLE_KEY") ?? "";
         }
     }
 
