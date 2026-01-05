@@ -7,9 +7,10 @@ interface WorkoutGeneratorProps {
   loading: boolean;
   error: string | null;
   workout: any;
+  disabled?: boolean;
 }
 
-function WorkoutGenerator({ onGenerate, loading, error, workout }: WorkoutGeneratorProps) {
+function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = false }: WorkoutGeneratorProps) {
   const [fitnessLevel, setFitnessLevel] = useState('beginner');
   const [workoutType, setWorkoutType] = useState('full-body');
   const [duration, setDuration] = useState('30');
@@ -126,8 +127,8 @@ function WorkoutGenerator({ onGenerate, loading, error, workout }: WorkoutGenera
           </div>
         )}
 
-        <button type="submit" className="btn" disabled={loading}>
-          {loading ? 'Generating Workout...' : 'Generate AI Workout'}
+        <button type="submit" className="btn" disabled={loading || disabled}>
+          {loading ? 'Generating Workout...' : disabled ? 'Unlock More Workouts' : 'Generate AI Workout'}
         </button>
       </form>
 

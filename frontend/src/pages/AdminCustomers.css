@@ -1,0 +1,109 @@
+.admin-customers {
+  padding: 2rem 0;
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  margin: 0;
+  color: #2c3e50;
+}
+
+.search-bar {
+  margin-bottom: 1.5rem;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 500px;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.customers-table {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.customers-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.customers-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.customers-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.customers-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.customers-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.device-id {
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.badge-paid {
+  background: #d4edda;
+  color: #155724;
+}
+
+.badge-free {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.no-data {
+  text-align: center;
+  color: #999;
+  padding: 2rem;
+}
+
+@media (max-width: 768px) {
+  .customers-table {
+    overflow-x: auto;
+  }
+  
+  .customers-table table {
+    min-width: 1000px;
+  }
+}

@@ -1,0 +1,140 @@
+.admin-contact-detail {
+  padding: 2rem 0;
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
+.contact-detail-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.contact-meta {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #eee;
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.meta-item .label {
+  font-size: 0.85rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.meta-item .value {
+  font-size: 1.1rem;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.contact-message-content h3 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+}
+
+.contact-message-content p {
+  color: #666;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.replies-section {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.replies-section h2 {
+  margin: 0 0 1.5rem 0;
+  color: #2c3e50;
+}
+
+.replies-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.reply-item {
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #667eea;
+}
+
+.reply-header {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.reply-admin {
+  font-weight: 600;
+  color: #667eea;
+}
+
+.reply-date {
+  color: #999;
+}
+
+.reply-sent {
+  color: #28a745;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.reply-text {
+  color: #2c3e50;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.reply-section {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.reply-section h2 {
+  margin: 0 0 1.5rem 0;
+  color: #2c3e50;
+}
+
+.reply-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.reply-textarea {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.reply-textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}

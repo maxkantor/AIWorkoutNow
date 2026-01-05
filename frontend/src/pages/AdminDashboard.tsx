@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { getAdminStats } from '../services/api';
 import './AdminDashboard.css';
@@ -96,9 +96,30 @@ function AdminDashboard() {
             </div>
           )}
 
-          <div className="dashboard-section">
-            <h2>Recent Activity</h2>
-            <p>Activity logs and contact messages will appear here.</p>
+          <div className="dashboard-nav">
+            <h2>Quick Navigation</h2>
+            <div className="nav-grid">
+              <Link to="/admin/customers" className="nav-card">
+                <div className="nav-icon">👥</div>
+                <h3>Customers</h3>
+                <p>View all customers and their activity</p>
+              </Link>
+              <Link to="/admin/contacts" className="nav-card">
+                <div className="nav-icon">📧</div>
+                <h3>Contact Messages</h3>
+                <p>View and reply to contact messages</p>
+              </Link>
+              <Link to="/admin/purchases" className="nav-card">
+                <div className="nav-icon">💰</div>
+                <h3>Stripe Purchases</h3>
+                <p>View all payment transactions</p>
+              </Link>
+              <Link to="/admin/activities" className="nav-card">
+                <div className="nav-icon">📊</div>
+                <h3>All Activities</h3>
+                <p>View system-wide activity logs</p>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

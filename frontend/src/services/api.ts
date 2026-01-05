@@ -44,40 +44,54 @@ export async function generateWorkout(
   deviceId: string,
   isFreeUser: boolean
 ): Promise<WorkoutResponse> {
-  const response = await fetch(`${API_BASE_URL}/generate-workout`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      ...preferences,
-      deviceId,
-      isFreeUser,
-    }),
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}/generate-workout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...preferences,
+        deviceId,
+        isFreeUser,
+      }),
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Failed to generate workout' }));
-    throw new Error(error.message || 'Failed to generate workout');
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to generate workout' }));
+      throw new Error(error.message || 'Failed to generate workout');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error('Connection failed. Please check your internet connection and try again.');
+    }
+    throw error;
   }
-
-  return response.json();
 }
 
 export async function checkTokenBalance(deviceId: string): Promise<number> {
-  const response = await fetch(`${API_BASE_URL}/token-balance?deviceId=${deviceId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}/token-balance?deviceId=${deviceId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-  if (!response.ok) {
-    throw new Error('Failed to check token balance');
+    if (!response.ok) {
+      throw new Error('Failed to check token balance');
+    }
+
+    const data = await response.json();
+    return data.tokensRemaining || 0;
+  } catch (error: any) {
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error('Connection failed. Please check your internet connection.');
+    }
+    throw error;
   }
-
-  const data = await response.json();
-  return data.tokensRemaining || 0;
 }
 
 export async function submitContact(email: string, message: string): Promise<void> {
@@ -150,5 +164,122 @@ export async function trackAffiliateClick(
   if (!response.ok) {
     // Don't throw error - tracking failures shouldn't break the UI
     console.error('Failed to track affiliate click');
+  }
+}
+
+// Pricing Plans API
+export interface PricingPlan {
+  planId: string;
+  name: string;
+  price: number;
+  currency: string;
+  tokenCount?: number;
+  isUnlimited: boolean;
+  unlimitedDays?: number;
+  displayOrder: number;
+  isRecommended: boolean;
+  badgeText?: string;
+  microCopy?: string;
+  isActive: boolean;
+  stripePriceId: string;
+}
+
+export interface UserAccessStatus {
+  hasFreeAccess: boolean;
+  freeWorkoutsRemaining: number;
+  hasUnlimitedAccess: boolean;
+  unlimitedExpiresAt?: string;
+  hasTokenAccess: boolean;
+  tokensRemaining: number;
+  canGenerateWorkout: boolean;
+}
+
+export async function getPricingPlans(): Promise<PricingPlan[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/pricing-plans`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch pricing plans');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error('Connection failed. Please check your internet connection.');
+    }
+    throw error;
+  }
+}
+
+export async function getFreeWorkoutsRemaining(deviceId: string): Promise<{ remaining: number; totalUsed: number }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/free-workouts-remaining?deviceId=${deviceId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get free workouts');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error('Connection failed. Please check your internet connection.');
+    }
+    throw error;
+  }
+}
+
+export async function getUserAccessStatus(deviceId: string): Promise<UserAccessStatus> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/user-access-status?deviceId=${deviceId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get access status');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error('Connection failed. Please check your internet connection.');
+    }
+    throw error;
+  }
+}
+
+export async function createCheckoutSession(deviceId: string, planId: string): Promise<{ sessionId: string; url: string }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/create-checkout-session`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ deviceId, planId }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to create checkout session' }));
+      throw new Error(error.message || 'Failed to create checkout session');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error('Connection failed. Please check your internet connection and try again.');
+    }
+    throw error;
   }
 }

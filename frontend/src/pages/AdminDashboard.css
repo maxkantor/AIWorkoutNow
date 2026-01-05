@@ -55,6 +55,60 @@
   color: var(--text-primary);
 }
 
+.dashboard-nav {
+  background-color: var(--bg-primary);
+  padding: 2rem;
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow);
+  margin-top: 2rem;
+}
+
+.dashboard-nav h2 {
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+.nav-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.nav-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+  border-radius: 0.75rem;
+  text-decoration: none;
+  color: white;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.nav-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+}
+
+.nav-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.nav-card h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.nav-card p {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 0.95rem;
+}
+
 .loading,
 .error-message {
   text-align: center;
