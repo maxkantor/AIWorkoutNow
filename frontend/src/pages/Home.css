@@ -110,11 +110,28 @@
 }
 
 .seo-content {
-  position: absolute;
-  left: -9999px;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
+  margin-top: 3rem;
+  padding: 2rem 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.seo-content h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  margin-top: 1.5rem;
+  color: var(--text-primary);
+}
+
+.seo-content h2:first-child {
+  margin-top: 0;
+}
+
+.seo-content p {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
 }
 
 .hero {
@@ -283,16 +300,22 @@
   }
 
   .seo-content {
-    padding: 1rem 0;
+    padding: 1.5rem 0;
+    margin-top: 2rem;
   }
 
   .seo-content h2 {
     font-size: 1.25rem;
     margin-bottom: 0.5rem;
+    margin-top: 1.25rem;
+  }
+
+  .seo-content h2:first-child {
+    margin-top: 0;
   }
 
   .seo-content p {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     line-height: 1.6;
   }
 }
