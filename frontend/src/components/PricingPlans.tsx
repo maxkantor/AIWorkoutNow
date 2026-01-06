@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getPricingPlans, createCheckoutSession, PricingPlan } from '../services/api';
 import { getDeviceId } from '../utils/storage';
+import './PricingPlans.css';
 
 interface PricingPlansProps {
   showHeader?: boolean;

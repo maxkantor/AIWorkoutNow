@@ -7,6 +7,7 @@ import AffiliateProducts from '../components/AffiliateProducts';
 import { getDeviceId, getTokenBalance } from '../utils/storage';
 import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus } from '../services/api';
 import { useHeroContext } from '../components/Layout';
+import './Home.css';
 
 function Home() {
   const [workout, setWorkout] = useState<any>(null);
