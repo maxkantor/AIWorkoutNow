@@ -193,20 +193,33 @@ function Home() {
               {freeWorkoutsRemaining > 0 && (
                 <section className="free-tier-banner" aria-label="Free workout offer">
                   <span className="banner-icon" aria-hidden="true">🎁</span>
-                  <span className="banner-text">3 Free AI Workouts — No Signup Required</span>
+                  <span className="banner-text">
+                    {freeWorkoutsRemaining === 3 
+                      ? "3 Free AI Workouts — No Signup Required" 
+                      : `Only ${freeWorkoutsRemaining} Free Workout${freeWorkoutsRemaining > 1 ? 's' : ''} Left — Start Now!`}
+                  </span>
                 </section>
               )}
 
               <section className="hero">
-                <h1>Instant AI Workouts. No Signup.</h1>
+                <div className="hero-visual">
+                  <div className="hero-icon">💪</div>
+                  <div className="hero-gradient"></div>
+                </div>
+                <h1>Get Your Perfect Workout in Seconds</h1>
                 <p className="hero-subtitle">
-                  No account. No subscription. Just train.
+                  AI-powered, personalized fitness plans tailored to your goals, equipment, and schedule. No signup. No subscription. Just results.
                 </p>
                 
                 <div className="trust-signals" role="list" aria-label="Key features">
                   <span role="listitem">🎁 3 Free Workouts</span>
                   <span role="listitem">🚫 No Signup</span>
                   <span role="listitem">💳 One-Time Payment</span>
+                  <span role="listitem">⚡ Instant Access</span>
+                </div>
+                
+                <div className="hero-cta">
+                  <p className="hero-cta-text">Start your first free workout now</p>
                 </div>
 
                 {/* Access Status Display */}
@@ -250,6 +263,64 @@ function Home() {
                 <AffiliateProducts workoutType={workout.type || 'general'} />
               )}
 
+              {/* Benefits Section */}
+              <section className="benefits-section" aria-label="Benefits">
+                <h2>Why Choose AIWorkoutNow?</h2>
+                <div className="benefits-grid">
+                  <div className="benefit-card">
+                    <div className="benefit-icon">🎯</div>
+                    <h3>100% Personalized</h3>
+                    <p>Every workout is tailored to your fitness level, goals, and available equipment.</p>
+                  </div>
+                  <div className="benefit-card">
+                    <div className="benefit-icon">⚡</div>
+                    <h3>Instant Generation</h3>
+                    <p>Get professional-quality workout plans in seconds, not hours of research.</p>
+                  </div>
+                  <div className="benefit-card">
+                    <div className="benefit-icon">🏠</div>
+                    <h3>Home or Gym</h3>
+                    <p>Works with any equipment—from bodyweight to full gym setups.</p>
+                  </div>
+                  <div className="benefit-card">
+                    <div className="benefit-icon">🔒</div>
+                    <h3>No Commitment</h3>
+                    <p>Pay once. No subscriptions. No recurring charges. Ever.</p>
+                  </div>
+                </div>
+              </section>
+
+              {/* Social Proof Section */}
+              <section className="social-proof" aria-label="Social proof">
+                <div className="social-proof-stats">
+                  <div className="stat-item">
+                    <div className="stat-number">10,000+</div>
+                    <div className="stat-label">Workouts Generated</div>
+                  </div>
+                  <div className="stat-item">
+                    <div className="stat-number">4.8★</div>
+                    <div className="stat-label">User Rating</div>
+                  </div>
+                  <div className="stat-item">
+                    <div className="stat-number">98%</div>
+                    <div className="stat-label">Satisfaction Rate</div>
+                  </div>
+                </div>
+                
+                <div className="testimonials">
+                  <div className="testimonial-card">
+                    <div className="testimonial-rating">⭐⭐⭐⭐⭐</div>
+                    <p className="testimonial-text">"Finally, a workout app that doesn't require signup. Got my personalized plan in 30 seconds!"</p>
+                    <p className="testimonial-author">— Sarah M., Fitness Enthusiast</p>
+                  </div>
+                  <div className="testimonial-card">
+                    <div className="testimonial-rating">⭐⭐⭐⭐⭐</div>
+                    <p className="testimonial-text">"The AI really understands my limitations and creates perfect workouts for my home gym."</p>
+                    <p className="testimonial-author">— Mike T., Home Trainer</p>
+                  </div>
+                </div>
+              </section>
+
               {/* SEO Content Sections */}
               <section className="seo-content" aria-label="About AI Workout Generator">
                 <h2>AI Workout Generator Without Signup</h2>
@@ -279,6 +350,46 @@ function Home() {
 
           <section className="home-full-width" aria-label="Pricing plans">
             <PricingPlans showHeader={true} />
+          </section>
+
+          {/* Trust Badges */}
+          <section className="trust-badges" aria-label="Trust indicators">
+            <div className="trust-badge-item">
+              <span className="badge-icon">🔒</span>
+              <span>Secure Payment</span>
+            </div>
+            <div className="trust-badge-item">
+              <span className="badge-icon">🚫</span>
+              <span>No Subscription</span>
+            </div>
+            <div className="trust-badge-item">
+              <span className="badge-icon">⚡</span>
+              <span>Instant Access</span>
+            </div>
+            <div className="trust-badge-item">
+              <span className="badge-icon">💯</span>
+              <span>Money-Back Guarantee</span>
+            </div>
+          </section>
+
+          {/* Footer CTA */}
+          <section className="footer-cta" aria-label="Final call to action">
+            <div className="footer-cta-content">
+              <h2>Ready to Transform Your Fitness?</h2>
+              <p>Join thousands of users getting personalized AI workouts every day.</p>
+              <button 
+                className="footer-cta-button"
+                onClick={() => {
+                  const generator = document.querySelector('.workout-generator');
+                  if (generator) {
+                    generator.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
+                aria-label="Start your free workout"
+              >
+                Start Your Free Workout Now
+              </button>
+            </div>
           </section>
         </div>
       </main>

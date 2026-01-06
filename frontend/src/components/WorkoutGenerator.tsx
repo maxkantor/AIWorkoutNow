@@ -32,7 +32,10 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = fals
 
   return (
     <section className="workout-generator" aria-labelledby="workout-generator-title">
-      <h2 id="workout-generator-title" className="sr-only">Generate Your AI Workout</h2>
+      <header className="generator-header">
+        <h2 id="workout-generator-title">Create Your Personalized Workout</h2>
+        <p className="generator-subtitle">Tell us about yourself, and we'll generate a workout plan tailored just for you.</p>
+      </header>
       <form onSubmit={handleSubmit} className="workout-form" aria-label="Workout preferences form">
         <div className="form-grid">
           <div className="form-group">

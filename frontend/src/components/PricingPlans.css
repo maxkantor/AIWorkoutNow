@@ -198,6 +198,79 @@
   color: #2c3e50;
 }
 
+/* FAQs Section */
+.pricing-faqs {
+  margin-top: 3rem;
+  padding-top: 2.5rem;
+  border-top: 2px solid #e0e0e0;
+}
+
+.pricing-faqs h3 {
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  color: #2c3e50;
+}
+
+.faq-list {
+  max-width: 800px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.faq-item {
+  background: white;
+  padding: 1.25rem;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s;
+}
+
+.faq-item:hover {
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.faq-item h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+}
+
+.faq-item p {
+  font-size: 0.95rem;
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+}
+
+@media (min-width: 1025px) {
+  .faq-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .pricing-faqs {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+  }
+
+  .pricing-faqs h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .faq-item {
+    padding: 1rem;
+  }
+}
+
 .loading, .error {
   text-align: center;
   padding: 1.5rem;

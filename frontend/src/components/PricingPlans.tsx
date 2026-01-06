@@ -149,10 +149,43 @@ function PricingPlans({ showHeader = true, compact = false }: PricingPlansProps)
       )}
 
       {showHeader && (
-        <div className="pricing-footer">
-          <p>No login. No subscription. Pay once.</p>
-          <p className="comparison">Other fitness apps charge $10–$30/month. We don't.</p>
-        </div>
+        <>
+          <div className="pricing-footer">
+            <p>No login. No subscription. Pay once.</p>
+            <p className="comparison">Other fitness apps charge $10–$30/month. We don't.</p>
+          </div>
+
+          {/* FAQs Section */}
+          <div className="pricing-faqs">
+            <h3>Frequently Asked Questions</h3>
+            <div className="faq-list">
+              <div className="faq-item">
+                <h4>Do I need to create an account?</h4>
+                <p>No! You can start using AIWorkoutNow immediately with 3 free workouts. No signup required.</p>
+              </div>
+              <div className="faq-item">
+                <h4>Is there a subscription?</h4>
+                <p>No subscriptions. You pay once for additional workouts or unlimited access. No recurring charges ever.</p>
+              </div>
+              <div className="faq-item">
+                <h4>What happens after I use my 3 free workouts?</h4>
+                <p>You can purchase a one-time plan to unlock more workouts. Choose from token packs or unlimited access for a set period.</p>
+              </div>
+              <div className="faq-item">
+                <h4>Can I use this at home or in a gym?</h4>
+                <p>Yes! Our AI creates workouts based on your available equipment—from bodyweight exercises to full gym setups.</p>
+              </div>
+              <div className="faq-item">
+                <h4>Is this medical advice?</h4>
+                <p>No. AIWorkoutNow provides AI-generated workout plans for informational purposes only. Always consult a healthcare professional before starting any new exercise program.</p>
+              </div>
+              <div className="faq-item">
+                <h4>How does the unlimited plan work?</h4>
+                <p>The unlimited plan gives you access to generate as many workouts as you want for a set number of days (typically 7 days). It's a one-time payment, not a subscription.</p>
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </section>
   );

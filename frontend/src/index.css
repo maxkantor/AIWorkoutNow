@@ -5,9 +5,14 @@
 }
 
 :root {
-  --primary-color: #2563eb;
+  /* Energetic Color Palette */
+  --primary-color: #2563eb; /* Trust blue */
   --primary-dark: #1e40af;
-  --secondary-color: #10b981;
+  --primary-light: #3b82f6;
+  --secondary-color: #10b981; /* Energy green */
+  --secondary-dark: #059669;
+  --accent-orange: #f97316; /* Motivation orange */
+  --accent-red: #ef4444; /* Urgency red */
   --text-primary: #1f2937;
   --text-secondary: #6b7280;
   --bg-primary: #ffffff;
@@ -17,6 +22,8 @@
   --success-color: #10b981;
   --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --gradient-primary: linear-gradient(135deg, #2563eb 0%, #10b981 100%);
+  --gradient-energy: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 body {
