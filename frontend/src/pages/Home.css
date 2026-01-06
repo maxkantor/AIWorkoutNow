@@ -237,45 +237,39 @@ main.min-h-screen {
   }
 }
 
-/* Trust Badges - Responsive Grid with Better Spacing */
-.grid.grid-cols-2.md\:grid-cols-4 {
-  margin-top: clamp(2rem, 4vw, 3rem);
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: clamp(1rem, 2vw, 1.5rem);
+/* Trust Badges - Compact in Left Column */
+aside.lg\:col-span-3 > section.grid.grid-cols-2 {
+  margin-top: 1rem;
+  gap: 0.5rem;
 }
 
-@media (min-width: 768px) {
-  .grid.md\:grid-cols-4 {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-.grid.grid-cols-2.md\:grid-cols-4 > div {
-  background: #f8fafc;
-  border-radius: 0.75rem;
-  padding: 1.25rem;
+aside.lg\:col-span-3 > section.grid.grid-cols-2 > div {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 0.625rem;
   text-align: center;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: all 0.2s;
 }
 
-.grid.grid-cols-2.md\:grid-cols-4 > div:hover {
-  box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
+aside.lg\:col-span-3 > section.grid.grid-cols-2 > div:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  border-color: #667eea;
 }
 
-.grid.grid-cols-2.md\:grid-cols-4 > div > span:first-child {
-  font-size: 1.75rem;
+aside.lg\:col-span-3 > section.grid.grid-cols-2 > div > span:first-child {
+  font-size: 1.125rem;
   display: block;
-  margin-bottom: 0.625rem;
+  margin-bottom: 0.25rem;
 }
 
-.grid.grid-cols-2.md\:grid-cols-4 > div > span:last-child {
-  font-size: clamp(0.8125rem, 1.5vw, 0.875rem);
+aside.lg\:col-span-3 > section.grid.grid-cols-2 > div > span:last-child {
+  font-size: 0.75rem;
   font-weight: 600;
   color: #475569;
+  line-height: 1.2;
 }
 
 /* Typography Improvements - Better Vertical Rhythm */
