@@ -4,11 +4,10 @@ import { getDeviceId } from '../utils/storage';
 
 interface PricingPlansProps {
   showHeader?: boolean;
-  compact?: boolean;
   vertical?: boolean;
 }
 
-function PricingPlans({ showHeader = true, compact = false, vertical = false }: PricingPlansProps) {
+function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps) {
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);

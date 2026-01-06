@@ -315,7 +315,7 @@ function Home() {
             {/* Right Column: Pricing Plans */}
             <aside className="md:col-span-1 lg:col-span-3 order-2 md:order-2 lg:order-3">
               <div className="bg-slate-50/50 rounded-xl p-6">
-                <PricingPlans showHeader={true} compact={true} vertical={true} />
+                <PricingPlans showHeader={true} vertical={true} />
               </div>
             </aside>
           </div>
