@@ -30,15 +30,6 @@
   --gradient-energy: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-html, body {
-  overflow-x: hidden;
-  max-width: 100vw;
-}
-
-* {
-  box-sizing: border-box;
-}
-
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -48,15 +39,7 @@ body {
   color: var(--text-primary);
   background-color: var(--bg-secondary);
   line-height: 1.6;
-  font-size: clamp(15px, 1.5vw, 16px);
-  margin: 0;
-  padding: 0;
-  width: 100%;
-}
-
-img {
-  max-width: 100%;
-  height: auto;
+  font-size: 16px;
 }
 
 code {
