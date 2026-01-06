@@ -171,18 +171,6 @@ function Home() {
       
       <main className="min-h-screen bg-slate-50 py-6">
         <div className="max-w-7xl mx-auto px-4">
-          {/* Free Tier Banner - Full Width */}
-          {freeWorkoutsRemaining > 0 && (
-            <div className="mb-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-center py-3 px-4 rounded-lg shadow-lg">
-              <span className="text-lg mr-2">🎁</span>
-              <span className="font-semibold">
-                {freeWorkoutsRemaining === 3 
-                  ? "3 Free AI Workouts — No Signup Required" 
-                  : `Only ${freeWorkoutsRemaining} Free Workout${freeWorkoutsRemaining > 1 ? 's' : ''} Left — Start Now!`}
-              </span>
-            </div>
-          )}
-
           {/* 3-Column Grid Layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-8">
             {/* Left Column: Why Choose AIWorkoutNow? - Benefits, Stats, Testimonials */}
@@ -229,20 +217,6 @@ function Home() {
                     <div className="text-3xl font-extrabold mb-1">98%</div>
                     <div className="text-sm opacity-90">Satisfaction Rate</div>
                   </div>
-                </div>
-              </section>
-
-              {/* Testimonials */}
-              <section className="space-y-4">
-                <div className="bg-white rounded-lg p-4 shadow-sm border-l-4 border-green-500">
-                  <div className="text-yellow-400 mb-2">⭐⭐⭐⭐⭐</div>
-                  <p className="text-sm text-slate-700 italic mb-2">"Finally, a workout app that doesn't require signup. Got my personalized plan in 30 seconds!"</p>
-                  <p className="text-xs text-slate-500 font-semibold">— Sarah M., Fitness Enthusiast</p>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm border-l-4 border-green-500">
-                  <div className="text-yellow-400 mb-2">⭐⭐⭐⭐⭐</div>
-                  <p className="text-sm text-slate-700 italic mb-2">"The AI really understands my limitations and creates perfect workouts for my home gym."</p>
-                  <p className="text-xs text-slate-500 font-semibold">— Mike T., Home Trainer</p>
                 </div>
               </section>
             </aside>
