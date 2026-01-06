@@ -1,19 +1,18 @@
 import { useState, useEffect } from 'react';
 import { getPricingPlans, createCheckoutSession, PricingPlan } from '../services/api';
 import { getDeviceId } from '../utils/storage';
-import './PricingPlans.css';
 
 interface PricingPlansProps {
   showHeader?: boolean;
   compact?: boolean;
+  vertical?: boolean;
 }
 
-function PricingPlans({ showHeader = true, compact = false }: PricingPlansProps) {
+function PricingPlans({ showHeader = true, compact = false, vertical = false }: PricingPlansProps) {
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showAllPlans, setShowAllPlans] = useState(false);
 
   useEffect(() => {
     loadPlans();
@@ -39,7 +38,6 @@ function PricingPlans({ showHeader = true, compact = false }: PricingPlansProps)
       const deviceId = getDeviceId();
       const { url } = await createCheckoutSession(deviceId, plan.planId);
       
-      // Redirect to Stripe checkout
       window.location.href = url;
     } catch (err: any) {
       setError(err.message || 'Failed to start checkout');
@@ -49,143 +47,180 @@ function PricingPlans({ showHeader = true, compact = false }: PricingPlansProps)
 
   if (loading) {
     return (
-      <div className="pricing-plans-section">
-        <div className="loading">Loading pricing plans...</div>
+      <div className="text-center py-8 text-slate-600">
+        Loading pricing plans...
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="pricing-plans-section">
-        <div className="error">{error}</div>
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+        {error}
       </div>
     );
   }
 
   return (
-    <section className={`pricing-plans-section ${compact ? 'compact' : ''}`} aria-labelledby={showHeader ? "pricing-heading" : undefined}>
+    <section aria-labelledby={showHeader ? "pricing-heading" : undefined}>
       {showHeader && (
-        <header className="pricing-header">
-          <h2 id="pricing-heading">Unlock More AI Workouts</h2>
-          <p className="pricing-subtitle">
+        <header className="mb-6">
+          <h2 id="pricing-heading" className="text-xl font-bold text-slate-800 mb-2">
+            Unlock More AI Workouts
+          </h2>
+          <p className="text-sm text-slate-600">
             Pay once. No login. No subscription. Instant access.
           </p>
         </header>
       )}
 
-      <div className={`pricing-grid ${compact ? 'compact-grid' : ''}`} role="list">
-        {plans.map((plan, index) => (
-          <article
-            key={plan.planId}
-            className={`pricing-card ${plan.isRecommended ? 'recommended' : ''} ${showAllPlans || index < 2 || compact ? '' : 'hidden-mobile'}`}
-            role="listitem"
-            aria-label={`${plan.name} plan - $${plan.price.toFixed(2)}`}
-          >
-            {plan.isRecommended && (
-              <div className="recommended-badge">
-                {plan.badgeText || '⭐ Most Popular'}
-              </div>
-            )}
-            
-            <h3>{plan.name}</h3>
-            
-            <div className="price-display">
-              <span className="price">${plan.price.toFixed(2)}</span>
-              <span className="period">one-time</span>
-            </div>
-
-            <div className="features">
-              {plan.isUnlimited ? (
-                <div className="feature">
-                  <span className="icon">∞</span>
-                  <span>Unlimited workouts</span>
-                  {plan.unlimitedDays && (
-                    <span className="detail">({plan.unlimitedDays} days)</span>
-                  )}
-                </div>
-              ) : (
-                <div className="feature">
-                  <span className="icon">💪</span>
-                  <span>{plan.tokenCount} workouts</span>
+      {vertical ? (
+        <div className="space-y-4" role="list">
+          {plans.map((plan) => (
+            <article
+              key={plan.planId}
+              className={`relative bg-white rounded-lg border-2 p-4 transition-all ${
+                plan.isRecommended 
+                  ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-white shadow-md' 
+                  : 'border-slate-200 shadow-sm hover:shadow-md'
+              }`}
+              role="listitem"
+            >
+              {plan.isRecommended && (
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                  {plan.badgeText || '⭐ Most Popular'}
                 </div>
               )}
-            </div>
+              
+              <h3 className="text-lg font-semibold text-slate-800 mb-2 text-center">
+                {plan.name}
+              </h3>
+              
+              <div className="text-center mb-3">
+                <span className="text-2xl font-bold text-blue-600">
+                  ${plan.price.toFixed(2)}
+                </span>
+                <span className="text-xs text-slate-500 uppercase ml-1">one-time</span>
+              </div>
 
-            {plan.microCopy && (
-              <p className="microcopy">{plan.microCopy}</p>
-            )}
+              <div className="mb-3">
+                {plan.isUnlimited ? (
+                  <div className="flex items-center justify-center gap-2 text-slate-700">
+                    <span className="text-xl">∞</span>
+                    <span className="text-sm font-medium">
+                      Unlimited workouts
+                      {plan.unlimitedDays && (
+                        <span className="text-slate-500 ml-1">({plan.unlimitedDays} days)</span>
+                      )}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-2 text-slate-700">
+                    <span className="text-lg">💪</span>
+                    <span className="text-sm font-medium">{plan.tokenCount} workouts</span>
+                  </div>
+                )}
+              </div>
 
-            <button
-              className={`cta-button ${plan.isRecommended ? 'primary' : 'secondary'}`}
-              onClick={() => handlePurchase(plan)}
-              disabled={checkoutLoading === plan.planId}
-              aria-label={`Purchase ${plan.name} plan`}
+              {plan.microCopy && (
+                <p className="text-xs text-slate-500 text-center italic mb-3">
+                  {plan.microCopy}
+                </p>
+              )}
+
+              <button
+                className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all ${
+                  plan.isRecommended
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg transform hover:-translate-y-0.5'
+                    : 'bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white'
+                } disabled:opacity-60 disabled:cursor-not-allowed`}
+                onClick={() => handlePurchase(plan)}
+                disabled={checkoutLoading === plan.planId}
+                aria-label={`Purchase ${plan.name} plan`}
+              >
+                {checkoutLoading === plan.planId ? 'Processing...' : 'Get Started'}
+              </button>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" role="list">
+          {plans.map((plan) => (
+            <article
+              key={plan.planId}
+              className={`relative bg-white rounded-lg border-2 p-4 transition-all ${
+                plan.isRecommended 
+                  ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-white shadow-md' 
+                  : 'border-slate-200 shadow-sm hover:shadow-md'
+              }`}
+              role="listitem"
             >
-              {checkoutLoading === plan.planId ? 'Processing...' : 'Get Started'}
-            </button>
-          </article>
-        ))}
-      </div>
+              {plan.isRecommended && (
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                  {plan.badgeText || '⭐ Most Popular'}
+                </div>
+              )}
+              
+              <h3 className="text-lg font-semibold text-slate-800 mb-2 text-center">
+                {plan.name}
+              </h3>
+              
+              <div className="text-center mb-3">
+                <span className="text-2xl font-bold text-blue-600">
+                  ${plan.price.toFixed(2)}
+                </span>
+                <span className="text-xs text-slate-500 uppercase ml-1">one-time</span>
+              </div>
 
-      {plans.length > 2 && !showAllPlans && (
-        <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-          <button
-            onClick={() => setShowAllPlans(true)}
-            style={{
-              padding: '0.5rem 1.5rem',
-              background: 'transparent',
-              border: '2px solid #667eea',
-              color: '#667eea',
-              borderRadius: '6px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontSize: '0.9rem'
-            }}
-          >
-            Show All Plans
-          </button>
+              <div className="mb-3">
+                {plan.isUnlimited ? (
+                  <div className="flex items-center justify-center gap-2 text-slate-700">
+                    <span className="text-xl">∞</span>
+                    <span className="text-sm font-medium">
+                      Unlimited workouts
+                      {plan.unlimitedDays && (
+                        <span className="text-slate-500 ml-1">({plan.unlimitedDays} days)</span>
+                      )}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-2 text-slate-700">
+                    <span className="text-lg">💪</span>
+                    <span className="text-sm font-medium">{plan.tokenCount} workouts</span>
+                  </div>
+                )}
+              </div>
+
+              {plan.microCopy && (
+                <p className="text-xs text-slate-500 text-center italic mb-3">
+                  {plan.microCopy}
+                </p>
+              )}
+
+              <button
+                className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all ${
+                  plan.isRecommended
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg transform hover:-translate-y-0.5'
+                    : 'bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white'
+                } disabled:opacity-60 disabled:cursor-not-allowed`}
+                onClick={() => handlePurchase(plan)}
+                disabled={checkoutLoading === plan.planId}
+                aria-label={`Purchase ${plan.name} plan`}
+              >
+                {checkoutLoading === plan.planId ? 'Processing...' : 'Get Started'}
+              </button>
+            </article>
+          ))}
         </div>
       )}
 
-      {showHeader && (
-        <>
-          <div className="pricing-footer">
-            <p>No login. No subscription. Pay once.</p>
-            <p className="comparison">Other fitness apps charge $10–$30/month. We don't.</p>
-          </div>
-
-          {/* FAQs Section */}
-          <div className="pricing-faqs">
-            <h3>Frequently Asked Questions</h3>
-            <div className="faq-list">
-              <div className="faq-item">
-                <h4>Do I need to create an account?</h4>
-                <p>No! You can start using AIWorkoutNow immediately with 3 free workouts. No signup required.</p>
-              </div>
-              <div className="faq-item">
-                <h4>Is there a subscription?</h4>
-                <p>No subscriptions. You pay once for additional workouts or unlimited access. No recurring charges ever.</p>
-              </div>
-              <div className="faq-item">
-                <h4>What happens after I use my 3 free workouts?</h4>
-                <p>You can purchase a one-time plan to unlock more workouts. Choose from token packs or unlimited access for a set period.</p>
-              </div>
-              <div className="faq-item">
-                <h4>Can I use this at home or in a gym?</h4>
-                <p>Yes! Our AI creates workouts based on your available equipment—from bodyweight exercises to full gym setups.</p>
-              </div>
-              <div className="faq-item">
-                <h4>Is this medical advice?</h4>
-                <p>No. AIWorkoutNow provides AI-generated workout plans for informational purposes only. Always consult a healthcare professional before starting any new exercise program.</p>
-              </div>
-              <div className="faq-item">
-                <h4>How does the unlimited plan work?</h4>
-                <p>The unlimited plan gives you access to generate as many workouts as you want for a set number of days (typically 7 days). It's a one-time payment, not a subscription.</p>
-              </div>
-            </div>
-          </div>
-        </>
+      {showHeader && !vertical && (
+        <div className="mt-6 text-center space-y-2 pt-6 border-t border-slate-200">
+          <p className="text-sm text-slate-600">No login. No subscription. Pay once.</p>
+          <p className="text-sm font-semibold text-slate-700">
+            Other fitness apps charge $10–$30/month. We don't.
+          </p>
+        </div>
       )}
     </section>
   );

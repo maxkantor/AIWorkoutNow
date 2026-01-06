@@ -6,7 +6,6 @@ import PaywallModal from '../components/PaywallModal';
 import AffiliateProducts from '../components/AffiliateProducts';
 import { getDeviceId, getTokenBalance } from '../utils/storage';
 import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus } from '../services/api';
-import './Home.css';
 
 function Home() {
   const [workout, setWorkout] = useState<any>(null);
@@ -27,20 +26,16 @@ function Home() {
       setCheckingAccess(true);
       const deviceId = getDeviceId();
       
-      // Check access status from API
       const status = await getUserAccessStatus(deviceId);
       setAccessStatus(status);
       
-      // Check free workouts
       const freeWorkouts = await getFreeWorkoutsRemaining(deviceId);
       setFreeWorkoutsRemaining(freeWorkouts.remaining);
       
-      // Check token balance
       const balance = getTokenBalance(deviceId);
       setTokenBalance(balance);
     } catch (err) {
       console.error('Failed to check access status:', err);
-      // Default to free tier if API fails
       setFreeWorkoutsRemaining(3);
     } finally {
       setCheckingAccess(false);
@@ -56,7 +51,6 @@ function Home() {
       const balance = getTokenBalance(deviceId);
       const needsToken = balance === null || balance === 0;
       
-      // Check if user can generate workout
       if (needsToken && freeWorkoutsRemaining <= 0 && !accessStatus?.hasUnlimitedAccess) {
         setShowPaywall(true);
         setLoading(false);
@@ -66,22 +60,17 @@ function Home() {
       const result = await generateWorkout(preferences, deviceId, needsToken);
       setWorkout(result);
       
-      // Update state after successful generation
       if (needsToken && result.tokensRemaining !== undefined) {
-        // This is a free workout
         setFreeWorkoutsRemaining(Math.max(0, freeWorkoutsRemaining - 1));
       } else if (!needsToken && result.tokensRemaining !== undefined) {
-        // This is a paid workout
         setTokenBalance(result.tokensRemaining);
       }
       
-      // Refresh access status
       await checkAccessStatus();
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to generate workout. Please try again.';
       setError(errorMessage);
       
-      // Check if it's a free tier exhausted error
       if (errorMessage.includes('3 free workouts') || err.response?.data?.code === 'FREE_TIER_EXHAUSTED') {
         setShowPaywall(true);
       }
@@ -91,7 +80,6 @@ function Home() {
   };
 
   const handlePurchaseComplete = () => {
-    // Refresh access status after purchase
     checkAccessStatus();
     setShowPaywall(false);
   };
@@ -111,7 +99,6 @@ function Home() {
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://aiworkoutnow.com" />
         
-        {/* Open Graph */}
         <meta property="og:title" content="AI Workout Generator – 3 Free Workouts | AIWorkoutNow" />
         <meta property="og:description" content="Get 3 free AI workouts. No signup, no subscription. Pay once and train instantly." />
         <meta property="og:type" content="website" />
@@ -119,13 +106,11 @@ function Home() {
         <meta property="og:image" content="https://aiworkoutnow.com/og-image.png" />
         <meta property="og:site_name" content="AIWorkoutNow" />
         
-        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="AI Workout Generator – 3 Free Workouts" />
         <meta name="twitter:description" content="Get 3 free AI workouts. No signup, no subscription. Pay once and train instantly." />
         <meta name="twitter:image" content="https://aiworkoutnow.com/og-image.png" />
         
-        {/* Structured Data - WebPage */}
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
@@ -142,7 +127,6 @@ function Home() {
           })}
         </script>
         
-        {/* FAQ Schema */}
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
@@ -185,197 +169,185 @@ function Home() {
         </script>
       </Helmet>
       
-      <main className="home">
-        <div className="container">
-          <div className="home-layout">
-            <div className="home-main">
-              {/* Free Tier Banner */}
-              {freeWorkoutsRemaining > 0 && (
-                <section className="free-tier-banner" aria-label="Free workout offer">
-                  <span className="banner-icon" aria-hidden="true">🎁</span>
-                  <span className="banner-text">
-                    {freeWorkoutsRemaining === 3 
-                      ? "3 Free AI Workouts — No Signup Required" 
-                      : `Only ${freeWorkoutsRemaining} Free Workout${freeWorkoutsRemaining > 1 ? 's' : ''} Left — Start Now!`}
-                  </span>
-                </section>
-              )}
+      <main className="min-h-screen bg-slate-50 py-6">
+        <div className="max-w-7xl mx-auto px-4">
+          {/* Free Tier Banner - Full Width */}
+          {freeWorkoutsRemaining > 0 && (
+            <div className="mb-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-center py-3 px-4 rounded-lg shadow-lg">
+              <span className="text-lg mr-2">🎁</span>
+              <span className="font-semibold">
+                {freeWorkoutsRemaining === 3 
+                  ? "3 Free AI Workouts — No Signup Required" 
+                  : `Only ${freeWorkoutsRemaining} Free Workout${freeWorkoutsRemaining > 1 ? 's' : ''} Left — Start Now!`}
+              </span>
+            </div>
+          )}
 
-              <section className="hero">
-                <div className="hero-content">
-                  <div className="hero-visual">
-                    <div className="hero-icon">💪</div>
-                    <div className="hero-gradient"></div>
-                  </div>
-                  <div className="hero-text">
-                    <h1>Get Your Perfect Workout in Seconds</h1>
-                    <p className="hero-subtitle">
-                      AI-powered, personalized fitness plans tailored to your goals, equipment, and schedule. No signup. No subscription. Just results.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="trust-signals" role="list" aria-label="Key features">
-                  <span role="listitem">🎁 3 Free Workouts</span>
-                  <span role="listitem">🚫 No Signup</span>
-                  <span role="listitem">💳 One-Time Payment</span>
-                  <span role="listitem">⚡ Instant Access</span>
-                </div>
-                
-                <div className="hero-cta">
-                  <p className="hero-cta-text">Start your first free workout now</p>
-                </div>
-
-                {/* Access Status Display */}
-                {!checkingAccess && (
-                  <div className="access-status" aria-live="polite">
-                    {accessStatus?.hasUnlimitedAccess ? (
-                      <div className="status-badge unlimited">
-                        <span>∞ Unlimited Access</span>
-                        {accessStatus.unlimitedExpiresAt && (
-                          <span className="expires">
-                            (expires {new Date(accessStatus.unlimitedExpiresAt).toLocaleDateString()})
-                          </span>
-                        )}
-                      </div>
-                    ) : tokenBalance !== null && tokenBalance > 0 ? (
-                      <div className="status-badge tokens">
-                        <span>Tokens: {tokenBalance}</span>
-                      </div>
-                    ) : freeWorkoutsRemaining > 0 ? (
-                      <div className="status-badge free">
-                        <span>Free workouts remaining: {freeWorkoutsRemaining} / 3</span>
-                      </div>
-                    ) : (
-                      <div className="status-badge exhausted">
-                        <span>Free workouts exhausted</span>
-                      </div>
+          {/* Hero Section - Full Width */}
+          <section className="mb-8 text-center">
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <div className="text-5xl animate-pulse">💪</div>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">
+                Get Your Perfect Workout in Seconds
+              </h1>
+            </div>
+            <p className="text-slate-600 text-lg mb-4 max-w-2xl mx-auto">
+              AI-powered, personalized fitness plans tailored to your goals, equipment, and schedule. No signup. No subscription. Just results.
+            </p>
+            <div className="flex flex-wrap justify-center gap-3 mb-4">
+              <span className="px-3 py-1 bg-blue-50 text-slate-700 rounded-full text-sm font-medium">🎁 3 Free Workouts</span>
+              <span className="px-3 py-1 bg-blue-50 text-slate-700 rounded-full text-sm font-medium">🚫 No Signup</span>
+              <span className="px-3 py-1 bg-blue-50 text-slate-700 rounded-full text-sm font-medium">💳 One-Time Payment</span>
+              <span className="px-3 py-1 bg-blue-50 text-slate-700 rounded-full text-sm font-medium">⚡ Instant Access</span>
+            </div>
+            {!checkingAccess && (
+              <div className="mb-4">
+                {accessStatus?.hasUnlimitedAccess ? (
+                  <div className="inline-block px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold">
+                    ∞ Unlimited Access
+                    {accessStatus.unlimitedExpiresAt && (
+                      <span className="text-sm opacity-90 ml-2">
+                        (expires {new Date(accessStatus.unlimitedExpiresAt).toLocaleDateString()})
+                      </span>
                     )}
                   </div>
+                ) : tokenBalance !== null && tokenBalance > 0 ? (
+                  <div className="inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-semibold">
+                    Tokens: {tokenBalance}
+                  </div>
+                ) : freeWorkoutsRemaining > 0 ? (
+                  <div className="inline-block px-4 py-2 bg-green-100 text-green-800 rounded-lg font-semibold">
+                    Free workouts remaining: {freeWorkoutsRemaining} / 3
+                  </div>
+                ) : (
+                  <div className="inline-block px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg font-semibold">
+                    Free workouts exhausted
+                  </div>
                 )}
+              </div>
+            )}
+          </section>
+
+          {/* 3-Column Grid Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-8">
+            {/* Left Column: Benefits, Stats, Testimonials */}
+            <aside className="md:col-span-2 lg:col-span-3 space-y-6 order-3 md:order-3 lg:order-1">
+              {/* Why Choose Us */}
+              <section className="bg-slate-50/50 rounded-xl p-6">
+                <h2 className="text-xl font-bold text-slate-800 mb-4">Why Choose AIWorkoutNow?</h2>
+                <div className="space-y-4">
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <div className="text-3xl mb-2">🎯</div>
+                    <h3 className="font-semibold text-slate-800 mb-1">100% Personalized</h3>
+                    <p className="text-sm text-slate-600">Every workout is tailored to your fitness level, goals, and available equipment.</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <div className="text-3xl mb-2">⚡</div>
+                    <h3 className="font-semibold text-slate-800 mb-1">Instant Generation</h3>
+                    <p className="text-sm text-slate-600">Get professional-quality workout plans in seconds, not hours of research.</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <div className="text-3xl mb-2">🏠</div>
+                    <h3 className="font-semibold text-slate-800 mb-1">Home or Gym</h3>
+                    <p className="text-sm text-slate-600">Works with any equipment—from bodyweight to full gym setups.</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <div className="text-3xl mb-2">🔒</div>
+                    <h3 className="font-semibold text-slate-800 mb-1">No Commitment</h3>
+                    <p className="text-sm text-slate-600">Pay once. No subscriptions. No recurring charges. Ever.</p>
+                  </div>
+                </div>
               </section>
 
-              <WorkoutGenerator
-                onGenerate={handleGenerateWorkout}
-                loading={loading}
-                error={error}
-                workout={workout}
-                disabled={!canGenerate && !checkingAccess}
-              />
+              {/* Stats */}
+              <section className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-extrabold mb-1">10,000+</div>
+                    <div className="text-sm opacity-90">Workouts Generated</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-extrabold mb-1">4.8★</div>
+                    <div className="text-sm opacity-90">User Rating</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-extrabold mb-1">98%</div>
+                    <div className="text-sm opacity-90">Satisfaction Rate</div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Testimonials */}
+              <section className="space-y-4">
+                <div className="bg-white rounded-lg p-4 shadow-sm border-l-4 border-green-500">
+                  <div className="text-yellow-400 mb-2">⭐⭐⭐⭐⭐</div>
+                  <p className="text-sm text-slate-700 italic mb-2">"Finally, a workout app that doesn't require signup. Got my personalized plan in 30 seconds!"</p>
+                  <p className="text-xs text-slate-500 font-semibold">— Sarah M., Fitness Enthusiast</p>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm border-l-4 border-green-500">
+                  <div className="text-yellow-400 mb-2">⭐⭐⭐⭐⭐</div>
+                  <p className="text-sm text-slate-700 italic mb-2">"The AI really understands my limitations and creates perfect workouts for my home gym."</p>
+                  <p className="text-xs text-slate-500 font-semibold">— Mike T., Home Trainer</p>
+                </div>
+              </section>
+            </aside>
+
+            {/* Center Column: Workout Generator Form */}
+            <section className="md:col-span-1 lg:col-span-6 order-1 md:order-1 lg:order-2">
+              <div className="bg-white shadow-xl rounded-2xl border border-slate-100 p-6 md:p-8">
+                <WorkoutGenerator
+                  onGenerate={handleGenerateWorkout}
+                  loading={loading}
+                  error={error}
+                  workout={workout}
+                  disabled={!canGenerate && !checkingAccess}
+                />
+              </div>
 
               {workout && (
-                <AffiliateProducts workoutType={workout.type || 'general'} />
+                <div className="mt-6">
+                  <AffiliateProducts workoutType={workout.type || 'general'} />
+                </div>
               )}
+            </section>
 
-              {/* Benefits Section */}
-              <section className="benefits-section" aria-label="Benefits">
-                <h2>Why Choose AIWorkoutNow?</h2>
-                <div className="benefits-grid">
-                  <div className="benefit-card">
-                    <div className="benefit-icon">🎯</div>
-                    <h3>100% Personalized</h3>
-                    <p>Every workout is tailored to your fitness level, goals, and available equipment.</p>
-                  </div>
-                  <div className="benefit-card">
-                    <div className="benefit-icon">⚡</div>
-                    <h3>Instant Generation</h3>
-                    <p>Get professional-quality workout plans in seconds, not hours of research.</p>
-                  </div>
-                  <div className="benefit-card">
-                    <div className="benefit-icon">🏠</div>
-                    <h3>Home or Gym</h3>
-                    <p>Works with any equipment—from bodyweight to full gym setups.</p>
-                  </div>
-                  <div className="benefit-card">
-                    <div className="benefit-icon">🔒</div>
-                    <h3>No Commitment</h3>
-                    <p>Pay once. No subscriptions. No recurring charges. Ever.</p>
-                  </div>
-                </div>
-              </section>
-
-              {/* Social Proof Section */}
-              <section className="social-proof" aria-label="Social proof">
-                <div className="social-proof-stats">
-                  <div className="stat-item">
-                    <div className="stat-number">10,000+</div>
-                    <div className="stat-label">Workouts Generated</div>
-                  </div>
-                  <div className="stat-item">
-                    <div className="stat-number">4.8★</div>
-                    <div className="stat-label">User Rating</div>
-                  </div>
-                  <div className="stat-item">
-                    <div className="stat-number">98%</div>
-                    <div className="stat-label">Satisfaction Rate</div>
-                  </div>
-                </div>
-                
-                <div className="testimonials">
-                  <div className="testimonial-card">
-                    <div className="testimonial-rating">⭐⭐⭐⭐⭐</div>
-                    <p className="testimonial-text">"Finally, a workout app that doesn't require signup. Got my personalized plan in 30 seconds!"</p>
-                    <p className="testimonial-author">— Sarah M., Fitness Enthusiast</p>
-                  </div>
-                  <div className="testimonial-card">
-                    <div className="testimonial-rating">⭐⭐⭐⭐⭐</div>
-                    <p className="testimonial-text">"The AI really understands my limitations and creates perfect workouts for my home gym."</p>
-                    <p className="testimonial-author">— Mike T., Home Trainer</p>
-                  </div>
-                </div>
-              </section>
-
-              {/* SEO Content Sections */}
-              <section className="seo-content" aria-label="About AI Workout Generator">
-                <h2>AI Workout Generator Without Signup</h2>
-                <p>
-                  Get personalized AI-generated workouts instantly without creating an account. 
-                  Start with 3 free workouts and unlock more with one-time payments. No subscriptions, no commitments.
-                </p>
-
-                <h2>Personalized Home & Gym Workouts</h2>
-                <p>
-                  Our AI creates custom workout plans tailored to your fitness level, available equipment, 
-                  and personal goals. Whether you're at home or in the gym, get workouts that fit your needs.
-                </p>
-
-                <h2>Best AI Fitness App for Busy People</h2>
-                <p>
-                  No time for long signup processes? AIWorkoutNow gives you instant access to professional-quality 
-                  workout plans. Get started in seconds, not minutes.
-                </p>
-              </section>
-            </div>
-
-            <aside className="home-sidebar" aria-label="Pricing plans">
-              <PricingPlans showHeader={false} compact={true} />
+            {/* Right Column: Pricing Plans */}
+            <aside className="md:col-span-1 lg:col-span-3 order-2 md:order-2 lg:order-3">
+              <div className="bg-slate-50/50 rounded-xl p-6">
+                <PricingPlans showHeader={true} compact={true} vertical={true} />
+              </div>
             </aside>
           </div>
 
-          <section className="home-full-width" aria-label="Pricing plans">
-            <PricingPlans showHeader={true} />
-          </section>
-
-          {/* Trust Badges */}
-          <section className="trust-badges" aria-label="Trust indicators">
-            <div className="trust-badge-item">
-              <span className="badge-icon">🔒</span>
-              <span>Secure Payment</span>
+          {/* Trust Badges - Full Width */}
+          <section className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-slate-50 rounded-lg p-4 text-center">
+              <span className="text-2xl block mb-2">🔒</span>
+              <span className="text-sm font-semibold text-slate-700">Secure Payment</span>
             </div>
-            <div className="trust-badge-item">
-              <span className="badge-icon">🚫</span>
-              <span>No Subscription</span>
+            <div className="bg-slate-50 rounded-lg p-4 text-center">
+              <span className="text-2xl block mb-2">🚫</span>
+              <span className="text-sm font-semibold text-slate-700">No Subscription</span>
             </div>
-            <div className="trust-badge-item">
-              <span className="badge-icon">⚡</span>
-              <span>Instant Access</span>
+            <div className="bg-slate-50 rounded-lg p-4 text-center">
+              <span className="text-2xl block mb-2">⚡</span>
+              <span className="text-sm font-semibold text-slate-700">Instant Access</span>
             </div>
-            <div className="trust-badge-item">
-              <span className="badge-icon">💯</span>
-              <span>Money-Back Guarantee</span>
+            <div className="bg-slate-50 rounded-lg p-4 text-center">
+              <span className="text-2xl block mb-2">💯</span>
+              <span className="text-sm font-semibold text-slate-700">Money-Back Guarantee</span>
             </div>
           </section>
 
+          {/* SEO Content - Hidden but present for SEO */}
+          <section className="mt-8 hidden">
+            <h2>AI Workout Generator Without Signup</h2>
+            <p>Get personalized AI-generated workouts instantly without creating an account. Start with 3 free workouts and unlock more with one-time payments. No subscriptions, no commitments.</p>
+            <h2>Personalized Home & Gym Workouts</h2>
+            <p>Our AI creates custom workout plans tailored to your fitness level, available equipment, and personal goals. Whether you're at home or in the gym, get workouts that fit your needs.</p>
+            <h2>Best AI Fitness App for Busy People</h2>
+            <p>No time for long signup processes? AIWorkoutNow gives you instant access to professional-quality workout plans. Get started in seconds, not minutes.</p>
+          </section>
         </div>
       </main>
 
