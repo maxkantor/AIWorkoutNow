@@ -234,26 +234,6 @@ function Home() {
                   </div>
                 </div>
               </section>
-
-              {/* Trust Badges - Compact */}
-              <section className="grid grid-cols-2 gap-2 mt-4">
-                <div className="bg-white rounded-lg p-2.5 text-center border border-slate-200 shadow-sm">
-                  <span className="text-lg block mb-1">🔒</span>
-                  <span className="text-xs font-semibold text-slate-700">Secure Payment</span>
-                </div>
-                <div className="bg-white rounded-lg p-2.5 text-center border border-slate-200 shadow-sm">
-                  <span className="text-lg block mb-1">🚫</span>
-                  <span className="text-xs font-semibold text-slate-700">No Subscription</span>
-                </div>
-                <div className="bg-white rounded-lg p-2.5 text-center border border-slate-200 shadow-sm">
-                  <span className="text-lg block mb-1">⚡</span>
-                  <span className="text-xs font-semibold text-slate-700">Instant Access</span>
-                </div>
-                <div className="bg-white rounded-lg p-2.5 text-center border border-slate-200 shadow-sm">
-                  <span className="text-lg block mb-1">💯</span>
-                  <span className="text-xs font-semibold text-slate-700">Money-Back</span>
-                </div>
-              </section>
             </aside>
 
             {/* Center Column: Workout Generator Form */}
@@ -274,6 +254,26 @@ function Home() {
                   <AffiliateProducts workoutType={workout.type || 'general'} />
                 </div>
               )}
+
+              {/* Trust Badges - Under Workout Section */}
+              <section className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
+                <div className="bg-white rounded-lg p-3 text-center border border-slate-200 shadow-sm">
+                  <span className="text-xl block mb-1.5">🔒</span>
+                  <span className="text-xs font-semibold text-slate-700">Secure Payment</span>
+                </div>
+                <div className="bg-white rounded-lg p-3 text-center border border-slate-200 shadow-sm">
+                  <span className="text-xl block mb-1.5">🚫</span>
+                  <span className="text-xs font-semibold text-slate-700">No Subscription</span>
+                </div>
+                <div className="bg-white rounded-lg p-3 text-center border border-slate-200 shadow-sm">
+                  <span className="text-xl block mb-1.5">⚡</span>
+                  <span className="text-xs font-semibold text-slate-700">Instant Access</span>
+                </div>
+                <div className="bg-white rounded-lg p-3 text-center border border-slate-200 shadow-sm">
+                  <span className="text-xl block mb-1.5">💯</span>
+                  <span className="text-xs font-semibold text-slate-700">Money-Back Guarantee</span>
+                </div>
+              </section>
             </section>
 
             {/* Right Column: Pricing Plans */}

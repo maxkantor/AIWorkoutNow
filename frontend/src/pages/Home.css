@@ -65,8 +65,6 @@ main.min-h-screen {
   aside.lg\:col-span-3 {
     grid-column: span 3 / span 3;
     order: 1;
-    display: flex;
-    flex-direction: column;
   }
 
   /* Center Column - Form (6 columns - Focal Point, Larger) */
@@ -239,39 +237,54 @@ main.min-h-screen {
   }
 }
 
-/* Trust Badges - Compact in Left Column, Aligned Under Workout Section */
-aside.lg\:col-span-3 > section.grid.grid-cols-2 {
-  margin-top: auto;
-  gap: 0.5rem;
+/* Trust Badges - Under Workout Section in Center Column */
+section.lg\:col-span-6 > section.grid.grid-cols-2.md\:grid-cols-4 {
+  margin-top: 1.5rem;
+  gap: 0.75rem;
 }
 
-aside.lg\:col-span-3 > section.grid.grid-cols-2 > div {
+section.lg\:col-span-6 > section.grid.grid-cols-2.md\:grid-cols-4 > div {
   background: white;
   border-radius: 0.5rem;
-  padding: 0.625rem;
+  padding: 0.75rem;
   text-align: center;
   border: 1px solid #e2e8f0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: all 0.2s;
 }
 
-aside.lg\:col-span-3 > section.grid.grid-cols-2 > div:hover {
+section.lg\:col-span-6 > section.grid.grid-cols-2.md\:grid-cols-4 > div:hover {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
   border-color: #667eea;
 }
 
-aside.lg\:col-span-3 > section.grid.grid-cols-2 > div > span:first-child {
-  font-size: 1.125rem;
+section.lg\:col-span-6 > section.grid.grid-cols-2.md\:grid-cols-4 > div > span:first-child {
+  font-size: 1.25rem;
   display: block;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.375rem;
 }
 
-aside.lg\:col-span-3 > section.grid.grid-cols-2 > div > span:last-child {
+section.lg\:col-span-6 > section.grid.grid-cols-2.md\:grid-cols-4 > div > span:last-child {
   font-size: 0.75rem;
   font-weight: 600;
   color: #475569;
-  line-height: 1.2;
+  line-height: 1.3;
+}
+
+/* Mobile: 2 columns */
+@media (max-width: 767px) {
+  section.lg\:col-span-6 > section.grid.grid-cols-2.md\:grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.625rem;
+  }
+}
+
+/* Tablet and Desktop: 4 columns */
+@media (min-width: 768px) {
+  section.lg\:col-span-6 > section.grid.grid-cols-2.md\:grid-cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 /* Typography Improvements - Better Vertical Rhythm */
