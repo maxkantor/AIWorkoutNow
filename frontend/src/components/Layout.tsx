@@ -1,5 +1,4 @@
 import { ReactNode, createContext, useContext, useState } from 'react';
-import { Link } from 'react-router-dom';
 import Footer from './Footer';
 import './Layout.css';
 
@@ -71,7 +70,7 @@ function Layout({ children }: LayoutProps) {
                       </span>
                     )}
                   </div>
-                ) : tokenBalance !== null && tokenBalance > 0 ? (
+                ) : tokenBalance !== null && tokenBalance !== undefined && tokenBalance > 0 ? (
                   <div className="inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-semibold text-xs md:text-sm shadow-sm">
                     Tokens: {tokenBalance}
                   </div>
