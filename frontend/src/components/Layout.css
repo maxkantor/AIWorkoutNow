@@ -26,13 +26,14 @@
 }
 
 .logo h1 {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 700;
   background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin: 0;
+  white-space: nowrap;
 }
 
 .header-cta {
@@ -70,7 +71,8 @@
   }
   
   .logo h1 {
-    font-size: 1.1rem;
+    font-size: 0.9rem;
+    white-space: normal;
   }
   
   .main {
