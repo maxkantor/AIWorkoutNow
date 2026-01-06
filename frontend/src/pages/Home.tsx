@@ -234,6 +234,26 @@ function Home() {
                   </div>
                 </div>
               </section>
+
+              {/* Trust Badges - Compact */}
+              <section className="grid grid-cols-2 gap-2 mt-4">
+                <div className="bg-white rounded-lg p-2.5 text-center border border-slate-200 shadow-sm">
+                  <span className="text-lg block mb-1">🔒</span>
+                  <span className="text-xs font-semibold text-slate-700">Secure Payment</span>
+                </div>
+                <div className="bg-white rounded-lg p-2.5 text-center border border-slate-200 shadow-sm">
+                  <span className="text-lg block mb-1">🚫</span>
+                  <span className="text-xs font-semibold text-slate-700">No Subscription</span>
+                </div>
+                <div className="bg-white rounded-lg p-2.5 text-center border border-slate-200 shadow-sm">
+                  <span className="text-lg block mb-1">⚡</span>
+                  <span className="text-xs font-semibold text-slate-700">Instant Access</span>
+                </div>
+                <div className="bg-white rounded-lg p-2.5 text-center border border-slate-200 shadow-sm">
+                  <span className="text-lg block mb-1">💯</span>
+                  <span className="text-xs font-semibold text-slate-700">Money-Back</span>
+                </div>
+              </section>
             </aside>
 
             {/* Center Column: Workout Generator Form */}
@@ -263,26 +283,6 @@ function Home() {
               </div>
             </aside>
           </div>
-
-          {/* Trust Badges - Full Width */}
-          <section className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-slate-50 rounded-lg p-4 text-center">
-              <span className="text-2xl block mb-2">🔒</span>
-              <span className="text-sm font-semibold text-slate-700">Secure Payment</span>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-4 text-center">
-              <span className="text-2xl block mb-2">🚫</span>
-              <span className="text-sm font-semibold text-slate-700">No Subscription</span>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-4 text-center">
-              <span className="text-2xl block mb-2">⚡</span>
-              <span className="text-sm font-semibold text-slate-700">Instant Access</span>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-4 text-center">
-              <span className="text-2xl block mb-2">💯</span>
-              <span className="text-sm font-semibold text-slate-700">Money-Back Guarantee</span>
-            </div>
-          </section>
 
           {/* SEO Content - Hidden but present for SEO */}
           <section className="mt-8 hidden">
