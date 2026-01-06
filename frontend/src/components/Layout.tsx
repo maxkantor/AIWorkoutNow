@@ -35,51 +35,51 @@ function Layout({ children }: LayoutProps) {
   return (
     <div className="layout">
       <header className="header" role="banner">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="header-hero">
-            {/* Main Title */}
-            <div className="header-title-section">
-              <div className="flex items-center justify-center gap-3 mb-2">
-                <span className="text-4xl md:text-5xl animate-pulse">💪</span>
-                <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">
+        <div className="header-container">
+          <div className="header-content">
+            {/* Main Title - Compact */}
+            <div className="header-title-wrapper">
+              <span className="header-icon">💪</span>
+              <div className="header-text">
+                <h1 className="header-title">
                   Get Your Perfect Workout in Seconds
                 </h1>
+                <p className="header-subtitle">
+                  AI-powered, personalized fitness plans tailored to your goals, equipment, and schedule. No signup. No subscription. Just results.
+                </p>
               </div>
-              <p className="text-slate-600 text-sm md:text-base text-center max-w-3xl mx-auto mb-4">
-                AI-powered, personalized fitness plans tailored to your goals, equipment, and schedule. No signup. No subscription. Just results.
-              </p>
             </div>
 
-            {/* Trust Signals */}
-            <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-3">
-              <span className="px-3 py-1.5 bg-blue-50 text-slate-700 rounded-full text-xs md:text-sm font-medium shadow-sm">🎁 3 Free Workouts</span>
-              <span className="px-3 py-1.5 bg-blue-50 text-slate-700 rounded-full text-xs md:text-sm font-medium shadow-sm">🚫 No Signup</span>
-              <span className="px-3 py-1.5 bg-blue-50 text-slate-700 rounded-full text-xs md:text-sm font-medium shadow-sm">💳 One-Time Payment</span>
-              <span className="px-3 py-1.5 bg-blue-50 text-slate-700 rounded-full text-xs md:text-sm font-medium shadow-sm">⚡ Instant Access</span>
+            {/* Trust Signals - Compact */}
+            <div className="header-badges">
+              <span className="header-badge">🎁 3 Free Workouts</span>
+              <span className="header-badge">🚫 No Signup</span>
+              <span className="header-badge">💳 One-Time Payment</span>
+              <span className="header-badge">⚡ Instant Access</span>
             </div>
 
-            {/* Access Status */}
+            {/* Access Status - Compact */}
             {!checkingAccess && (
-              <div className="flex justify-center mb-2">
+              <div className="header-status">
                 {accessStatus?.hasUnlimitedAccess ? (
-                  <div className="inline-block px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold text-xs md:text-sm shadow-md">
+                  <div className="status-badge status-unlimited">
                     ∞ Unlimited Access
                     {accessStatus.unlimitedExpiresAt && (
-                      <span className="text-xs opacity-90 ml-2">
+                      <span className="status-expires">
                         (expires {new Date(accessStatus.unlimitedExpiresAt).toLocaleDateString()})
                       </span>
                     )}
                   </div>
                 ) : tokenBalance !== null && tokenBalance !== undefined && tokenBalance > 0 ? (
-                  <div className="inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-semibold text-xs md:text-sm shadow-sm">
+                  <div className="status-badge status-tokens">
                     Tokens: {tokenBalance}
                   </div>
                 ) : freeWorkoutsRemaining !== undefined && freeWorkoutsRemaining > 0 ? (
-                  <div className="inline-block px-4 py-2 bg-green-100 text-green-800 rounded-lg font-semibold text-xs md:text-sm shadow-sm">
+                  <div className="status-badge status-free">
                     Free workouts remaining: {freeWorkoutsRemaining} / 3
                   </div>
                 ) : freeWorkoutsRemaining !== undefined && freeWorkoutsRemaining === 0 ? (
-                  <div className="inline-block px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg font-semibold text-xs md:text-sm shadow-sm">
+                  <div className="status-badge status-exhausted">
                     Free workouts exhausted
                   </div>
                 ) : null}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import WorkoutDisplay from './WorkoutDisplay';
+import './WorkoutGenerator.css';
 
 interface WorkoutGeneratorProps {
   onGenerate: (preferences: any) => void;
@@ -31,26 +32,26 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = fals
 
   return (
     <section aria-labelledby="workout-generator-title">
-      <header className="mb-6">
-        <h2 id="workout-generator-title" className="text-2xl font-bold text-slate-800 mb-2">
+      <header className="form-header">
+        <h2 id="workout-generator-title" className="form-title">
           Create Your Personalized Workout
         </h2>
-        <p className="text-slate-600">
+        <p className="form-subtitle">
           Tell us about yourself, and we'll generate a workout plan tailored just for you.
         </p>
       </header>
       
-      <form onSubmit={handleSubmit} className="space-y-4" aria-label="Workout preferences form">
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="fitnessLevel" className="block text-sm font-semibold text-slate-700 mb-2">
+      <form onSubmit={handleSubmit} className="workout-form" aria-label="Workout preferences form">
+        <div className="form-fields">
+          <div className="form-field">
+            <label htmlFor="fitnessLevel" className="form-label">
               Fitness Level
             </label>
             <select
               id="fitnessLevel"
               value={fitnessLevel}
               onChange={(e) => setFitnessLevel(e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="form-input form-select"
             >
               <option value="beginner">Beginner</option>
               <option value="intermediate">Intermediate</option>
@@ -58,15 +59,15 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = fals
             </select>
           </div>
 
-          <div>
-            <label htmlFor="workoutType" className="block text-sm font-semibold text-slate-700 mb-2">
+          <div className="form-field">
+            <label htmlFor="workoutType" className="form-label">
               Workout Type
             </label>
             <select
               id="workoutType"
               value={workoutType}
               onChange={(e) => setWorkoutType(e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="form-input form-select"
             >
               <option value="full-body">Full Body</option>
               <option value="upper-body">Upper Body</option>
@@ -78,15 +79,15 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = fals
             </select>
           </div>
 
-          <div>
-            <label htmlFor="duration" className="block text-sm font-semibold text-slate-700 mb-2">
+          <div className="form-field">
+            <label htmlFor="duration" className="form-label">
               Duration (minutes)
             </label>
             <select
               id="duration"
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="form-input form-select"
             >
               <option value="15">15 min</option>
               <option value="30">30 min</option>
@@ -95,15 +96,15 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = fals
             </select>
           </div>
 
-          <div>
-            <label htmlFor="equipment" className="block text-sm font-semibold text-slate-700 mb-2">
+          <div className="form-field">
+            <label htmlFor="equipment" className="form-label">
               Equipment Available
             </label>
             <select
               id="equipment"
               value={equipment}
               onChange={(e) => setEquipment(e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="form-input form-select"
             >
               <option value="minimal">Minimal (Bodyweight)</option>
               <option value="dumbbells">Dumbbells</option>
@@ -112,9 +113,9 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = fals
             </select>
           </div>
 
-          <div>
-            <label htmlFor="injuries" className="block text-sm font-semibold text-slate-700 mb-2">
-              Injuries or Limitations <span className="text-slate-400 font-normal text-xs">(optional)</span>
+          <div className="form-field">
+            <label htmlFor="injuries" className="form-label">
+              Injuries or Limitations <span className="form-label-optional">(optional)</span>
             </label>
             <input
               type="text"
@@ -122,13 +123,13 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = fals
               value={injuries}
               onChange={(e) => setInjuries(e.target.value)}
               placeholder="e.g., knee injury, lower back pain"
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="form-input"
             />
           </div>
 
-          <div>
-            <label htmlFor="goals" className="block text-sm font-semibold text-slate-700 mb-2">
-              Fitness Goals <span className="text-slate-400 font-normal text-xs">(optional)</span>
+          <div className="form-field">
+            <label htmlFor="goals" className="form-label">
+              Fitness Goals <span className="form-label-optional">(optional)</span>
             </label>
             <input
               type="text"
@@ -136,13 +137,13 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = fals
               value={goals}
               onChange={(e) => setGoals(e.target.value)}
               placeholder="e.g., weight loss, muscle gain, endurance"
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="form-input"
             />
           </div>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          <div className="form-error">
             {error}
           </div>
         )}
@@ -150,7 +151,7 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = fals
         <button 
           type="submit" 
           disabled={loading || disabled}
-          className="w-full bg-gradient-to-r from-blue-600 to-green-500 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+          className="form-submit-button"
         >
           {loading ? 'Generating Workout...' : disabled ? 'Unlock More Workouts' : 'Generate AI Workout'}
         </button>
