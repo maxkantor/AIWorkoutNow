@@ -7,7 +7,6 @@ import AffiliateProducts from '../components/AffiliateProducts';
 import { getDeviceId, getTokenBalance } from '../utils/storage';
 import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus } from '../services/api';
 import { useHeroContext } from '../components/Layout';
-import './Home.css';
 
 function Home() {
   const [workout, setWorkout] = useState<any>(null);
@@ -184,62 +183,62 @@ function Home() {
         </script>
       </Helmet>
       
-      <main className="main-content">
-        <div className="content-container">
+      <main className="min-h-screen bg-slate-50 py-6">
+        <div className="max-w-7xl mx-auto px-4">
           {/* 3-Column Grid Layout */}
-          <div className="main-grid">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-8">
             {/* Left Column: Why Choose AIWorkoutNow? - Benefits, Stats */}
-            <aside className="sidebar-left">
+            <aside className="md:col-span-2 lg:col-span-3 space-y-6 order-3 md:order-3 lg:order-1">
               {/* Why Choose Us */}
-              <section className="benefits-section">
-                <h2>Why Choose AIWorkoutNow?</h2>
-                <div>
-                  <div>
-                    <div>🎯</div>
-                    <h3>100% Personalized</h3>
-                    <p>Every workout is tailored to your fitness level, goals, and available equipment.</p>
+              <section className="bg-slate-50/50 rounded-xl p-6">
+                <h2 className="text-xl font-bold text-slate-800 mb-4">Why Choose AIWorkoutNow?</h2>
+                <div className="space-y-4">
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <div className="text-3xl mb-2">🎯</div>
+                    <h3 className="font-semibold text-slate-800 mb-1">100% Personalized</h3>
+                    <p className="text-sm text-slate-600">Every workout is tailored to your fitness level, goals, and available equipment.</p>
                   </div>
-                  <div>
-                    <div>⚡</div>
-                    <h3>Instant Generation</h3>
-                    <p>Get professional-quality workout plans in seconds, not hours of research.</p>
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <div className="text-3xl mb-2">⚡</div>
+                    <h3 className="font-semibold text-slate-800 mb-1">Instant Generation</h3>
+                    <p className="text-sm text-slate-600">Get professional-quality workout plans in seconds, not hours of research.</p>
                   </div>
-                  <div>
-                    <div>🏠</div>
-                    <h3>Home or Gym</h3>
-                    <p>Works with any equipment—from bodyweight to full gym setups.</p>
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <div className="text-3xl mb-2">🏠</div>
+                    <h3 className="font-semibold text-slate-800 mb-1">Home or Gym</h3>
+                    <p className="text-sm text-slate-600">Works with any equipment—from bodyweight to full gym setups.</p>
                   </div>
-                  <div>
-                    <div>🔒</div>
-                    <h3>No Commitment</h3>
-                    <p>Pay once. No subscriptions. No recurring charges. Ever.</p>
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <div className="text-3xl mb-2">🔒</div>
+                    <h3 className="font-semibold text-slate-800 mb-1">No Commitment</h3>
+                    <p className="text-sm text-slate-600">Pay once. No subscriptions. No recurring charges. Ever.</p>
                   </div>
                 </div>
               </section>
 
               {/* Stats */}
-              <section className="stats-section">
-                <div>
-                  <div>
-                    <div>10,000+</div>
-                    <div>Workouts Generated</div>
+              <section className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-extrabold mb-1">10,000+</div>
+                    <div className="text-sm opacity-90">Workouts Generated</div>
                   </div>
-                  <div>
-                    <div>4.8★</div>
-                    <div>User Rating</div>
+                  <div className="text-center">
+                    <div className="text-3xl font-extrabold mb-1">4.8★</div>
+                    <div className="text-sm opacity-90">User Rating</div>
                   </div>
-                  <div>
-                    <div>98%</div>
-                    <div>Satisfaction Rate</div>
+                  <div className="text-center">
+                    <div className="text-3xl font-extrabold mb-1">98%</div>
+                    <div className="text-sm opacity-90">Satisfaction Rate</div>
                   </div>
                 </div>
               </section>
             </aside>
 
             {/* Center Column: Workout Generator Form */}
-            <section className="main-form-section">
+            <section className="md:col-span-1 lg:col-span-6 order-1 md:order-1 lg:order-2">
               {/* Workout Generator Form */}
-              <div className="form-container">
+              <div className="bg-white shadow-xl rounded-2xl border border-slate-100 p-6 md:p-8">
                 <WorkoutGenerator
                   onGenerate={handleGenerateWorkout}
                   loading={loading}
@@ -250,37 +249,37 @@ function Home() {
               </div>
 
               {workout && (
-                <div className="affiliate-products-wrapper">
+                <div className="mt-6">
                   <AffiliateProducts workoutType={workout.type || 'general'} />
                 </div>
               )}
             </section>
 
             {/* Right Column: Pricing Plans */}
-            <aside className="sidebar-right">
-              <div className="pricing-container">
+            <aside className="md:col-span-1 lg:col-span-3 order-2 md:order-2 lg:order-3">
+              <div className="bg-slate-50/50 rounded-xl p-6">
                 <PricingPlans showHeader={true} vertical={true} />
               </div>
             </aside>
           </div>
 
           {/* Trust Badges - Full Width */}
-          <section className="trust-badges-section">
-            <div>
-              <span>🔒</span>
-              <span>Secure Payment</span>
+          <section className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-slate-50 rounded-lg p-4 text-center">
+              <span className="text-2xl block mb-2">🔒</span>
+              <span className="text-sm font-semibold text-slate-700">Secure Payment</span>
             </div>
-            <div>
-              <span>🚫</span>
-              <span>No Subscription</span>
+            <div className="bg-slate-50 rounded-lg p-4 text-center">
+              <span className="text-2xl block mb-2">🚫</span>
+              <span className="text-sm font-semibold text-slate-700">No Subscription</span>
             </div>
-            <div>
-              <span>⚡</span>
-              <span>Instant Access</span>
+            <div className="bg-slate-50 rounded-lg p-4 text-center">
+              <span className="text-2xl block mb-2">⚡</span>
+              <span className="text-sm font-semibold text-slate-700">Instant Access</span>
             </div>
-            <div>
-              <span>💯</span>
-              <span>Money-Back Guarantee</span>
+            <div className="bg-slate-50 rounded-lg p-4 text-center">
+              <span className="text-2xl block mb-2">💯</span>
+              <span className="text-sm font-semibold text-slate-700">Money-Back Guarantee</span>
             </div>
           </section>
 
