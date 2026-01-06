@@ -64,14 +64,14 @@ function PricingPlans({ showHeader = true, compact = false }: PricingPlansProps)
   }
 
   return (
-    <section className={`pricing-plans-section ${compact ? 'compact' : ''}`}>
+    <section className={`pricing-plans-section ${compact ? 'compact' : ''}`} aria-labelledby={showHeader ? "pricing-heading" : undefined}>
       {showHeader && (
-        <div className="pricing-header">
-          <h2>Unlock More AI Workouts</h2>
+        <header className="pricing-header">
+          <h2 id="pricing-heading">Unlock More AI Workouts</h2>
           <p className="pricing-subtitle">
             Pay once. No login. No subscription. Instant access.
           </p>
-        </div>
+        </header>
       )}
 
       <div className={`pricing-grid ${compact ? 'compact-grid' : ''}`}>
@@ -118,10 +118,11 @@ function PricingPlans({ showHeader = true, compact = false }: PricingPlansProps)
               className={`cta-button ${plan.isRecommended ? 'primary' : 'secondary'}`}
               onClick={() => handlePurchase(plan)}
               disabled={checkoutLoading === plan.planId}
+              aria-label={`Purchase ${plan.name} plan`}
             >
               {checkoutLoading === plan.planId ? 'Processing...' : 'Get Started'}
             </button>
-          </div>
+          </article>
         ))}
       </div>
 

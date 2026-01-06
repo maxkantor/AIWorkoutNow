@@ -17,19 +17,23 @@ function Layout({ children }: LayoutProps) {
 
   return (
     <div className="layout">
-      <header className="header">
+      <header className="header" role="banner">
         <div className="container">
           <div className="header-content">
-            <Link to="/" className="logo">
+            <Link to="/" className="logo" aria-label="AIWorkoutNow Home">
               <h1>AIWorkoutNow</h1>
             </Link>
-            <button className="header-cta" onClick={scrollToGenerator}>
+            <button 
+              className="header-cta" 
+              onClick={scrollToGenerator}
+              aria-label="Scroll to workout generator"
+            >
               Get Free Workouts
             </button>
           </div>
         </div>
       </header>
-      <main className="main">{children}</main>
+      {children}
       <Footer />
     </div>
   );

@@ -107,13 +107,48 @@ code {
   margin-bottom: 1.5rem;
 }
 
-@media (max-width: 768px) {
+/* Responsive breakpoints */
+/* Mobile: 0-640px */
+/* Tablet: 641-1024px */
+/* Desktop: 1025px+ */
+
+@media (max-width: 640px) {
   .container {
-    padding: 0 0.75rem;
+    padding: 0 1rem;
   }
   
   .card {
     padding: 1rem;
   }
+
+  .btn {
+    padding: 0.875rem 1.25rem;
+    font-size: 1rem;
+    min-height: 44px; /* Touch target size */
+  }
+
+  .input {
+    min-height: 44px; /* Touch target size */
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .container {
+    padding: 0 1.25rem;
+  }
+}
+
+/* Screen reader only class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 

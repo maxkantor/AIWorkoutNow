@@ -31,8 +31,9 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = fals
   };
 
   return (
-    <div className="workout-generator">
-      <form onSubmit={handleSubmit} className="workout-form">
+    <section className="workout-generator" aria-labelledby="workout-generator-title">
+      <h2 id="workout-generator-title" className="sr-only">Generate Your AI Workout</h2>
+      <form onSubmit={handleSubmit} className="workout-form" aria-label="Workout preferences form">
         <div className="form-grid">
           <div className="form-group">
             <label htmlFor="fitnessLevel">Fitness Level</label>
@@ -133,7 +134,7 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = fals
       </form>
 
       {workout && <WorkoutDisplay workout={workout} />}
-    </div>
+    </section>
   );
 }
 

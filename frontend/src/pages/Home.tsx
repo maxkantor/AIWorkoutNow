@@ -106,9 +106,41 @@ function Home() {
           name="description" 
           content="Get 3 free AI workouts. No signup, no subscription. Pay once and train instantly with AIWorkoutNow." 
         />
+        <meta name="keywords" content="AI workout generator, free workouts, personalized fitness, home workouts, no signup, AI fitness, workout planner, fitness AI" />
+        <meta name="author" content="AIWorkoutNow" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://aiworkoutnow.com" />
+        
+        {/* Open Graph */}
         <meta property="og:title" content="AI Workout Generator – 3 Free Workouts | AIWorkoutNow" />
         <meta property="og:description" content="Get 3 free AI workouts. No signup, no subscription. Pay once and train instantly." />
-        <meta name="keywords" content="AI workout generator, free workouts, personalized fitness, home workouts, no signup, AI fitness" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://aiworkoutnow.com" />
+        <meta property="og:image" content="https://aiworkoutnow.com/og-image.png" />
+        <meta property="og:site_name" content="AIWorkoutNow" />
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="AI Workout Generator – 3 Free Workouts" />
+        <meta name="twitter:description" content="Get 3 free AI workouts. No signup, no subscription. Pay once and train instantly." />
+        <meta name="twitter:image" content="https://aiworkoutnow.com/og-image.png" />
+        
+        {/* Structured Data - WebPage */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "AI Workout Generator – 3 Free Workouts",
+            "description": "Get 3 free AI workouts. No signup, no subscription. Pay once and train instantly with AIWorkoutNow.",
+            "url": "https://aiworkoutnow.com",
+            "inLanguage": "en-US",
+            "isPartOf": {
+              "@type": "WebSite",
+              "name": "AIWorkoutNow",
+              "url": "https://aiworkoutnow.com"
+            }
+          })}
+        </script>
         
         {/* FAQ Schema */}
         <script type="application/ld+json">
@@ -153,58 +185,58 @@ function Home() {
         </script>
       </Helmet>
       
-      <div className="home">
+      <main className="home">
         <div className="container">
           <div className="home-layout">
             <div className="home-main">
               {/* Free Tier Banner */}
               {freeWorkoutsRemaining > 0 && (
-                <div className="free-tier-banner">
-                  <span className="banner-icon">🎁</span>
+                <section className="free-tier-banner" aria-label="Free workout offer">
+                  <span className="banner-icon" aria-hidden="true">🎁</span>
                   <span className="banner-text">3 Free AI Workouts — No Signup Required</span>
-                </div>
+                </section>
               )}
 
-              <div className="hero">
-            <h1>Instant AI Workouts. No Signup.</h1>
-            <p className="hero-subtitle">
-              No account. No subscription. Just train.
-            </p>
-            
-            <div className="trust-signals">
-              <span>🎁 3 Free Workouts</span>
-              <span>🚫 No Signup</span>
-              <span>💳 One-Time Payment</span>
-            </div>
+              <section className="hero">
+                <h1>Instant AI Workouts. No Signup.</h1>
+                <p className="hero-subtitle">
+                  No account. No subscription. Just train.
+                </p>
+                
+                <div className="trust-signals" role="list" aria-label="Key features">
+                  <span role="listitem">🎁 3 Free Workouts</span>
+                  <span role="listitem">🚫 No Signup</span>
+                  <span role="listitem">💳 One-Time Payment</span>
+                </div>
 
-            {/* Access Status Display */}
-            {!checkingAccess && (
-              <div className="access-status">
-                {accessStatus?.hasUnlimitedAccess ? (
-                  <div className="status-badge unlimited">
-                    <span>∞ Unlimited Access</span>
-                    {accessStatus.unlimitedExpiresAt && (
-                      <span className="expires">
-                        (expires {new Date(accessStatus.unlimitedExpiresAt).toLocaleDateString()})
-                      </span>
+                {/* Access Status Display */}
+                {!checkingAccess && (
+                  <div className="access-status" aria-live="polite">
+                    {accessStatus?.hasUnlimitedAccess ? (
+                      <div className="status-badge unlimited">
+                        <span>∞ Unlimited Access</span>
+                        {accessStatus.unlimitedExpiresAt && (
+                          <span className="expires">
+                            (expires {new Date(accessStatus.unlimitedExpiresAt).toLocaleDateString()})
+                          </span>
+                        )}
+                      </div>
+                    ) : tokenBalance !== null && tokenBalance > 0 ? (
+                      <div className="status-badge tokens">
+                        <span>Tokens: {tokenBalance}</span>
+                      </div>
+                    ) : freeWorkoutsRemaining > 0 ? (
+                      <div className="status-badge free">
+                        <span>Free workouts remaining: {freeWorkoutsRemaining} / 3</span>
+                      </div>
+                    ) : (
+                      <div className="status-badge exhausted">
+                        <span>Free workouts exhausted</span>
+                      </div>
                     )}
                   </div>
-                ) : tokenBalance !== null && tokenBalance > 0 ? (
-                  <div className="status-badge tokens">
-                    <span>Tokens: {tokenBalance}</span>
-                  </div>
-                ) : freeWorkoutsRemaining > 0 ? (
-                  <div className="status-badge free">
-                    <span>Free workouts remaining: {freeWorkoutsRemaining} / 3</span>
-                  </div>
-                ) : (
-                  <div className="status-badge exhausted">
-                    <span>Free workouts exhausted</span>
-                  </div>
                 )}
-              </div>
-            )}
-          </div>
+              </section>
 
               <WorkoutGenerator
                 onGenerate={handleGenerateWorkout}
@@ -218,8 +250,8 @@ function Home() {
                 <AffiliateProducts workoutType={workout.type || 'general'} />
               )}
 
-              {/* SEO Content Sections (Hidden visually but present for SEO) */}
-              <div className="seo-content" style={{ display: 'none' }}>
+              {/* SEO Content Sections */}
+              <section className="seo-content" aria-label="About AI Workout Generator">
                 <h2>AI Workout Generator Without Signup</h2>
                 <p>
                   Get personalized AI-generated workouts instantly without creating an account. 
@@ -237,19 +269,19 @@ function Home() {
                   No time for long signup processes? AIWorkoutNow gives you instant access to professional-quality 
                   workout plans. Get started in seconds, not minutes.
                 </p>
-              </div>
+              </section>
             </div>
 
-            <div className="home-sidebar">
+            <aside className="home-sidebar" aria-label="Pricing plans">
               <PricingPlans showHeader={false} compact={true} />
-            </div>
+            </aside>
           </div>
 
-          <div className="home-full-width">
+          <section className="home-full-width" aria-label="Pricing plans">
             <PricingPlans showHeader={true} />
-          </div>
+          </section>
         </div>
-      </div>
+      </main>
 
       <PaywallModal
         isOpen={showPaywall}
