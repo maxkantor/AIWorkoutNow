@@ -202,14 +202,18 @@ function Home() {
               )}
 
               <section className="hero">
-                <div className="hero-visual">
-                  <div className="hero-icon">💪</div>
-                  <div className="hero-gradient"></div>
+                <div className="hero-content">
+                  <div className="hero-visual">
+                    <div className="hero-icon">💪</div>
+                    <div className="hero-gradient"></div>
+                  </div>
+                  <div className="hero-text">
+                    <h1>Get Your Perfect Workout in Seconds</h1>
+                    <p className="hero-subtitle">
+                      AI-powered, personalized fitness plans tailored to your goals, equipment, and schedule. No signup. No subscription. Just results.
+                    </p>
+                  </div>
                 </div>
-                <h1>Get Your Perfect Workout in Seconds</h1>
-                <p className="hero-subtitle">
-                  AI-powered, personalized fitness plans tailored to your goals, equipment, and schedule. No signup. No subscription. Just results.
-                </p>
                 
                 <div className="trust-signals" role="list" aria-label="Key features">
                   <span role="listitem">🎁 3 Free Workouts</span>
