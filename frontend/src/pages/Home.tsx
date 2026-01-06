@@ -376,25 +376,6 @@ function Home() {
             </div>
           </section>
 
-          {/* Footer CTA */}
-          <section className="footer-cta" aria-label="Final call to action">
-            <div className="footer-cta-content">
-              <h2>Ready to Transform Your Fitness?</h2>
-              <p>Join thousands of users getting personalized AI workouts every day.</p>
-              <button 
-                className="footer-cta-button"
-                onClick={() => {
-                  const generator = document.querySelector('.workout-generator');
-                  if (generator) {
-                    generator.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }
-                }}
-                aria-label="Start your free workout"
-              >
-                Start Your Free Workout Now
-              </button>
-            </div>
-          </section>
         </div>
       </main>
 
