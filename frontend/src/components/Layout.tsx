@@ -21,7 +21,10 @@ function Layout({ children }: LayoutProps) {
         <div className="container">
           <div className="header-content">
             <Link to="/" className="logo" aria-label="AIWorkoutNow Home">
-              <h1>AIWorkoutNow</h1>
+              <h1 className="flex items-center gap-2">
+                <span>💪</span>
+                <span>Get Your Perfect Workout in Seconds</span>
+              </h1>
             </Link>
             <button 
               className="header-cta" 
