@@ -6,6 +6,7 @@ import PaywallModal from '../components/PaywallModal';
 import AffiliateProducts from '../components/AffiliateProducts';
 import { getDeviceId, getTokenBalance } from '../utils/storage';
 import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus } from '../services/api';
+import { useHeroContext } from '../components/Layout';
 
 function Home() {
   const [workout, setWorkout] = useState<any>(null);
@@ -16,10 +17,23 @@ function Home() {
   const [accessStatus, setAccessStatus] = useState<UserAccessStatus | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
+  const { setHeroContent } = useHeroContext();
 
   useEffect(() => {
     checkAccessStatus();
   }, []);
+
+  useEffect(() => {
+    setHeroContent({
+      freeWorkoutsRemaining,
+      accessStatus: accessStatus ? {
+        hasUnlimitedAccess: accessStatus.hasUnlimitedAccess,
+        unlimitedExpiresAt: accessStatus.unlimitedExpiresAt || undefined,
+      } : undefined,
+      tokenBalance,
+      checkingAccess,
+    });
+  }, [freeWorkoutsRemaining, accessStatus, tokenBalance, checkingAccess, setHeroContent]);
 
   const checkAccessStatus = async () => {
     try {
@@ -173,7 +187,7 @@ function Home() {
         <div className="max-w-7xl mx-auto px-4">
           {/* 3-Column Grid Layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-8">
-            {/* Left Column: Why Choose AIWorkoutNow? - Benefits, Stats, Testimonials */}
+            {/* Left Column: Why Choose AIWorkoutNow? - Benefits, Stats */}
             <aside className="md:col-span-2 lg:col-span-3 space-y-6 order-3 md:order-3 lg:order-1">
               {/* Why Choose Us */}
               <section className="bg-slate-50/50 rounded-xl p-6">
@@ -221,53 +235,8 @@ function Home() {
               </section>
             </aside>
 
-            {/* Center Column: Hero + Workout Generator Form */}
-            <section className="md:col-span-1 lg:col-span-6 order-1 md:order-1 lg:order-2 space-y-6">
-              {/* Hero Section */}
-              <section className="text-center">
-                <div className="flex items-center justify-center gap-4 mb-4">
-                  <div className="text-5xl animate-pulse">💪</div>
-                  <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">
-                    Get Your Perfect Workout in Seconds
-                  </h1>
-                </div>
-                <p className="text-slate-600 text-base md:text-lg mb-4">
-                  AI-powered, personalized fitness plans tailored to your goals, equipment, and schedule. No signup. No subscription. Just results.
-                </p>
-                <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-4">
-                  <span className="px-3 py-1 bg-blue-50 text-slate-700 rounded-full text-xs md:text-sm font-medium">🎁 3 Free Workouts</span>
-                  <span className="px-3 py-1 bg-blue-50 text-slate-700 rounded-full text-xs md:text-sm font-medium">🚫 No Signup</span>
-                  <span className="px-3 py-1 bg-blue-50 text-slate-700 rounded-full text-xs md:text-sm font-medium">💳 One-Time Payment</span>
-                  <span className="px-3 py-1 bg-blue-50 text-slate-700 rounded-full text-xs md:text-sm font-medium">⚡ Instant Access</span>
-                </div>
-                {!checkingAccess && (
-                  <div className="mb-4">
-                    {accessStatus?.hasUnlimitedAccess ? (
-                      <div className="inline-block px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold text-sm">
-                        ∞ Unlimited Access
-                        {accessStatus.unlimitedExpiresAt && (
-                          <span className="text-xs opacity-90 ml-2">
-                            (expires {new Date(accessStatus.unlimitedExpiresAt).toLocaleDateString()})
-                          </span>
-                        )}
-                      </div>
-                    ) : tokenBalance !== null && tokenBalance > 0 ? (
-                      <div className="inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-semibold text-sm">
-                        Tokens: {tokenBalance}
-                      </div>
-                    ) : freeWorkoutsRemaining > 0 ? (
-                      <div className="inline-block px-4 py-2 bg-green-100 text-green-800 rounded-lg font-semibold text-sm">
-                        Free workouts remaining: {freeWorkoutsRemaining} / 3
-                      </div>
-                    ) : (
-                      <div className="inline-block px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg font-semibold text-sm">
-                        Free workouts exhausted
-                      </div>
-                    )}
-                  </div>
-                )}
-              </section>
-
+            {/* Center Column: Workout Generator Form */}
+            <section className="md:col-span-1 lg:col-span-6 order-1 md:order-1 lg:order-2">
               {/* Workout Generator Form */}
               <div className="bg-white shadow-xl rounded-2xl border border-slate-100 p-6 md:p-8">
                 <WorkoutGenerator
