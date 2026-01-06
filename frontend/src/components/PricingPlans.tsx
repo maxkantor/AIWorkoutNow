@@ -74,11 +74,13 @@ function PricingPlans({ showHeader = true, compact = false }: PricingPlansProps)
         </header>
       )}
 
-      <div className={`pricing-grid ${compact ? 'compact-grid' : ''}`}>
+      <div className={`pricing-grid ${compact ? 'compact-grid' : ''}`} role="list">
         {plans.map((plan, index) => (
-          <div
+          <article
             key={plan.planId}
             className={`pricing-card ${plan.isRecommended ? 'recommended' : ''} ${showAllPlans || index < 2 || compact ? '' : 'hidden-mobile'}`}
+            role="listitem"
+            aria-label={`${plan.name} plan - $${plan.price.toFixed(2)}`}
           >
             {plan.isRecommended && (
               <div className="recommended-badge">

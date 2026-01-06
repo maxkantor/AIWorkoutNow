@@ -29,17 +29,22 @@ function ProductRecommendations({ products, workoutId }: ProductRecommendationsP
   };
 
   return (
-    <div className="product-recommendations">
-      <h3>Recommended Equipment</h3>
+    <section className="product-recommendations" aria-labelledby="products-heading">
+      <h3 id="products-heading">Recommended Equipment</h3>
       <p className="product-recommendations-subtitle">
         Enhance your workout with these recommended products
       </p>
-      <div className="product-grid">
+      <div className="product-grid" role="list">
         {products.map((product, index) => (
-          <div key={index} className="product-card">
+          <article key={index} className="product-card" role="listitem">
             {product.imageUrl && (
               <div className="product-image">
-                <img src={product.imageUrl} alt={product.title} />
+                <img 
+                  src={product.imageUrl} 
+                  alt={product.title}
+                  loading="lazy"
+                  decoding="async"
+                />
               </div>
             )}
             <div className="product-info">
@@ -58,6 +63,7 @@ function ProductRecommendations({ products, workoutId }: ProductRecommendationsP
               <button
                 className="product-button"
                 onClick={() => handleProductClick(product)}
+                aria-label={`View ${product.title} on Amazon`}
               >
                 View on Amazon
               </button>
@@ -65,10 +71,10 @@ function ProductRecommendations({ products, workoutId }: ProductRecommendationsP
                 <small>As an Amazon Associate, we earn from qualifying purchases.</small>
               </p>
             </div>
-          </div>
+          </article>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 

@@ -16,24 +16,24 @@ function WorkoutDisplay({ workout }: WorkoutDisplayProps) {
   }, [workout]);
 
   return (
-    <div className="workout-display card">
-      <div className="workout-header">
-        <h2>{workout.title || 'Your AI Workout'}</h2>
+    <article className="workout-display card" aria-labelledby="workout-title">
+      <header className="workout-header">
+        <h2 id="workout-title">{workout.title || 'Your AI Workout'}</h2>
         {workout.type && (
-          <span className="workout-type-badge">{workout.type}</span>
+          <span className="workout-type-badge" aria-label={`Workout type: ${workout.type}`}>{workout.type}</span>
         )}
-      </div>
+      </header>
       
       {workout.description && (
         <p className="workout-description">{workout.description}</p>
       )}
       
       {workout.exercises && workout.exercises.length > 0 && (
-        <div className="exercises">
-          <h3>Exercises</h3>
-          <ol className="exercise-list">
+        <section className="exercises" aria-labelledby="exercises-heading">
+          <h3 id="exercises-heading">Exercises</h3>
+          <ol className="exercise-list" role="list">
             {workout.exercises.map((exercise: any, index: number) => (
-              <li key={index} className="exercise-item">
+              <li key={index} className="exercise-item" role="listitem">
                 <div className="exercise-header">
                   <strong>{exercise.name}</strong>
                   {exercise.sets && exercise.reps && (
@@ -54,18 +54,18 @@ function WorkoutDisplay({ workout }: WorkoutDisplayProps) {
               </li>
             ))}
           </ol>
-        </div>
+        </section>
       )}
       
       {workout.tips && workout.tips.length > 0 && (
-        <div className="workout-tips">
-          <h3>Tips</h3>
-          <ul>
+        <section className="workout-tips" aria-labelledby="tips-heading">
+          <h3 id="tips-heading">Tips</h3>
+          <ul role="list">
             {workout.tips.map((tip: string, index: number) => (
-              <li key={index}>{tip}</li>
+              <li key={index} role="listitem">{tip}</li>
             ))}
           </ul>
-        </div>
+        </section>
       )}
       
       <ProductRecommendations 
@@ -73,12 +73,12 @@ function WorkoutDisplay({ workout }: WorkoutDisplayProps) {
         workoutId={workout.workoutId}
       />
       
-      <div className="workout-footer">
+      <footer className="workout-footer">
         <p className="workout-meta">
           Generated on {new Date(workout.createdAt || Date.now()).toLocaleDateString()}
         </p>
-      </div>
-    </div>
+      </footer>
+    </article>
   );
 }
 
