@@ -848,17 +848,19 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task<PricingPlan?> GetPricingPlanAsync(string planId)
     {
-        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
-        var plansTable = $"{tablePrefix}-PricingPlans";
-        
-        var response = await _dynamoDB.GetItemAsync(new GetItemRequest
+        try
         {
-            TableName = plansTable,
-            Key = new Dictionary<string, AttributeValue>
+            var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+            var plansTable = $"{tablePrefix}-PricingPlans";
+            
+            var response = await _dynamoDB.GetItemAsync(new GetItemRequest
             {
-                { "PlanId", new AttributeValue { S = planId } }
-            }
-        });
+                TableName = plansTable,
+                Key = new Dictionary<string, AttributeValue>
+                {
+                    { "PlanId", new AttributeValue { S = planId } }
+                }
+            });
 
         if (!response.Item.Any())
             return null;
