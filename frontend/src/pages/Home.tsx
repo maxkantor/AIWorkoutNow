@@ -44,11 +44,20 @@ function Home() {
       const status = await getUserAccessStatus(deviceId);
       setAccessStatus(status);
       
-      const freeWorkouts = await getFreeWorkoutsRemaining(deviceId);
-      setFreeWorkoutsRemaining(freeWorkouts.remaining);
-      
-      const balance = getTokenBalance(deviceId);
-      setTokenBalance(balance);
+      // Use tokensRemaining from API response (prioritize paid tokens)
+      if (status.tokensRemaining > 0) {
+        setTokenBalance(status.tokensRemaining);
+        // Update localStorage for consistency
+        const storageData = JSON.parse(localStorage.getItem(`token_balance_${deviceId}`) || '{}');
+        storageData.tokensRemaining = status.tokensRemaining;
+        storageData.lastUpdated = Date.now();
+        localStorage.setItem(`token_balance_${deviceId}`, JSON.stringify(storageData));
+      } else {
+        // Only check free workouts if no paid tokens
+        const freeWorkouts = await getFreeWorkoutsRemaining(deviceId);
+        setFreeWorkoutsRemaining(freeWorkouts.remaining);
+        setTokenBalance(null);
+      }
     } catch (err) {
       console.error('Failed to check access status:', err);
       setFreeWorkoutsRemaining(3);

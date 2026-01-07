@@ -774,6 +774,8 @@ public class DynamoDBService : IDynamoDBService
     // Cache table existence state to avoid slow scans
     private static bool? _pricingPlansTableExists = null;
     private static readonly object _tableExistenceLock = new object();
+    // Cache default plans to avoid recreating them
+    private static List<PricingPlan>? _defaultPlansCache = null;
     
     public async Task<List<PricingPlan>> GetAllPricingPlansAsync()
     {
@@ -786,7 +788,11 @@ public class DynamoDBService : IDynamoDBService
             if (_pricingPlansTableExists == false)
             {
                 Console.WriteLine($"[DynamoDBService] PricingPlans table known to not exist (cached), returning default plans immediately");
-                return GetDefaultPricingPlans();
+                if (_defaultPlansCache == null)
+                {
+                    _defaultPlansCache = GetDefaultPricingPlans();
+                }
+                return _defaultPlansCache;
             }
         }
         
@@ -811,7 +817,14 @@ public class DynamoDBService : IDynamoDBService
             if (response.Items.Count == 0)
             {
                 Console.WriteLine("[DynamoDBService] No pricing plans found, returning default plans");
-                return GetDefaultPricingPlans();
+                lock (_tableExistenceLock)
+                {
+                    if (_defaultPlansCache == null)
+                    {
+                        _defaultPlansCache = GetDefaultPricingPlans();
+                    }
+                    return _defaultPlansCache;
+                }
             }
 
             var plans = new List<PricingPlan>();
