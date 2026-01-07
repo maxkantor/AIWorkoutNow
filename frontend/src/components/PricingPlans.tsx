@@ -44,7 +44,21 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
       localStorage.setItem(cacheKey, JSON.stringify(sortedPlans));
       localStorage.setItem(cacheExpiryKey, (new Date().getTime() + 5 * 60 * 1000).toString());
     } catch (err: any) {
-      setError(err.message || 'Failed to load pricing plans');
+      console.error('[PricingPlans] Error loading plans:', err);
+      // Try to use cached plans even if expired as fallback
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        console.log('[PricingPlans] Using expired cache as fallback');
+        try {
+          const pricingPlans: PricingPlan[] = JSON.parse(cached);
+          setPlans(pricingPlans.sort((a: PricingPlan, b: PricingPlan) => a.displayOrder - b.displayOrder));
+          setError(null); // Clear error if we have cached data
+        } catch (parseErr) {
+          setError(err.message || 'Failed to load pricing plans');
+        }
+      } else {
+        setError(err.message || 'Failed to load pricing plans');
+      }
     } finally {
       setLoading(false);
     }

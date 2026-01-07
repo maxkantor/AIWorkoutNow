@@ -232,6 +232,7 @@ export interface UserAccessStatus {
 
 export async function getPricingPlans(): Promise<PricingPlan[]> {
   try {
+    console.log(`[API] Fetching pricing plans from: ${API_BASE_URL}/pricing-plans`);
     const response = await fetch(`${API_BASE_URL}/pricing-plans`, {
       method: 'GET',
       headers: {
@@ -239,14 +240,29 @@ export async function getPricingPlans(): Promise<PricingPlan[]> {
       },
     });
 
+    console.log(`[API] Pricing plans response status: ${response.status}`);
+
     if (!response.ok) {
-      throw new Error('Failed to fetch pricing plans');
+      let errorMessage = 'Failed to fetch pricing plans';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || errorMessage;
+        console.error('[API] Pricing plans error response:', errorData);
+      } catch (e) {
+        const text = await response.text();
+        console.error('[API] Pricing plans raw error response:', text);
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
     }
 
-    return response.json();
+    const data = await response.json();
+    console.log(`[API] Successfully fetched ${data.length} pricing plans`);
+    return data;
   } catch (error: any) {
+    console.error('[API] Pricing plans fetch exception:', error);
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      throw new Error('Connection failed. Please check your internet connection.');
+      throw new Error(`Connection failed. Please check your internet connection and API URL (${API_BASE_URL}).`);
     }
     throw error;
   }
