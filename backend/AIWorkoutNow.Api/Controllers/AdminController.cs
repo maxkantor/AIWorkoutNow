@@ -6,7 +6,7 @@ using AIWorkoutNow.Api.Models;
 namespace AIWorkoutNow.Api.Controllers;
 
 [ApiController]
-[Route("admin")]
+[Route("")]
 public class AdminController : ControllerBase
 {
     private readonly IDynamoDBService _dynamoService;
@@ -23,33 +23,49 @@ public class AdminController : ControllerBase
         _emailService = emailService;
     }
 
-    [HttpPost("login")]
+    [HttpPost("admin/login")]
     public async Task<IActionResult> Login([FromBody] AdminLoginRequest request)
     {
         try
         {
+            Console.WriteLine($"[AdminController] Login attempt for email: {request?.Email}");
+            
+            if (request == null || string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
+            {
+                Console.WriteLine("[AdminController] Invalid request - missing email or password");
+                return BadRequest(new { message = "Email and password are required" });
+            }
+
             var admin = await _dynamoService.GetAdminUserAsync(request.Email);
             if (admin == null)
             {
+                Console.WriteLine($"[AdminController] Admin user not found for email: {request.Email}");
                 return Unauthorized(new { message = "Invalid credentials" });
             }
 
+            Console.WriteLine($"[AdminController] Admin user found: {admin.AdminId}");
+            
             if (!_authService.VerifyPassword(request.Password, admin.PasswordHash))
             {
+                Console.WriteLine("[AdminController] Password verification failed");
                 return Unauthorized(new { message = "Invalid credentials" });
             }
 
+            Console.WriteLine("[AdminController] Password verified, generating token");
             var token = _authService.GenerateJwtToken(admin.AdminId, admin.Email);
+            Console.WriteLine("[AdminController] Token generated successfully");
             return Ok(new { token });
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "Login failed", error = ex.Message });
+            Console.WriteLine($"[AdminController] Login error: {ex.Message}");
+            Console.WriteLine($"[AdminController] Stack trace: {ex.StackTrace}");
+            return StatusCode(500, new { message = "Login failed", error = ex.Message, stackTrace = ex.StackTrace });
         }
     }
 
     [Authorize]
-    [HttpGet("stats")]
+    [HttpGet("admin/stats")]
     public async Task<IActionResult> GetStats()
     {
         try
@@ -64,7 +80,7 @@ public class AdminController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("send-email")]
+    [HttpPost("admin/send-email")]
     public async Task<IActionResult> SendEmail([FromBody] Models.SendEmailRequest request)
     {
         try
@@ -80,7 +96,7 @@ public class AdminController : ControllerBase
 
     // CRM Endpoints
     [Authorize]
-    [HttpGet("customers")]
+    [HttpGet("admin/customers")]
     public async Task<IActionResult> GetAllCustomers()
     {
         try
@@ -95,7 +111,7 @@ public class AdminController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("customers/{deviceId}")]
+    [HttpGet("admin/customers/{deviceId}")]
     public async Task<IActionResult> GetCustomer(string deviceId)
     {
         try
@@ -114,7 +130,7 @@ public class AdminController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("customers/{deviceId}/activities")]
+    [HttpGet("admin/customers/{deviceId}/activities")]
     public async Task<IActionResult> GetCustomerActivities(string deviceId, [FromQuery] int limit = 50)
     {
         try
@@ -129,7 +145,7 @@ public class AdminController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("activities")]
+    [HttpGet("admin/activities")]
     public async Task<IActionResult> GetAllActivities([FromQuery] int limit = 100)
     {
         try
@@ -144,7 +160,7 @@ public class AdminController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("contacts")]
+    [HttpGet("admin/contacts")]
     public async Task<IActionResult> GetAllContacts()
     {
         try
@@ -159,7 +175,7 @@ public class AdminController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("contacts/{messageId}")]
+    [HttpGet("admin/contacts/{messageId}")]
     public async Task<IActionResult> GetContact(string messageId)
     {
         try
@@ -180,7 +196,7 @@ public class AdminController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("contacts/{messageId}/reply")]
+    [HttpPost("admin/contacts/{messageId}/reply")]
     public async Task<IActionResult> ReplyToContact(string messageId, [FromBody] ContactReplyRequest request)
     {
         try
@@ -223,7 +239,7 @@ public class AdminController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("customers/{deviceId}/reset-tokens")]
+    [HttpPost("admin/customers/{deviceId}/reset-tokens")]
     public async Task<IActionResult> ResetTokens(string deviceId, [FromBody] ResetTokensRequest request)
     {
         try
@@ -253,7 +269,7 @@ public class AdminController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("purchases")]
+    [HttpGet("admin/purchases")]
     public async Task<IActionResult> GetAllPurchases()
     {
         try
@@ -268,7 +284,7 @@ public class AdminController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("purchases/{deviceId}")]
+    [HttpGet("admin/purchases/{deviceId}")]
     public async Task<IActionResult> GetPurchasesByCustomer(string deviceId)
     {
         try
@@ -284,7 +300,7 @@ public class AdminController : ControllerBase
 
     // Pricing Plan Management
     [Authorize]
-    [HttpGet("pricing-plans")]
+    [HttpGet("admin/pricing-plans")]
     public async Task<IActionResult> GetAllPricingPlans()
     {
         try
@@ -299,7 +315,7 @@ public class AdminController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("pricing-plans/{planId}")]
+    [HttpGet("admin/pricing-plans/{planId}")]
     public async Task<IActionResult> GetPricingPlan(string planId)
     {
         try
@@ -318,7 +334,7 @@ public class AdminController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("pricing-plans")]
+    [HttpPost("admin/pricing-plans")]
     public async Task<IActionResult> CreatePricingPlan([FromBody] PricingPlan plan)
     {
         try
@@ -335,7 +351,7 @@ public class AdminController : ControllerBase
     }
 
     [Authorize]
-    [HttpPut("pricing-plans/{planId}")]
+    [HttpPut("admin/pricing-plans/{planId}")]
     public async Task<IActionResult> UpdatePricingPlan(string planId, [FromBody] PricingPlan plan)
     {
         try
@@ -358,7 +374,7 @@ public class AdminController : ControllerBase
     }
 
     [Authorize]
-    [HttpDelete("pricing-plans/{planId}")]
+    [HttpDelete("admin/pricing-plans/{planId}")]
     public async Task<IActionResult> DeletePricingPlan(string planId)
     {
         try

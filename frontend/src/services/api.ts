@@ -109,21 +109,39 @@ export async function submitContact(email: string, message: string): Promise<voi
 }
 
 export async function adminLogin(email: string, password: string): Promise<string> {
-  const response = await fetch(`${API_BASE_URL}/admin/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ email, password }),
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Login failed' }));
-    throw new Error(error.message || 'Login failed');
+    if (!response.ok) {
+      let errorMessage = 'Login failed';
+      try {
+        const error = await response.json();
+        errorMessage = error.message || error.error || 'Login failed';
+        console.error('Admin login error:', error);
+      } catch (e) {
+        console.error('Failed to parse error response:', e);
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    if (!data.token) {
+      throw new Error('No token received from server');
+    }
+    return data.token;
+  } catch (error: any) {
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error('Connection failed. Please check your internet connection and API URL.');
+    }
+    throw error;
   }
-
-  const data = await response.json();
-  return data.token;
 }
 
 export async function getAdminStats(token: string) {
