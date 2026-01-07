@@ -108,9 +108,6 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
                     <span className="text-xl">∞</span>
                     <span className="text-sm font-medium">
                       Unlimited workouts
-                      {plan.unlimitedDays && (
-                        <span className="text-slate-500 ml-1">({plan.unlimitedDays} days)</span>
-                      )}
                     </span>
                   </div>
                 ) : (
@@ -177,9 +174,6 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
                     <span className="text-xl">∞</span>
                     <span className="text-sm font-medium">
                       Unlimited workouts
-                      {plan.unlimitedDays && (
-                        <span className="text-slate-500 ml-1">({plan.unlimitedDays} days)</span>
-                      )}
                     </span>
                   </div>
                 ) : (

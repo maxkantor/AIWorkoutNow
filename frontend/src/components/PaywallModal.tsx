@@ -95,9 +95,6 @@ function PaywallModal({ isOpen, onClose, onPurchaseComplete: _onPurchaseComplete
                       <div className="feature-item">
                         <span className="feature-icon">∞</span>
                         <span>Unlimited workouts</span>
-                        {plan.unlimitedDays && (
-                          <span className="feature-detail">for {plan.unlimitedDays} days</span>
-                        )}
                       </div>
                     ) : (
                       <div className="feature-item">
