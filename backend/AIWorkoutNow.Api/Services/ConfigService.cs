@@ -109,7 +109,8 @@ public class ConfigService : IConfigService
 
     public string GetFrontendBaseUrl()
     {
-        return Environment.GetEnvironmentVariable("FRONTEND_BASE_URL") ?? "https://aiworkoutnow.com";
+        // Default to Amplify URL for now, can be changed via environment variable
+        return Environment.GetEnvironmentVariable("FRONTEND_BASE_URL") ?? "https://main.dpwd01x1yg45j.amplifyapp.com";
     }
 }
 

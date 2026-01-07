@@ -14,18 +14,8 @@ public class PricingController : ControllerBase
     private static readonly object _cacheLock = new object();
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5); // Cache for 5 minutes
     
-    // Pre-populate cache with defaults on first access to avoid any delay
-    static PricingController()
-    {
-        // Initialize cache with defaults immediately
-        lock (_cacheLock)
-        {
-            if (_cachedPlans == null)
-            {
-                // We'll populate this on first request, but this ensures we have a fast path
-            }
-        }
-    }
+    // Note: Static constructor removed - we'll populate cache on first request
+    // This avoids dependency injection issues in static constructor
 
     public PricingController(IDynamoDBService dynamoService)
     {
@@ -62,6 +52,22 @@ public class PricingController : ControllerBase
                 else
                 {
                     plans = null!; // Will fetch from DB
+                }
+            }
+            
+            // If cache is empty, pre-populate with defaults immediately for instant response
+            if (plans == null)
+            {
+                lock (_cacheLock)
+                {
+                    if (_cachedPlans == null)
+                    {
+                        Console.WriteLine("[PricingController] Pre-populating cache with default plans for instant response");
+                        var defaultPlans = _dynamoService.GetDefaultPricingPlans();
+                        _cachedPlans = defaultPlans;
+                        _cacheExpiry = DateTime.UtcNow.Add(CacheDuration);
+                        plans = defaultPlans;
+                    }
                 }
             }
 
