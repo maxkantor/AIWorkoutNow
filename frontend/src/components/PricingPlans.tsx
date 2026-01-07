@@ -18,12 +18,13 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
   }, []);
 
   const loadPlans = async () => {
+    const cacheKey = 'pricing_plans_cache';
+    const cacheExpiryKey = 'pricing_plans_cache_expiry';
+    
     try {
       setLoading(true);
       
       // Check localStorage cache first
-      const cacheKey = 'pricing_plans_cache';
-      const cacheExpiryKey = 'pricing_plans_cache_expiry';
       const cached = localStorage.getItem(cacheKey);
       const expiry = localStorage.getItem(cacheExpiryKey);
       
