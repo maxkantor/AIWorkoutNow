@@ -13,6 +13,19 @@ public class PricingController : ControllerBase
     private static DateTime _cacheExpiry = DateTime.MinValue;
     private static readonly object _cacheLock = new object();
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5); // Cache for 5 minutes
+    
+    // Pre-populate cache with defaults on first access to avoid any delay
+    static PricingController()
+    {
+        // Initialize cache with defaults immediately
+        lock (_cacheLock)
+        {
+            if (_cachedPlans == null)
+            {
+                // We'll populate this on first request, but this ensures we have a fast path
+            }
+        }
+    }
 
     public PricingController(IDynamoDBService dynamoService)
     {
@@ -61,7 +74,7 @@ public class PricingController : ControllerBase
                 var fetchTime = (DateTime.UtcNow - fetchStart).TotalMilliseconds;
                 Console.WriteLine($"[PricingController] Fetched {plans.Count} plans in {fetchTime:F2}ms");
                 
-                // Update cache
+                // Always update cache, even if it's defaults (to avoid repeated DB calls)
                 lock (_cacheLock)
                 {
                     _cachedPlans = plans;

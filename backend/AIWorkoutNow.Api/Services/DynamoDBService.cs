@@ -771,20 +771,40 @@ public class DynamoDBService : IDynamoDBService
         });
     }
 
+    // Cache table existence state to avoid slow scans
+    private static bool? _pricingPlansTableExists = null;
+    private static readonly object _tableExistenceLock = new object();
+    
     public async Task<List<PricingPlan>> GetAllPricingPlansAsync()
     {
         var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
         var plansTable = $"{tablePrefix}-PricingPlans";
         
+        // Check cached table existence - if we know it doesn't exist, return defaults immediately
+        lock (_tableExistenceLock)
+        {
+            if (_pricingPlansTableExists == false)
+            {
+                Console.WriteLine($"[DynamoDBService] PricingPlans table known to not exist (cached), returning default plans immediately");
+                return GetDefaultPricingPlans();
+            }
+        }
+        
         Console.WriteLine($"[DynamoDBService] Getting pricing plans from table: {plansTable}");
         
-        // Try to scan table directly - if it fails, return defaults immediately
+        // Try to scan table directly - if it fails, cache the result and return defaults
         try
         {
             var response = await _dynamoDB.ScanAsync(new ScanRequest
             {
                 TableName = plansTable
             });
+
+            // Table exists - cache this fact
+            lock (_tableExistenceLock)
+            {
+                _pricingPlansTableExists = true;
+            }
 
             Console.WriteLine($"[DynamoDBService] Found {response.Items.Count} pricing plans");
 
@@ -835,14 +855,20 @@ public class DynamoDBService : IDynamoDBService
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
-            Console.WriteLine("[DynamoDBService] PricingPlans table does not exist, returning default plans");
+            // Cache that table doesn't exist so we never scan again
+            lock (_tableExistenceLock)
+            {
+                _pricingPlansTableExists = false;
+            }
+            Console.WriteLine("[DynamoDBService] PricingPlans table does not exist, returning default plans immediately (cached)");
             return GetDefaultPricingPlans();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[DynamoDBService] Error getting pricing plans: {ex.Message}");
             Console.WriteLine($"[DynamoDBService] Stack trace: {ex.StackTrace}");
-            throw;
+            // On error, return defaults instead of throwing
+            return GetDefaultPricingPlans();
         }
     }
 

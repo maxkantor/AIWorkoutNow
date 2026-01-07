@@ -80,7 +80,13 @@ public class StripeController : ControllerBase
             if (string.IsNullOrEmpty(stripeSecretKey))
             {
                 Console.WriteLine("[StripeController] Stripe secret key is null or empty");
-                return StatusCode(500, new { message = "Stripe secret key not configured. Please check SSM parameter /AIWorkoutNow/stripe-secret-key" });
+                var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+                var parameterName = $"/{tablePrefix}/stripe-secret-key";
+                return StatusCode(500, new { 
+                    message = $"Stripe secret key not configured. Please check SSM parameter {parameterName} and ensure Lambda execution role has ssm:GetParameter permission.",
+                    parameterName = parameterName,
+                    hint = "The Lambda execution role needs permission to read from SSM Parameter Store"
+                });
             }
             
             Console.WriteLine($"[StripeController] Stripe secret key retrieved (length: {stripeSecretKey.Length})");
