@@ -19,20 +19,49 @@ public class ConfigService : IConfigService
     public async Task<string> GetStripeSecretKeyAsync()
     {
         var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var parameterName = $"/{tablePrefix}/stripe-secret-key";
         var ssm = new Amazon.SimpleSystemsManagement.AmazonSimpleSystemsManagementClient();
         try
         {
+            Console.WriteLine($"[ConfigService] Attempting to retrieve Stripe secret key from SSM: {parameterName}");
             var response = await ssm.GetParameterAsync(new Amazon.SimpleSystemsManagement.Model.GetParameterRequest
             {
-                Name = $"/{tablePrefix}/stripe-secret-key",
+                Name = parameterName,
                 WithDecryption = true
             });
-            return response.Parameter.Value;
+            
+            if (response?.Parameter?.Value != null)
+            {
+                Console.WriteLine($"[ConfigService] Successfully retrieved Stripe secret key from SSM (length: {response.Parameter.Value.Length})");
+                return response.Parameter.Value;
+            }
+            
+            Console.WriteLine("[ConfigService] SSM parameter returned null value");
         }
-        catch
+        catch (Amazon.SimpleSystemsManagement.Model.ParameterNotFoundException ex)
         {
-            return Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY") ?? "";
+            Console.WriteLine($"[ConfigService] SSM parameter not found: {parameterName}. Error: {ex.Message}");
         }
+        catch (Amazon.SimpleSystemsManagement.Model.InvalidKeyIdException ex)
+        {
+            Console.WriteLine($"[ConfigService] Invalid SSM parameter key: {parameterName}. Error: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ConfigService] Error retrieving Stripe secret key from SSM: {ex.GetType().Name} - {ex.Message}");
+            Console.WriteLine($"[ConfigService] Stack trace: {ex.StackTrace}");
+        }
+        
+        // Fall back to environment variable
+        var envValue = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
+        if (!string.IsNullOrEmpty(envValue))
+        {
+            Console.WriteLine("[ConfigService] Using Stripe secret key from environment variable");
+            return envValue;
+        }
+        
+        Console.WriteLine("[ConfigService] Stripe secret key not found in SSM or environment variable");
+        return "";
     }
 
     public async Task<string> GetStripeWebhookSecretAsync()

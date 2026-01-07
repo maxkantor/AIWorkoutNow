@@ -1012,6 +1012,7 @@ public class DynamoDBService : IDynamoDBService
             var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
             var purchasesTable = $"{tablePrefix}-UserPurchases";
             
+            // Try to scan directly - if table doesn't exist, return empty immediately
             var response = await _dynamoDB.ScanAsync(new ScanRequest
             {
                 TableName = purchasesTable,
@@ -1038,7 +1039,7 @@ public class DynamoDBService : IDynamoDBService
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
-            Console.WriteLine("[DynamoDBService] UserPurchases table does not exist, returning empty list");
+            Console.WriteLine("[DynamoDBService] UserPurchases table does not exist, returning empty list immediately");
             return new List<UserPurchase>();
         }
         catch (Exception ex)

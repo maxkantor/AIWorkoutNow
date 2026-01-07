@@ -5,11 +5,26 @@ import { adminLogin } from '../services/api';
 import './AdminLogin.css';
 
 function AdminLogin() {
-  const [email, setEmail] = useState('');
+  // Load email from localStorage on mount
+  const [email, setEmail] = useState(() => {
+    const savedEmail = localStorage.getItem('admin_email');
+    return savedEmail || '';
+  });
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  
+  // Save email to localStorage whenever it changes
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+    if (newEmail) {
+      localStorage.setItem('admin_email', newEmail);
+    } else {
+      localStorage.removeItem('admin_email');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +59,7 @@ function AdminLogin() {
                   type="email"
                   id="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={handleEmailChange}
                   className="input"
                   required
                 />
