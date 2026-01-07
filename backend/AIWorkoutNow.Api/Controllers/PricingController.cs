@@ -55,32 +55,17 @@ public class PricingController : ControllerBase
                 }
             }
             
-            // If cache is empty, pre-populate with defaults immediately for instant response
+            // Fetch from service if cache expired or empty
+            // This will be fast due to table existence caching in DynamoDBService
             if (plans == null)
             {
-                lock (_cacheLock)
-                {
-                    if (_cachedPlans == null)
-                    {
-                        Console.WriteLine("[PricingController] Pre-populating cache with default plans for instant response");
-                        var defaultPlans = _dynamoService.GetDefaultPricingPlans();
-                        _cachedPlans = defaultPlans;
-                        _cacheExpiry = DateTime.UtcNow.Add(CacheDuration);
-                        plans = defaultPlans;
-                    }
-                }
-            }
-
-            // Fetch from DB if cache expired or empty
-            if (plans == null)
-            {
-                Console.WriteLine("[PricingController] Cache miss, fetching from DynamoDB");
+                Console.WriteLine("[PricingController] Cache miss, fetching from service (will be fast due to table existence cache)");
                 var fetchStart = DateTime.UtcNow;
                 plans = await _dynamoService.GetAllPricingPlansAsync();
                 var fetchTime = (DateTime.UtcNow - fetchStart).TotalMilliseconds;
                 Console.WriteLine($"[PricingController] Fetched {plans.Count} plans in {fetchTime:F2}ms");
                 
-                // Always update cache, even if it's defaults (to avoid repeated DB calls)
+                // Always update cache, even if it's defaults (to avoid repeated calls)
                 lock (_cacheLock)
                 {
                     _cachedPlans = plans;
