@@ -342,6 +342,10 @@ public class AdminController : ControllerBase
             plan.PlanId = Guid.NewGuid().ToString();
             plan.CreatedAt = DateTime.UtcNow;
             await _dynamoService.SavePricingPlanAsync(plan);
+            
+            // Invalidate cache
+            PricingController.InvalidateCache();
+            
             return Ok(plan);
         }
         catch (Exception ex)
@@ -365,6 +369,10 @@ public class AdminController : ControllerBase
             plan.PlanId = planId;
             plan.UpdatedAt = DateTime.UtcNow;
             await _dynamoService.SavePricingPlanAsync(plan);
+            
+            // Invalidate cache
+            PricingController.InvalidateCache();
+            
             return Ok(plan);
         }
         catch (Exception ex)
@@ -389,6 +397,10 @@ public class AdminController : ControllerBase
             plan.IsActive = false;
             plan.UpdatedAt = DateTime.UtcNow;
             await _dynamoService.SavePricingPlanAsync(plan);
+            
+            // Invalidate cache
+            PricingController.InvalidateCache();
+            
             return Ok(new { message = "Pricing plan deleted" });
         }
         catch (Exception ex)

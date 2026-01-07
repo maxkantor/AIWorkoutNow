@@ -9,10 +9,24 @@ namespace AIWorkoutNow.Api.Controllers;
 public class PricingController : ControllerBase
 {
     private readonly IDynamoDBService _dynamoService;
+    private static List<PricingPlan>? _cachedPlans;
+    private static DateTime _cacheExpiry = DateTime.MinValue;
+    private static readonly object _cacheLock = new object();
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5); // Cache for 5 minutes
 
     public PricingController(IDynamoDBService dynamoService)
     {
         _dynamoService = dynamoService;
+    }
+
+    public static void InvalidateCache()
+    {
+        lock (_cacheLock)
+        {
+            _cachedPlans = null;
+            _cacheExpiry = DateTime.MinValue;
+            Console.WriteLine("[PricingController] Cache invalidated");
+        }
     }
 
     [HttpGet("pricing-plans")]
@@ -20,11 +34,46 @@ public class PricingController : ControllerBase
     {
         try
         {
-            var plans = await _dynamoService.GetAllPricingPlansAsync();
+            List<PricingPlan> plans;
+            
+            // Check cache
+            lock (_cacheLock)
+            {
+                if (_cachedPlans != null && DateTime.UtcNow < _cacheExpiry)
+                {
+                    Console.WriteLine("[PricingController] Returning cached pricing plans");
+                    plans = _cachedPlans;
+                }
+                else
+                {
+                    plans = null!; // Will fetch from DB
+                }
+            }
+
+            // Fetch from DB if cache expired or empty
+            if (plans == null)
+            {
+                Console.WriteLine("[PricingController] Cache miss, fetching from DynamoDB");
+                plans = await _dynamoService.GetAllPricingPlansAsync();
+                
+                // Update cache
+                lock (_cacheLock)
+                {
+                    _cachedPlans = plans;
+                    _cacheExpiry = DateTime.UtcNow.Add(CacheDuration);
+                    Console.WriteLine($"[PricingController] Cached pricing plans, expires at {_cacheExpiry}");
+                }
+            }
+
+            // Set cache headers for browser caching
+            Response.Headers["Cache-Control"] = "public, max-age=300"; // 5 minutes
+            Response.Headers["ETag"] = $"\"{plans.GetHashCode()}\"";
+            
             return Ok(plans);
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"[PricingController] Error in GetPricingPlans: {ex.Message}");
             return StatusCode(500, new { message = "Failed to get pricing plans", error = ex.Message });
         }
     }

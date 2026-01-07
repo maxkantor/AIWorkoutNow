@@ -20,8 +20,29 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
   const loadPlans = async () => {
     try {
       setLoading(true);
+      
+      // Check localStorage cache first
+      const cacheKey = 'pricing_plans_cache';
+      const cacheExpiryKey = 'pricing_plans_cache_expiry';
+      const cached = localStorage.getItem(cacheKey);
+      const expiry = localStorage.getItem(cacheExpiryKey);
+      
+      if (cached && expiry && new Date().getTime() < parseInt(expiry)) {
+        console.log('[PricingPlans] Using cached pricing plans');
+        const pricingPlans: PricingPlan[] = JSON.parse(cached);
+        setPlans(pricingPlans.sort((a: PricingPlan, b: PricingPlan) => a.displayOrder - b.displayOrder));
+        setLoading(false);
+        return;
+      }
+      
+      // Fetch from API
       const pricingPlans = await getPricingPlans();
-      setPlans(pricingPlans.sort((a, b) => a.displayOrder - b.displayOrder));
+      const sortedPlans = pricingPlans.sort((a: PricingPlan, b: PricingPlan) => a.displayOrder - b.displayOrder);
+      setPlans(sortedPlans);
+      
+      // Cache in localStorage (5 minutes)
+      localStorage.setItem(cacheKey, JSON.stringify(sortedPlans));
+      localStorage.setItem(cacheExpiryKey, (new Date().getTime() + 5 * 60 * 1000).toString());
     } catch (err: any) {
       setError(err.message || 'Failed to load pricing plans');
     } finally {
