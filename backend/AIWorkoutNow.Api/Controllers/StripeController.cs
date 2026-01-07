@@ -30,24 +30,60 @@ public class StripeController : ControllerBase
                 return BadRequest(new { message = "DeviceId and PlanId are required" });
             }
 
-            var plan = await _dynamoService.GetPricingPlanAsync(request.PlanId);
-            if (plan == null || !plan.IsActive)
+            Console.WriteLine($"[StripeController] Looking up pricing plan: {request.PlanId}");
+            PricingPlan? plan = null;
+            try
             {
-                Console.WriteLine($"[StripeController] Invalid pricing plan: {request.PlanId}");
-                return BadRequest(new { message = "Invalid pricing plan" });
+                plan = await _dynamoService.GetPricingPlanAsync(request.PlanId);
             }
-
-            Console.WriteLine($"[StripeController] Plan found: {plan.Name}, Price: {plan.Price}");
-
-            // Get Stripe secret key from SSM
-            var stripeSecretKey = await _configService.GetStripeSecretKeyAsync();
-            if (string.IsNullOrEmpty(stripeSecretKey))
+            catch (Exception ex)
             {
-                Console.WriteLine("[StripeController] Stripe secret key not configured");
-                return StatusCode(500, new { message = "Stripe not configured" });
+                Console.WriteLine($"[StripeController] Error getting pricing plan: {ex.Message}");
+                Console.WriteLine($"[StripeController] Stack trace: {ex.StackTrace}");
             }
             
-            Console.WriteLine("[StripeController] Stripe secret key retrieved");
+            if (plan == null)
+            {
+                Console.WriteLine($"[StripeController] Pricing plan not found: {request.PlanId}");
+                // Try to get default plans and find the plan
+                var allPlans = await _dynamoService.GetAllPricingPlansAsync();
+                plan = allPlans.FirstOrDefault(p => p.PlanId == request.PlanId);
+                
+                if (plan == null)
+                {
+                    Console.WriteLine($"[StripeController] Plan {request.PlanId} not found in all plans. Available plans: {string.Join(", ", allPlans.Select(p => p.PlanId))}");
+                    return BadRequest(new { message = $"Pricing plan '{request.PlanId}' not found" });
+                }
+            }
+            
+            if (!plan.IsActive)
+            {
+                Console.WriteLine($"[StripeController] Pricing plan is not active: {request.PlanId}");
+                return BadRequest(new { message = "Pricing plan is not active" });
+            }
+
+            Console.WriteLine($"[StripeController] Plan found: {plan.Name}, Price: {plan.Price}, Currency: {plan.Currency}");
+
+            // Get Stripe secret key from SSM
+            Console.WriteLine("[StripeController] Retrieving Stripe secret key from SSM...");
+            string? stripeSecretKey = null;
+            try
+            {
+                stripeSecretKey = await _configService.GetStripeSecretKeyAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StripeController] Error retrieving Stripe secret key: {ex.Message}");
+                Console.WriteLine($"[StripeController] Stack trace: {ex.StackTrace}");
+            }
+            
+            if (string.IsNullOrEmpty(stripeSecretKey))
+            {
+                Console.WriteLine("[StripeController] Stripe secret key is null or empty");
+                return StatusCode(500, new { message = "Stripe secret key not configured. Please check SSM parameter /AIWorkoutNow/stripe-secret-key" });
+            }
+            
+            Console.WriteLine($"[StripeController] Stripe secret key retrieved (length: {stripeSecretKey.Length})");
 
             // Create Stripe checkout session
             // Note: This is a simplified version. In production, use Stripe.NET SDK
@@ -127,7 +163,13 @@ public class StripeController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "Failed to create checkout session", error = ex.Message });
+            Console.WriteLine($"[StripeController] Exception in CreateCheckoutSession: {ex.Message}");
+            Console.WriteLine($"[StripeController] Stack trace: {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"[StripeController] Inner exception: {ex.InnerException.Message}");
+            }
+            return StatusCode(500, new { message = "Failed to create checkout session", error = ex.Message, stackTrace = ex.StackTrace });
         }
     }
 
