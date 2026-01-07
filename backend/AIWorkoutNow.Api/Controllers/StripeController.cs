@@ -43,9 +43,9 @@ public class StripeController : ControllerBase
             httpClient.DefaultRequestHeaders.Authorization = 
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", stripeSecretKey);
 
-            var apiBaseUrl = _configService.GetApiBaseUrl();
-            var successUrl = $"{apiBaseUrl}/payment-success?session_id={{CHECKOUT_SESSION_ID}}";
-            var cancelUrl = $"{apiBaseUrl}/payment-cancel";
+            var frontendBaseUrl = _configService.GetFrontendBaseUrl();
+            var successUrl = $"{frontendBaseUrl}/payment-success?session_id={{CHECKOUT_SESSION_ID}}";
+            var cancelUrl = $"{frontendBaseUrl}/payment-cancel";
 
             // Create checkout session with amount directly (no need for pre-created products/prices)
             var amountInCents = (int)(plan.Price * 100); // Convert to cents
@@ -132,7 +132,7 @@ public class StripeController : ControllerBase
                 var sessionId = sessionObject?["id"]?.ToString();
                 var metadata = sessionObject?["metadata"] as Dictionary<string, object>;
                 var deviceId = metadata?["deviceId"]?.ToString();
-                var planId = metadata?["deviceId"]?.ToString();
+                var planId = metadata?["planId"]?.ToString();
 
                 if (!string.IsNullOrEmpty(deviceId) && !string.IsNullOrEmpty(planId))
                 {

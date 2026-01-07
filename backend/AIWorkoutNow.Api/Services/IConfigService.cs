@@ -16,5 +16,6 @@ public interface IConfigService
     Task<string> GetStripeWebhookSecretAsync();
     Task<string> GetStripePublishableKeyAsync();
     string GetApiBaseUrl();
+    string GetFrontendBaseUrl();
 }
 

@@ -1,0 +1,137 @@
+.payment-success-container {
+  min-height: calc(100vh - 200px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+}
+
+.payment-success-card {
+  background: white;
+  border-radius: 1rem;
+  padding: 3rem 2.5rem;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  font-size: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  font-weight: bold;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 1rem 0;
+}
+
+.success-message {
+  font-size: 1.125rem;
+  color: #64748b;
+  margin: 0 0 2rem 0;
+  line-height: 1.6;
+}
+
+.loading-status {
+  color: #64748b;
+  font-size: 0.9375rem;
+  margin: 1.5rem 0;
+}
+
+.access-status {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  margin: 1.5rem 0;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #065f46;
+}
+
+.status-icon {
+  font-size: 1.5rem;
+}
+
+.status-detail {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #047857;
+  margin-left: 0.5rem;
+}
+
+.cta-button {
+  width: 100%;
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #2563eb 0%, #10b981 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+}
+
+.cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px -1px rgba(37, 99, 235, 0.4);
+}
+
+.cta-button:active {
+  transform: translateY(0);
+}
+
+.session-info {
+  margin-top: 1.5rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-family: monospace;
+}
+
+@media (max-width: 640px) {
+  .payment-success-container {
+    padding: 1rem;
+  }
+
+  .payment-success-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .success-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 2rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .success-message {
+    font-size: 1rem;
+  }
+}

@@ -77,5 +77,10 @@ public class ConfigService : IConfigService
     {
         return Environment.GetEnvironmentVariable("API_BASE_URL") ?? "https://api.aiworkoutnow.com";
     }
+
+    public string GetFrontendBaseUrl()
+    {
+        return Environment.GetEnvironmentVariable("FRONTEND_BASE_URL") ?? "https://aiworkoutnow.com";
+    }
 }
 
