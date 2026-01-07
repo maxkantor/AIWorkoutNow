@@ -48,10 +48,7 @@ function Home() {
       if (status.tokensRemaining > 0) {
         setTokenBalance(status.tokensRemaining);
         // Update localStorage for consistency
-        const storageData = JSON.parse(localStorage.getItem(`token_balance_${deviceId}`) || '{}');
-        storageData.tokensRemaining = status.tokensRemaining;
-        storageData.lastUpdated = Date.now();
-        localStorage.setItem(`token_balance_${deviceId}`, JSON.stringify(storageData));
+        updateTokenStorage(deviceId, status.tokensRemaining);
       } else {
         // Only check free workouts if no paid tokens
         const freeWorkouts = await getFreeWorkoutsRemaining(deviceId);
