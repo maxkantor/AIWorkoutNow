@@ -110,6 +110,9 @@ export async function submitContact(email: string, message: string): Promise<voi
 
 export async function adminLogin(email: string, password: string): Promise<string> {
   try {
+    console.log(`[API] Attempting admin login for: ${email}`);
+    console.log(`[API] API Base URL: ${API_BASE_URL}`);
+    
     const response = await fetch(`${API_BASE_URL}/admin/login`, {
       method: 'POST',
       headers: {
@@ -118,27 +121,42 @@ export async function adminLogin(email: string, password: string): Promise<strin
       body: JSON.stringify({ email, password }),
     });
 
+    console.log(`[API] Admin login response status: ${response.status}`);
+    console.log(`[API] Admin login response ok: ${response.ok}`);
+
     if (!response.ok) {
       let errorMessage = 'Login failed';
+      let errorDetails: any = null;
+      
       try {
         const error = await response.json();
         errorMessage = error.message || error.error || 'Login failed';
-        console.error('Admin login error:', error);
+        errorDetails = error;
+        console.error('[API] Admin login error response:', error);
       } catch (e) {
-        console.error('Failed to parse error response:', e);
+        console.error('[API] Failed to parse error response:', e);
+        const text = await response.text();
+        console.error('[API] Raw error response:', text);
         errorMessage = `HTTP ${response.status}: ${response.statusText}`;
       }
+      
+      console.error(`[API] Admin login failed: ${errorMessage}`, errorDetails);
       throw new Error(errorMessage);
     }
 
     const data = await response.json();
+    console.log('[API] Admin login success, token received');
+    
     if (!data.token) {
+      console.error('[API] No token in response:', data);
       throw new Error('No token received from server');
     }
+    
     return data.token;
   } catch (error: any) {
+    console.error('[API] Admin login exception:', error);
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      throw new Error('Connection failed. Please check your internet connection and API URL.');
+      throw new Error(`Connection failed. Please check your internet connection and API URL. (${API_BASE_URL}/admin/login)`);
     }
     throw error;
   }

@@ -744,23 +744,26 @@ public class DynamoDBService : IDynamoDBService
             
             Console.WriteLine($"[DynamoDBService] Getting pricing plans from table: {plansTable}");
             
-            var response = await _dynamoDB.ScanAsync(new ScanRequest
+            ScanResponse response;
+            try
             {
-                TableName = plansTable
-            });
+                response = await _dynamoDB.ScanAsync(new ScanRequest
+                {
+                    TableName = plansTable
+                });
+            }
+            catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+            {
+                Console.WriteLine("[DynamoDBService] PricingPlans table does not exist, returning default plans immediately");
+                return GetDefaultPricingPlans();
+            }
 
             Console.WriteLine($"[DynamoDBService] Found {response.Items.Count} pricing plans");
 
             if (response.Items.Count == 0)
             {
-                Console.WriteLine("[DynamoDBService] No pricing plans found, creating default plans");
-                await CreateDefaultPricingPlansAsync(plansTable);
-                // Retry scan after creating defaults
-                response = await _dynamoDB.ScanAsync(new ScanRequest
-                {
-                    TableName = plansTable
-                });
-                Console.WriteLine($"[DynamoDBService] After creating defaults, found {response.Items.Count} pricing plans");
+                Console.WriteLine("[DynamoDBService] No pricing plans found, returning default plans (not creating in DB to avoid delay)");
+                return GetDefaultPricingPlans();
             }
 
             var plans = new List<PricingPlan>();

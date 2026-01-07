@@ -32,6 +32,7 @@ public class PricingController : ControllerBase
     [HttpGet("pricing-plans")]
     public async Task<IActionResult> GetPricingPlans()
     {
+        var startTime = DateTime.UtcNow;
         try
         {
             List<PricingPlan> plans;
@@ -41,7 +42,8 @@ public class PricingController : ControllerBase
             {
                 if (_cachedPlans != null && DateTime.UtcNow < _cacheExpiry)
                 {
-                    Console.WriteLine("[PricingController] Returning cached pricing plans");
+                    var cacheTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
+                    Console.WriteLine($"[PricingController] Returning cached pricing plans ({cacheTime:F2}ms)");
                     plans = _cachedPlans;
                 }
                 else
@@ -54,7 +56,10 @@ public class PricingController : ControllerBase
             if (plans == null)
             {
                 Console.WriteLine("[PricingController] Cache miss, fetching from DynamoDB");
+                var fetchStart = DateTime.UtcNow;
                 plans = await _dynamoService.GetAllPricingPlansAsync();
+                var fetchTime = (DateTime.UtcNow - fetchStart).TotalMilliseconds;
+                Console.WriteLine($"[PricingController] Fetched {plans.Count} plans in {fetchTime:F2}ms");
                 
                 // Update cache
                 lock (_cacheLock)
@@ -69,11 +74,15 @@ public class PricingController : ControllerBase
             Response.Headers["Cache-Control"] = "public, max-age=300"; // 5 minutes
             Response.Headers["ETag"] = $"\"{plans.GetHashCode()}\"";
             
+            var totalTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
+            Console.WriteLine($"[PricingController] Total response time: {totalTime:F2}ms");
+            
             return Ok(plans);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[PricingController] Error in GetPricingPlans: {ex.Message}");
+            Console.WriteLine($"[PricingController] Stack trace: {ex.StackTrace}");
             return StatusCode(500, new { message = "Failed to get pricing plans", error = ex.Message });
         }
     }
