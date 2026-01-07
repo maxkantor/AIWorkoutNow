@@ -21,22 +21,28 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
     const cacheKey = 'pricing_plans_cache';
     const cacheExpiryKey = 'pricing_plans_cache_expiry';
     
-    try {
-      setLoading(true);
-      
-      // Check localStorage cache first
-      const cached = localStorage.getItem(cacheKey);
-      const expiry = localStorage.getItem(cacheExpiryKey);
-      
-      if (cached && expiry && new Date().getTime() < parseInt(expiry)) {
-        console.log('[PricingPlans] Using cached pricing plans');
+    // Check localStorage cache first - do this synchronously to show plans instantly
+    const cached = localStorage.getItem(cacheKey);
+    const expiry = localStorage.getItem(cacheExpiryKey);
+    
+    if (cached && expiry && new Date().getTime() < parseInt(expiry)) {
+      console.log('[PricingPlans] Using cached pricing plans (instant)');
+      try {
         const pricingPlans: PricingPlan[] = JSON.parse(cached);
         setPlans(pricingPlans.sort((a: PricingPlan, b: PricingPlan) => a.displayOrder - b.displayOrder));
         setLoading(false);
+        // Still fetch in background to refresh cache
+        fetchPlansInBackground();
         return;
+      } catch (parseErr) {
+        console.error('[PricingPlans] Error parsing cached plans:', parseErr);
+        // Fall through to fetch from API
       }
-      
-      // Fetch from API
+    }
+    
+    // If no valid cache, fetch from API
+    try {
+      setLoading(true);
       const pricingPlans = await getPricingPlans();
       const sortedPlans = pricingPlans.sort((a: PricingPlan, b: PricingPlan) => a.displayOrder - b.displayOrder);
       setPlans(sortedPlans);
@@ -47,7 +53,6 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
     } catch (err: any) {
       console.error('[PricingPlans] Error loading plans:', err);
       // Try to use cached plans even if expired as fallback
-      const cached = localStorage.getItem(cacheKey);
       if (cached) {
         console.log('[PricingPlans] Using expired cache as fallback');
         try {
@@ -62,6 +67,22 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPlansInBackground = async () => {
+    try {
+      const pricingPlans = await getPricingPlans();
+      const sortedPlans = pricingPlans.sort((a: PricingPlan, b: PricingPlan) => a.displayOrder - b.displayOrder);
+      setPlans(sortedPlans);
+      
+      // Update cache
+      const cacheKey = 'pricing_plans_cache';
+      const cacheExpiryKey = 'pricing_plans_cache_expiry';
+      localStorage.setItem(cacheKey, JSON.stringify(sortedPlans));
+      localStorage.setItem(cacheExpiryKey, (new Date().getTime() + 5 * 60 * 1000).toString());
+    } catch (err) {
+      console.error('[PricingPlans] Background fetch failed (non-critical):', err);
     }
   };
 

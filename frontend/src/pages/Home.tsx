@@ -4,7 +4,7 @@ import WorkoutGenerator from '../components/WorkoutGenerator';
 import PricingPlans from '../components/PricingPlans';
 import PaywallModal from '../components/PaywallModal';
 import AffiliateProducts from '../components/AffiliateProducts';
-import { getDeviceId, getTokenBalance } from '../utils/storage';
+import { getDeviceId, getTokenBalance, setTokenBalance as updateTokenStorage } from '../utils/storage';
 import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus } from '../services/api';
 import { useHeroContext } from '../components/Layout';
 import './Home.css';
@@ -84,12 +84,20 @@ function Home() {
       const result = await generateWorkout(preferences, deviceId, needsToken);
       setWorkout(result);
       
-      if (needsToken && result.tokensRemaining !== undefined) {
-        setFreeWorkoutsRemaining(Math.max(0, freeWorkoutsRemaining - 1));
-      } else if (!needsToken && result.tokensRemaining !== undefined) {
-        setTokenBalance(result.tokensRemaining);
+      // Update tokens immediately from response
+      if (result.tokensRemaining !== undefined) {
+        if (needsToken) {
+          // Free workout was used
+          setFreeWorkoutsRemaining(Math.max(0, freeWorkoutsRemaining - 1));
+        } else {
+          // Paid token was used - update immediately
+          setTokenBalance(result.tokensRemaining);
+          // Update localStorage immediately
+          updateTokenStorage(deviceId, result.tokensRemaining);
+        }
       }
       
+      // Refresh access status to ensure UI is in sync
       await checkAccessStatus();
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to generate workout. Please try again.';
