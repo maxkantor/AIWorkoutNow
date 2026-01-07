@@ -327,8 +327,157 @@ public class StripeController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Stripe webhook error: {ex.Message}");
+            Console.WriteLine($"[StripeController] Stripe webhook error: {ex.Message}");
+            Console.WriteLine($"[StripeController] Stack trace: {ex.StackTrace}");
             return StatusCode(500);
+        }
+    }
+
+    [HttpPost("verify-payment")]
+    public async Task<IActionResult> VerifyPayment([FromBody] VerifyPaymentRequest request)
+    {
+        try
+        {
+            Console.WriteLine($"[StripeController] VerifyPayment called - SessionId: {request?.SessionId}, DeviceId: {request?.DeviceId}");
+            
+            if (string.IsNullOrEmpty(request?.SessionId) || string.IsNullOrEmpty(request?.DeviceId))
+            {
+                return BadRequest(new { message = "SessionId and DeviceId are required" });
+            }
+
+            // Get Stripe secret key
+            var stripeSecretKey = await _configService.GetStripeSecretKeyAsync();
+            if (string.IsNullOrEmpty(stripeSecretKey))
+            {
+                return StatusCode(500, new { message = "Stripe secret key not configured" });
+            }
+
+            // Retrieve checkout session from Stripe
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization = 
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", stripeSecretKey);
+
+            var sessionUrl = $"https://api.stripe.com/v1/checkout/sessions/{request.SessionId}";
+            var response = await httpClient.GetAsync(sessionUrl);
+            var responseContent = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"[StripeController] Failed to retrieve session from Stripe: {responseContent}");
+                return StatusCode(500, new { message = "Failed to verify payment with Stripe" });
+            }
+
+            var sessionData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(responseContent);
+            var paymentStatus = sessionData?["payment_status"]?.ToString();
+            var metadata = sessionData?["metadata"] as Dictionary<string, object>;
+            var deviceIdFromSession = metadata?["deviceId"]?.ToString();
+            var planId = metadata?["planId"]?.ToString();
+
+            // Verify device ID matches
+            if (deviceIdFromSession != request.DeviceId)
+            {
+                Console.WriteLine($"[StripeController] Device ID mismatch: {deviceIdFromSession} != {request.DeviceId}");
+                return BadRequest(new { message = "Device ID mismatch" });
+            }
+
+            // Check if payment is completed
+            if (paymentStatus != "paid")
+            {
+                Console.WriteLine($"[StripeController] Payment not completed. Status: {paymentStatus}");
+                return Ok(new { verified = false, message = "Payment not completed" });
+            }
+
+            // Check if purchase already processed
+            var purchases = await _dynamoService.GetUserPurchasesAsync(request.DeviceId);
+            var existingPurchase = purchases.FirstOrDefault(p => p.StripeSessionId == request.SessionId && p.Status == "completed");
+
+            if (existingPurchase != null)
+            {
+                Console.WriteLine($"[StripeController] Payment already processed");
+                return Ok(new { verified = true, alreadyProcessed = true });
+            }
+
+            // Process payment (same logic as webhook)
+            if (!string.IsNullOrEmpty(planId))
+            {
+                var plan = await _dynamoService.GetPricingPlanAsync(planId);
+                if (plan == null)
+                {
+                    return StatusCode(500, new { message = "Pricing plan not found" });
+                }
+
+                var purchase = new UserPurchase
+                {
+                    PurchaseId = Guid.NewGuid().ToString(),
+                    DeviceId = request.DeviceId,
+                    PlanId = planId,
+                    StripeSessionId = request.SessionId,
+                    StripePaymentIntentId = sessionData?["payment_intent"]?.ToString() ?? "",
+                    Status = "completed",
+                    PurchasedAt = DateTime.UtcNow,
+                    IsUnlimited = plan.IsUnlimited,
+                    TokensGranted = plan.TokenCount
+                };
+
+                if (plan.IsUnlimited && plan.UnlimitedDays.HasValue)
+                {
+                    purchase.ExpiresAt = DateTime.UtcNow.AddDays(plan.UnlimitedDays.Value);
+                }
+
+                // Grant tokens
+                if (purchase.IsUnlimited)
+                {
+                    var tokens = await _dynamoService.GetUserTokensAsync(request.DeviceId);
+                    if (tokens == null)
+                    {
+                        tokens = new UserTokens
+                        {
+                            DeviceId = request.DeviceId,
+                            TokensRemaining = 999999,
+                            ExpiresAt = purchase.ExpiresAt
+                        };
+                    }
+                    else
+                    {
+                        tokens.TokensRemaining = 999999;
+                        if (purchase.ExpiresAt.HasValue)
+                        {
+                            tokens.ExpiresAt = purchase.ExpiresAt;
+                        }
+                    }
+                    await _dynamoService.SaveUserTokensAsync(tokens);
+                }
+                else if (purchase.TokensGranted.HasValue)
+                {
+                    var tokens = await _dynamoService.GetUserTokensAsync(request.DeviceId);
+                    if (tokens == null)
+                    {
+                        tokens = new UserTokens
+                        {
+                            DeviceId = request.DeviceId,
+                            TokensRemaining = purchase.TokensGranted.Value
+                        };
+                    }
+                    else
+                    {
+                        tokens.TokensRemaining += purchase.TokensGranted.Value;
+                    }
+                    await _dynamoService.SaveUserTokensAsync(tokens);
+                }
+
+                await _dynamoService.SaveUserPurchaseAsync(purchase);
+
+                Console.WriteLine($"[StripeController] Payment verified and tokens granted");
+                return Ok(new { verified = true, tokensGranted = purchase.TokensGranted });
+            }
+
+            return Ok(new { verified = true });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[StripeController] VerifyPayment error: {ex.Message}");
+            Console.WriteLine($"[StripeController] Stack trace: {ex.StackTrace}");
+            return StatusCode(500, new { message = "Failed to verify payment", error = ex.Message });
         }
     }
 }
@@ -337,4 +486,10 @@ public class CreateCheckoutRequest
 {
     public string DeviceId { get; set; } = string.Empty;
     public string PlanId { get; set; } = string.Empty;
+}
+
+public class VerifyPaymentRequest
+{
+    public string SessionId { get; set; } = string.Empty;
+    public string DeviceId { get; set; } = string.Empty;
 }
