@@ -698,6 +698,42 @@ public class DynamoDBService : IDynamoDBService
         }
 
         await SaveUserTokensAsync(tokens);
+        
+        // Also reset free workout count so user sees updated status immediately
+        // Delete all AnonymousUsage records for this device to reset free workout count
+        try
+        {
+            var usageResponse = await _dynamoDB.QueryAsync(new QueryRequest
+            {
+                TableName = _anonymousUsageTable,
+                KeyConditionExpression = "DeviceId = :deviceId",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    { ":deviceId", new AttributeValue { S = deviceId } }
+                }
+            });
+
+            // Delete all usage records
+            foreach (var item in usageResponse.Items)
+            {
+                await _dynamoDB.DeleteItemAsync(new DeleteItemRequest
+                {
+                    TableName = _anonymousUsageTable,
+                    Key = new Dictionary<string, AttributeValue>
+                    {
+                        { "DeviceId", new AttributeValue { S = deviceId } },
+                        { "Date", item["Date"] }
+                    }
+                });
+            }
+            
+            Console.WriteLine($"[DynamoDBService] Reset free workout count for device {deviceId}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error resetting free workout count: {ex.Message}");
+            // Don't throw - tokens were reset successfully
+        }
     }
 
     // Pricing Plan Methods
@@ -742,26 +778,7 @@ public class DynamoDBService : IDynamoDBService
         
         Console.WriteLine($"[DynamoDBService] Getting pricing plans from table: {plansTable}");
         
-        // Check if table exists first (fast check)
-        try
-        {
-            await _dynamoDB.DescribeTableAsync(new Amazon.DynamoDBv2.Model.DescribeTableRequest
-            {
-                TableName = plansTable
-            });
-        }
-        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
-        {
-            Console.WriteLine("[DynamoDBService] PricingPlans table does not exist, returning default plans immediately");
-            return GetDefaultPricingPlans();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[DynamoDBService] Error checking table existence: {ex.Message}, returning defaults");
-            return GetDefaultPricingPlans();
-        }
-        
-        // Table exists, try to scan it
+        // Try to scan table directly - if it fails, return defaults immediately
         try
         {
             var response = await _dynamoDB.ScanAsync(new ScanRequest

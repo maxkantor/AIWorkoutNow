@@ -22,18 +22,32 @@ public class StripeController : ControllerBase
     {
         try
         {
+            Console.WriteLine($"[StripeController] CreateCheckoutSession called - DeviceId: {request?.DeviceId}, PlanId: {request?.PlanId}");
+            
+            if (request == null || string.IsNullOrEmpty(request.DeviceId) || string.IsNullOrEmpty(request.PlanId))
+            {
+                Console.WriteLine("[StripeController] Invalid request - missing DeviceId or PlanId");
+                return BadRequest(new { message = "DeviceId and PlanId are required" });
+            }
+
             var plan = await _dynamoService.GetPricingPlanAsync(request.PlanId);
             if (plan == null || !plan.IsActive)
             {
+                Console.WriteLine($"[StripeController] Invalid pricing plan: {request.PlanId}");
                 return BadRequest(new { message = "Invalid pricing plan" });
             }
+
+            Console.WriteLine($"[StripeController] Plan found: {plan.Name}, Price: {plan.Price}");
 
             // Get Stripe secret key from SSM
             var stripeSecretKey = await _configService.GetStripeSecretKeyAsync();
             if (string.IsNullOrEmpty(stripeSecretKey))
             {
+                Console.WriteLine("[StripeController] Stripe secret key not configured");
                 return StatusCode(500, new { message = "Stripe not configured" });
             }
+            
+            Console.WriteLine("[StripeController] Stripe secret key retrieved");
 
             // Create Stripe checkout session
             // Note: This is a simplified version. In production, use Stripe.NET SDK
@@ -72,13 +86,19 @@ public class StripeController : ControllerBase
             }
 
             var content = new FormUrlEncodedContent(formData);
+            Console.WriteLine($"[StripeController] Calling Stripe API: {stripeApiUrl}");
             var response = await httpClient.PostAsync(stripeApiUrl, content);
             var responseContent = await response.Content.ReadAsStringAsync();
 
+            Console.WriteLine($"[StripeController] Stripe API response status: {response.StatusCode}");
+            
             if (!response.IsSuccessStatusCode)
             {
+                Console.WriteLine($"[StripeController] Stripe API error: {responseContent}");
                 return StatusCode(500, new { message = "Failed to create checkout session", error = responseContent });
             }
+            
+            Console.WriteLine("[StripeController] Stripe checkout session created successfully");
 
             // Parse response to get session URL
             var sessionData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(responseContent);
