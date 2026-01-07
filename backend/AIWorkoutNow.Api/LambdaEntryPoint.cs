@@ -86,8 +86,9 @@ public class Startup
         //     app.UseSwaggerUI();
         // }
 
-        app.UseRouting();
+        // CORS must be before UseRouting for OPTIONS preflight requests
         app.UseCors("AllowAll");
+        app.UseRouting();
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseEndpoints(endpoints =>
