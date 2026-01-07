@@ -25,7 +25,7 @@ if (Test-Path $OutputZip) {
 Write-Host "Publishing .NET application..." -ForegroundColor Yellow
 Push-Location $ProjectDir
 try {
-    dotnet publish -c Release -r linux-arm64 --self-contained false -o publish-lambda
+    dotnet publish -c Release -r linux-arm64 --self-contained false -o publish-lambda /p:PublishReadyToRun=false
     
     if (-not (Test-Path "publish-lambda")) {
         Write-Host "Publish failed" -ForegroundColor Red
