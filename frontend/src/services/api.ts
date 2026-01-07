@@ -312,6 +312,29 @@ export async function getUserAccessStatus(deviceId: string): Promise<UserAccessS
   }
 }
 
+export async function verifyPayment(sessionId: string, deviceId: string): Promise<{ verified: boolean; alreadyProcessed?: boolean; tokensGranted?: number }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/verify-payment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ sessionId, deviceId }),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error(`[API] Failed to verify payment. Status: ${response.status}, Body: ${errorBody}`);
+      throw new Error(`Failed to verify payment: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+  } catch (error: any) {
+    console.error('[API] Payment verification exception:', error);
+    throw error;
+  }
+}
+
 export async function createCheckoutSession(deviceId: string, planId: string): Promise<{ sessionId: string; url: string }> {
   try {
     const response = await fetch(`${API_BASE_URL}/create-checkout-session`, {

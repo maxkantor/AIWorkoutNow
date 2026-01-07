@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { getUserAccessStatus, UserAccessStatus } from '../services/api';
+import { getUserAccessStatus, verifyPayment, UserAccessStatus } from '../services/api';
 import { getDeviceId } from '../utils/storage';
 import './PaymentSuccess.css';
 
@@ -10,12 +10,36 @@ function PaymentSuccess() {
   const navigate = useNavigate();
   const [accessStatus, setAccessStatus] = useState<UserAccessStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [verifying, setVerifying] = useState(false);
   const sessionId = searchParams.get('session_id');
 
   useEffect(() => {
-    const checkAccess = async () => {
+    const processPayment = async () => {
+      if (!sessionId) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const deviceId = getDeviceId();
+        
+        // First, verify payment and grant tokens if needed
+        setVerifying(true);
+        try {
+          const verification = await verifyPayment(sessionId, deviceId);
+          console.log('[PaymentSuccess] Payment verification:', verification);
+          
+          if (verification.verified && !verification.alreadyProcessed) {
+            console.log('[PaymentSuccess] Tokens granted:', verification.tokensGranted);
+          }
+        } catch (error) {
+          console.error('[PaymentSuccess] Failed to verify payment:', error);
+          // Continue anyway - webhook might have processed it
+        } finally {
+          setVerifying(false);
+        }
+
+        // Then check access status
         const status = await getUserAccessStatus(deviceId);
         setAccessStatus(status);
       } catch (error) {
@@ -25,11 +49,7 @@ function PaymentSuccess() {
       }
     };
 
-    if (sessionId) {
-      checkAccess();
-    } else {
-      setLoading(false);
-    }
+    processPayment();
   }, [sessionId]);
 
   const handleGoHome = () => {
@@ -51,8 +71,10 @@ function PaymentSuccess() {
             Thank you for your purchase. Your account has been upgraded.
           </p>
 
-          {loading ? (
-            <div className="loading-status">Checking your access...</div>
+          {loading || verifying ? (
+            <div className="loading-status">
+              {verifying ? 'Verifying payment and granting tokens...' : 'Checking your access...'}
+            </div>
           ) : accessStatus ? (
             <div className="access-status">
               {accessStatus.hasUnlimitedAccess ? (

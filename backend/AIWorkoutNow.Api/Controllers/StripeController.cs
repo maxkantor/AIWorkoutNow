@@ -197,10 +197,14 @@ public class StripeController : ControllerBase
 
             if (eventType == "checkout.session.completed")
             {
+                Console.WriteLine("[StripeController] Processing checkout.session.completed event");
                 var sessionId = sessionObject?["id"]?.ToString();
                 var metadata = sessionObject?["metadata"] as Dictionary<string, object>;
                 var deviceId = metadata?["deviceId"]?.ToString();
                 var planId = metadata?["planId"]?.ToString();
+                var paymentIntentId = sessionObject?["payment_intent"]?.ToString() ?? "";
+
+                Console.WriteLine($"[StripeController] Session ID: {sessionId}, DeviceId: {deviceId}, PlanId: {planId}");
 
                 if (!string.IsNullOrEmpty(deviceId) && !string.IsNullOrEmpty(planId))
                 {
@@ -208,37 +212,96 @@ public class StripeController : ControllerBase
                     var purchases = await _dynamoService.GetUserPurchasesAsync(deviceId);
                     var purchase = purchases.FirstOrDefault(p => p.StripeSessionId == sessionId);
 
-                    if (purchase != null)
+                    // If purchase not found (e.g., table doesn't exist), create it from session data
+                    if (purchase == null)
                     {
+                        Console.WriteLine($"[StripeController] Purchase not found for session {sessionId}, creating from session data");
+                        
+                        // Get plan details
+                        var plan = await _dynamoService.GetPricingPlanAsync(planId);
+                        if (plan == null)
+                        {
+                            Console.WriteLine($"[StripeController] Plan {planId} not found, cannot process payment");
+                            return Ok(); // Return OK to prevent webhook retries
+                        }
+
+                        purchase = new UserPurchase
+                        {
+                            PurchaseId = Guid.NewGuid().ToString(),
+                            DeviceId = deviceId,
+                            PlanId = planId,
+                            StripeSessionId = sessionId ?? "",
+                            StripePaymentIntentId = paymentIntentId,
+                            Status = "completed",
+                            PurchasedAt = DateTime.UtcNow,
+                            IsUnlimited = plan.IsUnlimited,
+                            TokensGranted = plan.TokenCount
+                        };
+
+                        if (plan.IsUnlimited && plan.UnlimitedDays.HasValue)
+                        {
+                            purchase.ExpiresAt = DateTime.UtcNow.AddDays(plan.UnlimitedDays.Value);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[StripeController] Found existing purchase: {purchase.PurchaseId}");
                         purchase.Status = "completed";
-                        purchase.StripePaymentIntentId = sessionObject?["payment_intent"]?.ToString() ?? "";
+                        purchase.StripePaymentIntentId = paymentIntentId;
+                    }
 
-                        // Grant tokens or unlimited access
-                        if (purchase.IsUnlimited)
+                    // Grant tokens or unlimited access
+                    Console.WriteLine($"[StripeController] Granting access - IsUnlimited: {purchase.IsUnlimited}, TokensGranted: {purchase.TokensGranted}");
+                    
+                    if (purchase.IsUnlimited)
+                    {
+                        // For unlimited, we need to track expiration in UserTokens
+                        var tokens = await _dynamoService.GetUserTokensAsync(deviceId);
+                        if (tokens == null)
                         {
-                            // Unlimited access already set with ExpiresAt
+                            tokens = new UserTokens
+                            {
+                                DeviceId = deviceId,
+                                TokensRemaining = 999999, // Large number for unlimited
+                                ExpiresAt = purchase.ExpiresAt
+                            };
                         }
-                        else if (purchase.TokensGranted.HasValue)
+                        else
                         {
-                            var tokens = await _dynamoService.GetUserTokensAsync(deviceId);
-                            if (tokens == null)
+                            tokens.TokensRemaining = 999999;
+                            if (purchase.ExpiresAt.HasValue)
                             {
-                                tokens = new UserTokens
-                                {
-                                    DeviceId = deviceId,
-                                    TokensRemaining = purchase.TokensGranted.Value
-                                };
+                                tokens.ExpiresAt = purchase.ExpiresAt;
                             }
-                            else
-                            {
-                                tokens.TokensRemaining += purchase.TokensGranted.Value;
-                            }
-                            await _dynamoService.SaveUserTokensAsync(tokens);
                         }
+                        await _dynamoService.SaveUserTokensAsync(tokens);
+                        Console.WriteLine($"[StripeController] Granted unlimited access until {purchase.ExpiresAt}");
+                    }
+                    else if (purchase.TokensGranted.HasValue)
+                    {
+                        var tokens = await _dynamoService.GetUserTokensAsync(deviceId);
+                        if (tokens == null)
+                        {
+                            tokens = new UserTokens
+                            {
+                                DeviceId = deviceId,
+                                TokensRemaining = purchase.TokensGranted.Value
+                            };
+                        }
+                        else
+                        {
+                            tokens.TokensRemaining += purchase.TokensGranted.Value;
+                        }
+                        await _dynamoService.SaveUserTokensAsync(tokens);
+                        Console.WriteLine($"[StripeController] Granted {purchase.TokensGranted.Value} tokens. Total: {tokens.TokensRemaining}");
+                    }
 
-                        await _dynamoService.SaveUserPurchaseAsync(purchase);
+                    // Save purchase record (may fail if table doesn't exist, but that's OK)
+                    await _dynamoService.SaveUserPurchaseAsync(purchase);
 
-                        // Track activity
+                    // Track activity
+                    try
+                    {
                         await _dynamoService.SaveCustomerActivityAsync(new CustomerActivity
                         {
                             DeviceId = deviceId,
@@ -247,6 +310,16 @@ public class StripeController : ControllerBase
                             PurchaseId = purchase.PurchaseId
                         });
                     }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[StripeController] Failed to save activity (non-critical): {ex.Message}");
+                    }
+
+                    Console.WriteLine($"[StripeController] Successfully processed payment for device {deviceId}");
+                }
+                else
+                {
+                    Console.WriteLine($"[StripeController] Missing deviceId or planId in metadata");
                 }
             }
 
