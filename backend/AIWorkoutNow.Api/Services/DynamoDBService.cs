@@ -737,32 +737,43 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task<List<PricingPlan>> GetAllPricingPlansAsync()
     {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var plansTable = $"{tablePrefix}-PricingPlans";
+        
+        Console.WriteLine($"[DynamoDBService] Getting pricing plans from table: {plansTable}");
+        
+        // Check if table exists first (fast check)
         try
         {
-            var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
-            var plansTable = $"{tablePrefix}-PricingPlans";
-            
-            Console.WriteLine($"[DynamoDBService] Getting pricing plans from table: {plansTable}");
-            
-            ScanResponse response;
-            try
+            await _dynamoDB.DescribeTableAsync(new Amazon.DynamoDBv2.Model.DescribeTableRequest
             {
-                response = await _dynamoDB.ScanAsync(new ScanRequest
-                {
-                    TableName = plansTable
-                });
-            }
-            catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+                TableName = plansTable
+            });
+        }
+        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+        {
+            Console.WriteLine("[DynamoDBService] PricingPlans table does not exist, returning default plans immediately");
+            return GetDefaultPricingPlans();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error checking table existence: {ex.Message}, returning defaults");
+            return GetDefaultPricingPlans();
+        }
+        
+        // Table exists, try to scan it
+        try
+        {
+            var response = await _dynamoDB.ScanAsync(new ScanRequest
             {
-                Console.WriteLine("[DynamoDBService] PricingPlans table does not exist, returning default plans immediately");
-                return GetDefaultPricingPlans();
-            }
+                TableName = plansTable
+            });
 
             Console.WriteLine($"[DynamoDBService] Found {response.Items.Count} pricing plans");
 
             if (response.Items.Count == 0)
             {
-                Console.WriteLine("[DynamoDBService] No pricing plans found, returning default plans (not creating in DB to avoid delay)");
+                Console.WriteLine("[DynamoDBService] No pricing plans found, returning default plans");
                 return GetDefaultPricingPlans();
             }
 
