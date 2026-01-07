@@ -862,15 +862,14 @@ public class DynamoDBService : IDynamoDBService
                 }
             });
 
-        if (!response.Item.Any())
-            return null;
-
-        var item = response.Item;
-        return new PricingPlan
+            if (response.Item.Any())
+            {
+                var item = response.Item;
+                return new PricingPlan
         {
             PlanId = item["PlanId"].S,
             Name = item["Name"].S,
-            Price = decimal.Parse(item["Price"].S),
+                    Price = item.ContainsKey("Price") ? (item["Price"].N != null ? decimal.Parse(item["Price"].N) : decimal.Parse(item["Price"].S)) : 0,
             Currency = item["Currency"].S,
             TokenCount = item.ContainsKey("TokenCount") ? int.Parse(item["TokenCount"].N) : null,
             IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL,
@@ -882,8 +881,28 @@ public class DynamoDBService : IDynamoDBService
             IsActive = item.ContainsKey("IsActive") ? item["IsActive"].BOOL : true,
             StripePriceId = item["StripePriceId"].S,
             CreatedAt = DateTime.Parse(item["CreatedAt"].S),
-            UpdatedAt = item.ContainsKey("UpdatedAt") ? DateTime.Parse(item["UpdatedAt"].S) : null
-        };
+                    UpdatedAt = item.ContainsKey("UpdatedAt") ? DateTime.Parse(item["UpdatedAt"].S) : null
+                };
+            }
+            
+            // Plan not found in DB, check default plans
+            Console.WriteLine($"[DynamoDBService] Plan {planId} not found in DB, checking default plans");
+            var defaultPlans = GetDefaultPricingPlans();
+            return defaultPlans.FirstOrDefault(p => p.PlanId == planId);
+        }
+        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+        {
+            Console.WriteLine($"[DynamoDBService] PricingPlans table does not exist, checking default plans for: {planId}");
+            var defaultPlans = GetDefaultPricingPlans();
+            return defaultPlans.FirstOrDefault(p => p.PlanId == planId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error getting pricing plan {planId}: {ex.Message}");
+            // Fall back to default plans on any error
+            var defaultPlans = GetDefaultPricingPlans();
+            return defaultPlans.FirstOrDefault(p => p.PlanId == planId);
+        }
     }
 
     public async Task DeletePricingPlanAsync(string planId)
