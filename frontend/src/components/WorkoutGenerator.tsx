@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import WorkoutDisplay from './WorkoutDisplay';
 import './WorkoutGenerator.css';
+import './WorkoutLoading.css';
 
 interface WorkoutGeneratorProps {
   onGenerate: (preferences: any) => void;
