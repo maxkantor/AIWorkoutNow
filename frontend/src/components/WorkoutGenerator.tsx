@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import WorkoutDisplay from './WorkoutDisplay';
+import './WorkoutGenerator.css';
 
 interface WorkoutGeneratorProps {
   onGenerate: (preferences: any) => void;
@@ -155,6 +156,24 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = fals
           {loading ? 'Generating Workout...' : disabled ? 'Unlock More Workouts' : 'Generate AI Workout'}
         </button>
       </form>
+
+      {loading && (
+        <div className="mt-8 workout-loading-container">
+          <div className="workout-loading-content">
+            <div className="running-character">
+              <div className="runner-body">
+                <div className="runner-head"></div>
+                <div className="runner-torso"></div>
+                <div className="runner-arm runner-arm-left"></div>
+                <div className="runner-arm runner-arm-right"></div>
+                <div className="runner-leg runner-leg-left"></div>
+                <div className="runner-leg runner-leg-right"></div>
+              </div>
+            </div>
+            <p className="workout-loading-text">AI is crafting your perfect workout... 💪</p>
+          </div>
+        </div>
+      )}
 
       {workout && <WorkoutDisplay workout={workout} />}
     </section>
