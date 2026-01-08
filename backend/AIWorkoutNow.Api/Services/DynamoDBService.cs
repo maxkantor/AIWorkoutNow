@@ -405,65 +405,102 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task<List<StripePurchase>> GetAllStripePurchasesAsync()
     {
-        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
-        var purchasesTable = $"{tablePrefix}-StripePurchases";
-        
-        var response = await _dynamoDB.ScanAsync(new ScanRequest
+        try
         {
-            TableName = purchasesTable
-        });
+            var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+            var purchasesTable = $"{tablePrefix}-UserPurchases";
+            
+            var response = await _dynamoDB.ScanAsync(new ScanRequest
+            {
+                TableName = purchasesTable
+            });
 
-        return response.Items.Select(item => new StripePurchase
+            // Convert UserPurchase to StripePurchase format for admin
+            var purchases = new List<StripePurchase>();
+            foreach (var item in response.Items)
+            {
+                // Get plan details to determine amount
+                var planId = item["PlanId"].S;
+                var plan = await GetPricingPlanAsync(planId);
+                var amount = plan?.Price ?? 0;
+                var currency = plan?.Currency ?? "USD";
+                
+                purchases.Add(new StripePurchase
+                {
+                    PurchaseId = item["PurchaseId"].S,
+                    DeviceId = item["DeviceId"].S,
+                    StripeCustomerId = "", // Not stored in UserPurchase
+                    StripePaymentIntentId = item.ContainsKey("StripePaymentIntentId") ? item["StripePaymentIntentId"].S : "",
+                    StripeSessionId = item["StripeSessionId"].S,
+                    PackType = plan?.Name ?? planId,
+                    Amount = amount,
+                    Currency = currency,
+                    TokensPurchased = item.ContainsKey("TokensGranted") && item["TokensGranted"].N != null 
+                        ? int.Parse(item["TokensGranted"].N) 
+                        : (item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL ? 999999 : 0),
+                    Status = item["Status"].S,
+                    CreatedAt = DateTime.Parse(item["PurchasedAt"].S),
+                    CompletedAt = item["Status"].S == "completed" ? DateTime.Parse(item["PurchasedAt"].S) : null,
+                    CustomerEmail = null, // Not stored in UserPurchase
+                    CustomerName = null // Not stored in UserPurchase
+                });
+            }
+            
+            return purchases.OrderByDescending(p => p.CreatedAt).ToList();
+        }
+        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
-            PurchaseId = item["PurchaseId"].S,
-            DeviceId = item["DeviceId"].S,
-            StripeCustomerId = item["StripeCustomerId"].S,
-            StripePaymentIntentId = item["StripePaymentIntentId"].S,
-            StripeSessionId = item["StripeSessionId"].S,
-            PackType = item["PackType"].S,
-            Amount = decimal.Parse(item["Amount"].S),
-            Currency = item["Currency"].S,
-            TokensPurchased = int.Parse(item["TokensPurchased"].N),
-            Status = item["Status"].S,
-            CreatedAt = DateTime.Parse(item["CreatedAt"].S),
-            CompletedAt = item.ContainsKey("CompletedAt") ? DateTime.Parse(item["CompletedAt"].S) : null,
-            CustomerEmail = item.ContainsKey("CustomerEmail") ? item["CustomerEmail"].S : null,
-            CustomerName = item.ContainsKey("CustomerName") ? item["CustomerName"].S : null
-        }).OrderByDescending(p => p.CreatedAt).ToList();
+            Console.WriteLine("[DynamoDBService] UserPurchases table does not exist, returning empty list");
+            return new List<StripePurchase>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error getting all purchases: {ex.Message}");
+            return new List<StripePurchase>();
+        }
     }
 
     public async Task<List<StripePurchase>> GetPurchasesByDeviceIdAsync(string deviceId)
     {
-        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
-        var purchasesTable = $"{tablePrefix}-StripePurchases";
-        
-        var response = await _dynamoDB.ScanAsync(new ScanRequest
+        try
         {
-            TableName = purchasesTable,
-            FilterExpression = "DeviceId = :deviceId",
-            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            var userPurchases = await GetUserPurchasesAsync(deviceId);
+            
+            // Convert UserPurchase to StripePurchase format for admin
+            var purchases = new List<StripePurchase>();
+            foreach (var userPurchase in userPurchases)
             {
-                { ":deviceId", new AttributeValue { S = deviceId } }
+                // Get plan details to determine amount
+                var plan = await GetPricingPlanAsync(userPurchase.PlanId);
+                var amount = plan?.Price ?? 0;
+                var currency = plan?.Currency ?? "USD";
+                
+                purchases.Add(new StripePurchase
+                {
+                    PurchaseId = userPurchase.PurchaseId,
+                    DeviceId = userPurchase.DeviceId,
+                    StripeCustomerId = "", // Not stored in UserPurchase
+                    StripePaymentIntentId = userPurchase.StripePaymentIntentId,
+                    StripeSessionId = userPurchase.StripeSessionId,
+                    PackType = plan?.Name ?? userPurchase.PlanId,
+                    Amount = amount,
+                    Currency = currency,
+                    TokensPurchased = userPurchase.TokensGranted ?? (userPurchase.IsUnlimited ? 999999 : 0),
+                    Status = userPurchase.Status,
+                    CreatedAt = userPurchase.PurchasedAt,
+                    CompletedAt = userPurchase.Status == "completed" ? userPurchase.PurchasedAt : null,
+                    CustomerEmail = null, // Not stored in UserPurchase
+                    CustomerName = null // Not stored in UserPurchase
+                });
             }
-        });
-
-        return response.Items.Select(item => new StripePurchase
+            
+            return purchases.OrderByDescending(p => p.CreatedAt).ToList();
+        }
+        catch (Exception ex)
         {
-            PurchaseId = item["PurchaseId"].S,
-            DeviceId = item["DeviceId"].S,
-            StripeCustomerId = item["StripeCustomerId"].S,
-            StripePaymentIntentId = item["StripePaymentIntentId"].S,
-            StripeSessionId = item["StripeSessionId"].S,
-            PackType = item["PackType"].S,
-            Amount = decimal.Parse(item["Amount"].S),
-            Currency = item["Currency"].S,
-            TokensPurchased = int.Parse(item["TokensPurchased"].N),
-            Status = item["Status"].S,
-            CreatedAt = DateTime.Parse(item["CreatedAt"].S),
-            CompletedAt = item.ContainsKey("CompletedAt") ? DateTime.Parse(item["CompletedAt"].S) : null,
-            CustomerEmail = item.ContainsKey("CustomerEmail") ? item["CustomerEmail"].S : null,
-            CustomerName = item.ContainsKey("CustomerName") ? item["CustomerName"].S : null
-        }).OrderByDescending(p => p.CreatedAt).ToList();
+            Console.WriteLine($"[DynamoDBService] Error getting purchases by device ID: {ex.Message}");
+            return new List<StripePurchase>();
+        }
     }
 
     public async Task SaveCustomerActivityAsync(CustomerActivity activity)
