@@ -42,6 +42,9 @@ function Create-TableIfNotExists {
 }
 
 # Create CRM tables
+Write-Host "📊 Creating User Purchases table..." -ForegroundColor Cyan
+Create-TableIfNotExists -TableName "$TABLE_PREFIX-UserPurchases" -PartitionKey "PurchaseId"
+
 Write-Host "📊 Creating Stripe Purchases table..." -ForegroundColor Cyan
 Create-TableIfNotExists -TableName "$TABLE_PREFIX-StripePurchases" -PartitionKey "PurchaseId"
 
@@ -54,6 +57,7 @@ Create-TableIfNotExists -TableName "$TABLE_PREFIX-ContactReplies" -PartitionKey 
 Write-Host ""
 Write-Host "⏳ Waiting for tables to be active..." -ForegroundColor Cyan
 $tables = @(
+    "$TABLE_PREFIX-UserPurchases",
     "$TABLE_PREFIX-StripePurchases",
     "$TABLE_PREFIX-CustomerActivities",
     "$TABLE_PREFIX-ContactReplies"
@@ -68,6 +72,7 @@ Write-Host ""
 Write-Host "✅ All CRM tables created and active!" -ForegroundColor Green
 Write-Host ""
 Write-Host "📋 Created tables:" -ForegroundColor Cyan
+Write-Host "   - $TABLE_PREFIX-UserPurchases" -ForegroundColor White
 Write-Host "   - $TABLE_PREFIX-StripePurchases" -ForegroundColor White
 Write-Host "   - $TABLE_PREFIX-CustomerActivities" -ForegroundColor White
 Write-Host "   - $TABLE_PREFIX-ContactReplies" -ForegroundColor White
