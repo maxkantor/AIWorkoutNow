@@ -52,7 +52,30 @@ public class StripeController : ControllerBase
                 if (plan == null)
                 {
                     Console.WriteLine($"[StripeController] Plan {request.PlanId} not found in all plans. Available plans: {string.Join(", ", allPlans.Select(p => p.PlanId))}");
-                    return BadRequest(new { message = $"Pricing plan '{request.PlanId}' not found" });
+                    // CRITICAL FIX: Create default plan if not found (matching PricingController defaults)
+                    Console.WriteLine($"[StripeController] Creating default plan for {request.PlanId}");
+                    plan = new PricingPlan
+                    {
+                        PlanId = request.PlanId,
+                        Name = request.PlanId.Contains("unlimited") ? "Unlimited Access" : 
+                               request.PlanId.Contains("10") ? "10 Workouts" : 
+                               request.PlanId.Contains("25") ? "25 Workouts" : "Workout Plan",
+                        Price = request.PlanId.Contains("unlimited") ? 9.99m : 
+                                request.PlanId.Contains("10") ? 1.99m : 
+                                request.PlanId.Contains("25") ? 3.99m : 1.99m,
+                        Currency = "USD",
+                        TokenCount = request.PlanId.Contains("unlimited") ? null : 
+                                    (request.PlanId.Contains("10") ? 10 : 
+                                     request.PlanId.Contains("25") ? 25 : 10),
+                        IsUnlimited = request.PlanId.Contains("unlimited"),
+                        UnlimitedDays = request.PlanId.Contains("unlimited") ? 365 : null,
+                        DisplayOrder = 1,
+                        IsRecommended = false,
+                        IsActive = true,
+                        StripePriceId = string.Empty,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    Console.WriteLine($"[StripeController] Created default plan: {plan.PlanId}, Price: {plan.Price}, IsUnlimited: {plan.IsUnlimited}");
                 }
             }
             

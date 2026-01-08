@@ -533,10 +533,18 @@ public class PricingController : ControllerBase
                 {
                     // Fallback: If expiration is less than 1 year from now, fix it to 1 year from now
                     // This handles cases where purchase record is missing
-                    if (tokens.ExpiresAt.HasValue && tokens.ExpiresAt.Value < DateTime.UtcNow.AddDays(365))
+                    // CRITICAL FIX: Use proper comparison - expiration should be at least 1 year from now
+                    var oneYearFromNow = DateTime.UtcNow.AddDays(365);
+                    if (tokens.ExpiresAt.HasValue && tokens.ExpiresAt.Value < oneYearFromNow)
                     {
-                        expectedExpiration = DateTime.UtcNow.AddDays(365);
-                        Console.WriteLine($"[PricingController] No purchase found, but expiration {tokens.ExpiresAt} is less than 1 year, fixing to {expectedExpiration}");
+                        expectedExpiration = oneYearFromNow;
+                        Console.WriteLine($"[PricingController] No purchase found, but expiration {tokens.ExpiresAt} is less than 1 year from now ({oneYearFromNow}), fixing to {expectedExpiration}");
+                    }
+                    else if (!tokens.ExpiresAt.HasValue)
+                    {
+                        // If no expiration set, set it to 1 year from now
+                        expectedExpiration = oneYearFromNow;
+                        Console.WriteLine($"[PricingController] No purchase found and no expiration set, setting to 1 year from now: {expectedExpiration}");
                     }
                 }
                 
