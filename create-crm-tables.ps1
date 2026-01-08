@@ -54,13 +54,17 @@ Create-TableIfNotExists -TableName "$TABLE_PREFIX-CustomerActivities" -Partition
 Write-Host "📊 Creating Contact Replies table..." -ForegroundColor Cyan
 Create-TableIfNotExists -TableName "$TABLE_PREFIX-ContactReplies" -PartitionKey "ReplyId"
 
+Write-Host "📊 Creating Pricing Plans table..." -ForegroundColor Cyan
+Create-TableIfNotExists -TableName "$TABLE_PREFIX-PricingPlans" -PartitionKey "PlanId"
+
 Write-Host ""
 Write-Host "⏳ Waiting for tables to be active..." -ForegroundColor Cyan
 $tables = @(
     "$TABLE_PREFIX-UserPurchases",
     "$TABLE_PREFIX-StripePurchases",
     "$TABLE_PREFIX-CustomerActivities",
-    "$TABLE_PREFIX-ContactReplies"
+    "$TABLE_PREFIX-ContactReplies",
+    "$TABLE_PREFIX-PricingPlans"
 )
 
 foreach ($table in $tables) {
@@ -76,4 +80,5 @@ Write-Host "   - $TABLE_PREFIX-UserPurchases" -ForegroundColor White
 Write-Host "   - $TABLE_PREFIX-StripePurchases" -ForegroundColor White
 Write-Host "   - $TABLE_PREFIX-CustomerActivities" -ForegroundColor White
 Write-Host "   - $TABLE_PREFIX-ContactReplies" -ForegroundColor White
+Write-Host "   - $TABLE_PREFIX-PricingPlans" -ForegroundColor White
 Write-Host ""
