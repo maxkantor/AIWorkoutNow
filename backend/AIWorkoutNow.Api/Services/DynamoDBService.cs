@@ -1122,6 +1122,67 @@ public class DynamoDBService : IDynamoDBService
         }
     }
 
+    public async Task<List<UserPurchase>> GetAllUserPurchasesAsync()
+    {
+        try
+        {
+            var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+            var purchasesTable = $"{tablePrefix}-UserPurchases";
+            
+            // Try to scan directly - if table doesn't exist, return empty immediately
+            var response = await _dynamoDB.ScanAsync(new ScanRequest
+            {
+                TableName = purchasesTable,
+                Limit = 1000 // Reasonable limit
+            });
+
+            if (response.Items.Count == 0)
+                return new List<UserPurchase>();
+
+            var purchases = new List<UserPurchase>();
+            foreach (var item in response.Items)
+            {
+                try
+                {
+                    purchases.Add(new UserPurchase
+                    {
+                        PurchaseId = item["PurchaseId"].S,
+                        DeviceId = item["DeviceId"].S,
+                        PlanId = item["PlanId"].S,
+                        StripeSessionId = item["StripeSessionId"].S,
+                        StripePaymentIntentId = item["StripePaymentIntentId"].S,
+                        Status = item["Status"].S,
+                        PurchasedAt = DateTime.Parse(item["PurchasedAt"].S),
+                        ExpiresAt = item.ContainsKey("ExpiresAt") ? DateTime.Parse(item["ExpiresAt"].S) : null,
+                        TokensGranted = item.ContainsKey("TokensGranted") ? int.Parse(item["TokensGranted"].N) : null,
+                        IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[DynamoDBService] Error parsing purchase item: {ex.Message}");
+                }
+            }
+
+            return purchases.OrderByDescending(p => p.PurchasedAt).ToList();
+        }
+        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+        {
+            Console.WriteLine("[DynamoDBService] UserPurchases table does not exist, returning empty list immediately");
+            return new List<UserPurchase>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error getting all user purchases: {ex.Message}");
+            return new List<UserPurchase>();
+        }
+    }
+
+    public async Task<List<UserPurchase>> GetUserPurchasesByDeviceIdAsync(string deviceId)
+    {
+        return await GetUserPurchasesAsync(deviceId);
+    }
+
     public async Task<List<UserPurchase>> GetUserPurchasesAsync(string deviceId)
     {
         try
