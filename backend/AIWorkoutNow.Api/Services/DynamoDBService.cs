@@ -925,6 +925,15 @@ public class DynamoDBService : IDynamoDBService
             }
 
             Console.WriteLine($"[DynamoDBService] Returning {plans.Count} active pricing plans");
+            
+            // AGGRESSIVE FIX: Always return at least default plans if result is empty
+            if (plans.Count == 0)
+            {
+                Console.WriteLine("[DynamoDBService] No active plans found, returning default plans as fallback");
+                var defaultPlans = GetDefaultPricingPlans();
+                return defaultPlans;
+            }
+            
             return plans.OrderBy(p => p.DisplayOrder).ToList();
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
@@ -1085,7 +1094,7 @@ public class DynamoDBService : IDynamoDBService
                 DeviceId = item["DeviceId"].S,
                 PlanId = item["PlanId"].S,
                 StripeSessionId = item["StripeSessionId"].S,
-                StripePaymentIntentId = item["StripePaymentIntentId"].S,
+                StripePaymentIntentId = item.ContainsKey("StripePaymentIntentId") ? item["StripePaymentIntentId"].S : "",
                 Status = item["Status"].S,
                 PurchasedAt = DateTime.Parse(item["PurchasedAt"].S),
                 ExpiresAt = item.ContainsKey("ExpiresAt") ? DateTime.Parse(item["ExpiresAt"].S) : null,
@@ -1133,7 +1142,7 @@ public class DynamoDBService : IDynamoDBService
                         DeviceId = item["DeviceId"].S,
                         PlanId = item["PlanId"].S,
                         StripeSessionId = item["StripeSessionId"].S,
-                        StripePaymentIntentId = item["StripePaymentIntentId"].S,
+                        StripePaymentIntentId = item.ContainsKey("StripePaymentIntentId") ? item["StripePaymentIntentId"].S : "",
                         Status = item["Status"].S,
                         PurchasedAt = DateTime.Parse(item["PurchasedAt"].S),
                         ExpiresAt = item.ContainsKey("ExpiresAt") ? DateTime.Parse(item["ExpiresAt"].S) : null,
@@ -1190,7 +1199,7 @@ public class DynamoDBService : IDynamoDBService
                 DeviceId = item["DeviceId"].S,
                 PlanId = item["PlanId"].S,
                 StripeSessionId = item["StripeSessionId"].S,
-                StripePaymentIntentId = item["StripePaymentIntentId"].S,
+                StripePaymentIntentId = item.ContainsKey("StripePaymentIntentId") ? item["StripePaymentIntentId"].S : "",
                 Status = item["Status"].S,
                 PurchasedAt = DateTime.Parse(item["PurchasedAt"].S),
                 ExpiresAt = item.ContainsKey("ExpiresAt") ? DateTime.Parse(item["ExpiresAt"].S) : null,
