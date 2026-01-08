@@ -635,43 +635,108 @@ public class DynamoDBService : IDynamoDBService
             }
         }
 
-        // Get workout counts per device
-        var workoutsResponse = await _dynamoDB.ScanAsync(new ScanRequest
-        {
-            TableName = _workoutsTable
-        });
-        
-        // Note: This is simplified - in production, you'd want to track deviceId in workouts
-        // For now, we'll count total workouts
-
-        // Get purchase data
-        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
-        var purchasesTable = $"{tablePrefix}-StripePurchases";
+        // AGGRESSIVE FIX: Get workout counts from CustomerActivities (more accurate)
+        var activitiesTablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var activitiesTable = $"{activitiesTablePrefix}-CustomerActivities";
         
         try
         {
-            var purchasesResponse = await _dynamoDB.ScanAsync(new ScanRequest
+            var activitiesResponse = await _dynamoDB.ScanAsync(new ScanRequest
             {
-                TableName = purchasesTable
+                TableName = activitiesTable,
+                FilterExpression = "ActivityType = :workoutType",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    { ":workoutType", new AttributeValue { S = "workout_generated" } }
+                },
+                Limit = 10000 // Get all workout activities
             });
             
-            foreach (var item in purchasesResponse.Items)
+            // Count workouts per device
+            foreach (var item in activitiesResponse.Items)
             {
                 var deviceId = item["DeviceId"].S;
                 if (customers.ContainsKey(deviceId))
                 {
-                    customers[deviceId].TotalPurchases++;
-                    customers[deviceId].TotalSpent += decimal.Parse(item["Amount"].S);
-                    if (string.IsNullOrEmpty(customers[deviceId].Email) && item.ContainsKey("CustomerEmail"))
-                        customers[deviceId].Email = item["CustomerEmail"].S;
-                    if (string.IsNullOrEmpty(customers[deviceId].Name) && item.ContainsKey("CustomerName"))
-                        customers[deviceId].Name = item["CustomerName"].S;
+                    customers[deviceId].TotalWorkouts++;
                 }
             }
         }
         catch
         {
-            // Table might not exist yet
+            // Activities table might not exist - skip workout counting
+            Console.WriteLine("[DynamoDBService] CustomerActivities table not found, skipping workout counts");
+        }
+
+        // AGGRESSIVE FIX: Get purchase data from UserPurchases table (not StripePurchases)
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var purchasesTable = $"{tablePrefix}-UserPurchases";
+        
+        try
+        {
+            var purchasesResponse = await _dynamoDB.ScanAsync(new ScanRequest
+            {
+                TableName = purchasesTable,
+                Limit = 5000 // Get all purchases
+            });
+            
+            Console.WriteLine($"[DynamoDBService] Found {purchasesResponse.Items.Count} purchases in UserPurchases table");
+            
+            foreach (var item in purchasesResponse.Items)
+            {
+                try
+                {
+                    var deviceId = item["DeviceId"].S;
+                    var status = item["Status"].S;
+                    
+                    // Only count completed purchases
+                    if (status != "completed") continue;
+                    
+                    if (!customers.ContainsKey(deviceId))
+                    {
+                        customers[deviceId] = new CustomerSummary
+                        {
+                            DeviceId = deviceId,
+                            IsPaidUser = false,
+                            TokensRemaining = 0,
+                            TotalWorkouts = 0,
+                            TotalPurchases = 0,
+                            TotalSpent = 0
+                        };
+                    }
+                    
+                    customers[deviceId].TotalPurchases++;
+                    
+                    // Get plan details to calculate amount
+                    var planId = item["PlanId"].S;
+                    var plan = await GetPricingPlanAsync(planId);
+                    if (plan != null)
+                    {
+                        customers[deviceId].TotalSpent += plan.Price;
+                    }
+                    
+                    // Try to get customer email/name from Stripe session metadata if available
+                    // (We'll enhance this later to fetch from Stripe API if needed)
+                    if (string.IsNullOrEmpty(customers[deviceId].Email) && item.ContainsKey("CustomerEmail"))
+                        customers[deviceId].Email = item["CustomerEmail"].S;
+                    if (string.IsNullOrEmpty(customers[deviceId].Name) && item.ContainsKey("CustomerName"))
+                        customers[deviceId].Name = item["CustomerName"].S;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[DynamoDBService] Error processing purchase item: {ex.Message}");
+                }
+            }
+            
+            Console.WriteLine($"[DynamoDBService] Processed purchases for {customers.Count} customers");
+        }
+        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+        {
+            Console.WriteLine("[DynamoDBService] UserPurchases table does not exist yet");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error getting purchases: {ex.Message}");
         }
 
         return customers.Values.OrderByDescending(c => c.LastActivity ?? c.FirstSeen).ToList();
@@ -697,19 +762,38 @@ public class DynamoDBService : IDynamoDBService
             summary.TokensRemaining = tokens.TokensRemaining;
         }
 
-        // Get purchases
-        var purchases = await GetPurchasesByDeviceIdAsync(deviceId);
-        summary.TotalPurchases = purchases.Count;
-        summary.TotalSpent = purchases.Sum(p => p.Amount);
-        if (purchases.Any())
+        // AGGRESSIVE FIX: Get purchases from UserPurchases table and calculate totals
+        var purchases = await GetUserPurchasesByDeviceIdAsync(deviceId);
+        var completedPurchases = purchases.Where(p => p.Status == "completed").ToList();
+        summary.TotalPurchases = completedPurchases.Count;
+        
+        // Calculate total spent from plan prices
+        decimal totalSpent = 0;
+        foreach (var purchase in completedPurchases)
         {
-            summary.Email = purchases.First().CustomerEmail;
-            summary.Name = purchases.First().CustomerName;
+            var plan = await GetPricingPlanAsync(purchase.PlanId);
+            if (plan != null)
+            {
+                totalSpent += plan.Price;
+            }
+        }
+        summary.TotalSpent = totalSpent;
+        
+        // Try to get customer email/name from Stripe if available
+        // (For now, we'll leave these empty - can be enhanced to fetch from Stripe API)
+        if (completedPurchases.Any())
+        {
+            // Check if we stored customer info in purchase metadata
+            // This would need to be added when saving purchases
         }
 
-        // Get activities
-        var activities = await GetCustomerActivitiesAsync(deviceId, 10);
-        summary.RecentActivities = activities;
+        // Get activities and count workouts
+        var activities = await GetCustomerActivitiesAsync(deviceId, 100);
+        summary.RecentActivities = activities.Take(10).ToList();
+        
+        // Count workouts from activities
+        summary.TotalWorkouts = activities.Count(a => a.ActivityType == "workout_generated");
+        
         if (activities.Any())
         {
             summary.LastActivity = activities.First().Timestamp;

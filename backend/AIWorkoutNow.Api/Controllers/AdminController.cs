@@ -275,7 +275,31 @@ public class AdminController : ControllerBase
         try
         {
             var purchases = await _dynamoService.GetAllUserPurchasesAsync();
-            return Ok(purchases);
+            
+            // AGGRESSIVE FIX: Enrich purchases with plan details for Admin CRM
+            var enrichedPurchases = new List<object>();
+            foreach (var purchase in purchases)
+            {
+                var plan = await _dynamoService.GetPricingPlanAsync(purchase.PlanId);
+                enrichedPurchases.Add(new
+                {
+                    purchase.PurchaseId,
+                    purchase.DeviceId,
+                    purchase.PlanId,
+                    PlanName = plan?.Name ?? "Unknown Plan",
+                    Amount = plan?.Price ?? 0,
+                    Currency = plan?.Currency ?? "USD",
+                    purchase.Status,
+                    purchase.PurchasedAt,
+                    purchase.ExpiresAt,
+                    purchase.TokensGranted,
+                    purchase.IsUnlimited,
+                    purchase.StripeSessionId,
+                    purchase.StripePaymentIntentId
+                });
+            }
+            
+            return Ok(enrichedPurchases);
         }
         catch (Exception ex)
         {
@@ -290,7 +314,31 @@ public class AdminController : ControllerBase
         try
         {
             var purchases = await _dynamoService.GetUserPurchasesByDeviceIdAsync(deviceId);
-            return Ok(purchases);
+            
+            // AGGRESSIVE FIX: Enrich purchases with plan details
+            var enrichedPurchases = new List<object>();
+            foreach (var purchase in purchases)
+            {
+                var plan = await _dynamoService.GetPricingPlanAsync(purchase.PlanId);
+                enrichedPurchases.Add(new
+                {
+                    purchase.PurchaseId,
+                    purchase.DeviceId,
+                    purchase.PlanId,
+                    PlanName = plan?.Name ?? "Unknown Plan",
+                    Amount = plan?.Price ?? 0,
+                    Currency = plan?.Currency ?? "USD",
+                    purchase.Status,
+                    purchase.PurchasedAt,
+                    purchase.ExpiresAt,
+                    purchase.TokensGranted,
+                    purchase.IsUnlimited,
+                    purchase.StripeSessionId,
+                    purchase.StripePaymentIntentId
+                });
+            }
+            
+            return Ok(enrichedPurchases);
         }
         catch (Exception ex)
         {

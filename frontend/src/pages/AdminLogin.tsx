@@ -5,26 +5,12 @@ import { adminLogin } from '../services/api';
 import './AdminLogin.css';
 
 function AdminLogin() {
-  // Load email from localStorage on mount
-  const [email, setEmail] = useState(() => {
-    const savedEmail = localStorage.getItem('admin_email');
-    return savedEmail || '';
-  });
+  // Default email to admin@aiworkoutnow.com
+  const [email] = useState('admin@aiworkoutnow.com');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  
-  // Save email to localStorage whenever it changes
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newEmail = e.target.value;
-    setEmail(newEmail);
-    if (newEmail) {
-      localStorage.setItem('admin_email', newEmail);
-    } else {
-      localStorage.removeItem('admin_email');
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,29 +40,21 @@ function AdminLogin() {
             <h1>Admin Login</h1>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label htmlFor="email">Email</label>
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={handleEmailChange}
-                  className="input"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="password">Password</label>
+                <label htmlFor="password">Admin Password</label>
                 <input
                   type="password"
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="input"
+                  placeholder="Enter admin password"
+                  autoFocus
                   required
                 />
+                <small className="form-hint">Email: admin@aiworkoutnow.com</small>
               </div>
               {error && <div className="error-message">{error}</div>}
-              <button type="submit" className="btn" disabled={loading}>
+              <button type="submit" className="btn btn-primary" disabled={loading}>
                 {loading ? 'Logging in...' : 'Login'}
               </button>
             </form>
