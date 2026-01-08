@@ -295,7 +295,9 @@ public class AdminController : ControllerBase
                     purchase.TokensGranted,
                     purchase.IsUnlimited,
                     purchase.StripeSessionId,
-                    purchase.StripePaymentIntentId
+                    purchase.StripePaymentIntentId,
+                    purchase.CustomerEmail,
+                    purchase.CustomerName
                 });
             }
             

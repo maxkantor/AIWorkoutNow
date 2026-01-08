@@ -289,18 +289,32 @@ public class DynamoDBService : IDynamoDBService
     // CRM Methods
     public async Task<List<ContactMessage>> GetAllContactMessagesAsync()
     {
-        var response = await _dynamoDB.ScanAsync(new ScanRequest
+        try
         {
-            TableName = _contactMessagesTable
-        });
+            var response = await _dynamoDB.ScanAsync(new ScanRequest
+            {
+                TableName = _contactMessagesTable,
+                Limit = 1000 // Reasonable limit
+            });
 
-        return response.Items.Select(item => new ContactMessage
+            return response.Items.Select(item => new ContactMessage
+            {
+                MessageId = item["MessageId"].S,
+                Email = item["Email"].S,
+                Message = item["Message"].S,
+                CreatedAt = DateTime.Parse(item["CreatedAt"].S)
+            }).OrderByDescending(m => m.CreatedAt).ToList();
+        }
+        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
-            MessageId = item["MessageId"].S,
-            Email = item["Email"].S,
-            Message = item["Message"].S,
-            CreatedAt = DateTime.Parse(item["CreatedAt"].S)
-        }).OrderByDescending(m => m.CreatedAt).ToList();
+            Console.WriteLine("[DynamoDBService] ContactMessages table does not exist, returning empty list");
+            return new List<ContactMessage>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error getting contact messages: {ex.Message}");
+            return new List<ContactMessage>();
+        }
     }
 
     public async Task<ContactMessage?> GetContactMessageAsync(string messageId)
@@ -505,27 +519,48 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task SaveCustomerActivityAsync(CustomerActivity activity)
     {
-        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
-        var activitiesTable = $"{tablePrefix}-CustomerActivities";
-        
-        var document = new Document();
-        document["ActivityId"] = activity.ActivityId;
-        document["DeviceId"] = activity.DeviceId;
-        document["ActivityType"] = activity.ActivityType;
-        document["Description"] = activity.Description;
-        document["Timestamp"] = activity.Timestamp.ToString("O");
-        if (!string.IsNullOrEmpty(activity.WorkoutId))
-            document["WorkoutId"] = activity.WorkoutId;
-        if (!string.IsNullOrEmpty(activity.PurchaseId))
-            document["PurchaseId"] = activity.PurchaseId;
-        if (!string.IsNullOrEmpty(activity.ContactMessageId))
-            document["ContactMessageId"] = activity.ContactMessageId;
-
-        await _dynamoDB.PutItemAsync(new PutItemRequest
+        try
         {
-            TableName = activitiesTable,
-            Item = document.ToAttributeMap()
-        });
+            var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+            var activitiesTable = $"{tablePrefix}-CustomerActivities";
+            
+            // AGGRESSIVE FIX: Ensure timestamp is set to current time if not provided
+            if (activity.Timestamp == default)
+            {
+                activity.Timestamp = DateTime.UtcNow;
+            }
+            
+            var document = new Document();
+            document["ActivityId"] = activity.ActivityId;
+            document["DeviceId"] = activity.DeviceId;
+            document["ActivityType"] = activity.ActivityType;
+            document["Description"] = activity.Description;
+            document["Timestamp"] = activity.Timestamp.ToString("O");
+            if (!string.IsNullOrEmpty(activity.WorkoutId))
+                document["WorkoutId"] = activity.WorkoutId;
+            if (!string.IsNullOrEmpty(activity.PurchaseId))
+                document["PurchaseId"] = activity.PurchaseId;
+            if (!string.IsNullOrEmpty(activity.ContactMessageId))
+                document["ContactMessageId"] = activity.ContactMessageId;
+
+            await _dynamoDB.PutItemAsync(new PutItemRequest
+            {
+                TableName = activitiesTable,
+                Item = document.ToAttributeMap()
+            });
+            
+            Console.WriteLine($"[DynamoDBService] Saved activity: {activity.ActivityType} for {activity.DeviceId} at {activity.Timestamp}");
+        }
+        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+        {
+            Console.WriteLine("[DynamoDBService] CustomerActivities table does not exist, cannot save activity");
+            // Don't throw - allow the request to continue
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error saving customer activity: {ex.Message}");
+            // Don't throw - allow the request to continue
+        }
     }
 
     public async Task<List<CustomerActivity>> GetCustomerActivitiesAsync(string deviceId, int limit = 50)
@@ -933,10 +968,16 @@ public class DynamoDBService : IDynamoDBService
         // Try to scan table directly - if it fails, cache the result and return defaults
         try
         {
+            // AGGRESSIVE FIX: Use ProjectionExpression to only fetch needed fields for faster scans
             var response = await _dynamoDB.ScanAsync(new ScanRequest
             {
                 TableName = plansTable,
-                Limit = 20 // Fast scan - we don't expect more than 20 pricing plans
+                Limit = 20, // Fast scan - we don't expect more than 20 pricing plans
+                ProjectionExpression = "PlanId, #N, Price, Currency, TokenCount, IsUnlimited, UnlimitedDays, DisplayOrder, IsRecommended, BadgeText, MicroCopy, IsActive, StripePriceId, CreatedAt, UpdatedAt",
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    { "#N", "Name" }
+                }
             });
 
             // Table exists - cache this fact
@@ -1072,7 +1113,7 @@ public class DynamoDBService : IDynamoDBService
             BadgeText = item.ContainsKey("BadgeText") ? item["BadgeText"].S : null,
             MicroCopy = item.ContainsKey("MicroCopy") ? item["MicroCopy"].S : null,
             IsActive = item.ContainsKey("IsActive") ? item["IsActive"].BOOL : true,
-            StripePriceId = item["StripePriceId"].S,
+            StripePriceId = item.ContainsKey("StripePriceId") ? item["StripePriceId"].S : string.Empty,
             CreatedAt = DateTime.Parse(item["CreatedAt"].S),
                     UpdatedAt = item.ContainsKey("UpdatedAt") ? DateTime.Parse(item["UpdatedAt"].S) : null
                 };
@@ -1133,6 +1174,10 @@ public class DynamoDBService : IDynamoDBService
             if (purchase.TokensGranted.HasValue)
                 document["TokensGranted"] = purchase.TokensGranted.Value;
             document["IsUnlimited"] = purchase.IsUnlimited;
+            if (!string.IsNullOrEmpty(purchase.CustomerEmail))
+                document["CustomerEmail"] = purchase.CustomerEmail;
+            if (!string.IsNullOrEmpty(purchase.CustomerName))
+                document["CustomerName"] = purchase.CustomerName;
 
             await _dynamoDB.PutItemAsync(new PutItemRequest
             {
@@ -1183,7 +1228,9 @@ public class DynamoDBService : IDynamoDBService
                 PurchasedAt = DateTime.Parse(item["PurchasedAt"].S),
                 ExpiresAt = item.ContainsKey("ExpiresAt") ? DateTime.Parse(item["ExpiresAt"].S) : null,
                 TokensGranted = item.ContainsKey("TokensGranted") ? int.Parse(item["TokensGranted"].N) : null,
-                IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL
+                IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL,
+                CustomerEmail = item.ContainsKey("CustomerEmail") ? item["CustomerEmail"].S : null,
+                CustomerName = item.ContainsKey("CustomerName") ? item["CustomerName"].S : null
             };
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
@@ -1231,7 +1278,9 @@ public class DynamoDBService : IDynamoDBService
                         PurchasedAt = DateTime.Parse(item["PurchasedAt"].S),
                         ExpiresAt = item.ContainsKey("ExpiresAt") ? DateTime.Parse(item["ExpiresAt"].S) : null,
                         TokensGranted = item.ContainsKey("TokensGranted") ? int.Parse(item["TokensGranted"].N) : null,
-                        IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL
+                        IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL,
+                        CustomerEmail = item.ContainsKey("CustomerEmail") ? item["CustomerEmail"].S : null,
+                        CustomerName = item.ContainsKey("CustomerName") ? item["CustomerName"].S : null
                     });
                 }
                 catch (Exception ex)
@@ -1288,7 +1337,9 @@ public class DynamoDBService : IDynamoDBService
                 PurchasedAt = DateTime.Parse(item["PurchasedAt"].S),
                 ExpiresAt = item.ContainsKey("ExpiresAt") ? DateTime.Parse(item["ExpiresAt"].S) : null,
                 TokensGranted = item.ContainsKey("TokensGranted") ? int.Parse(item["TokensGranted"].N) : null,
-                IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL
+                IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL,
+                CustomerEmail = item.ContainsKey("CustomerEmail") ? item["CustomerEmail"].S : null,
+                CustomerName = item.ContainsKey("CustomerName") ? item["CustomerName"].S : null
             }).OrderByDescending(p => p.PurchasedAt).ToList();
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)

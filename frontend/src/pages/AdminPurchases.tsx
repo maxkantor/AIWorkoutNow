@@ -43,12 +43,19 @@ function AdminPurchases() {
         return status.toLowerCase() === filter.toLowerCase();
       });
 
-  const totalRevenue = filteredPurchases
+  // AGGRESSIVE FIX: Calculate revenue from ALL purchases (not filtered)
+  const totalRevenue = purchases
     .filter(p => {
       const status = (p as any).status || p.status || p.paymentStatus || 'pending';
       return status === 'completed';
     })
     .reduce((sum, p) => sum + ((p as any).amount || p.amount || p.amountTotal || 0), 0);
+  
+  // Calculate completed count from ALL purchases
+  const completedCount = purchases.filter(p => {
+    const status = (p as any).status || p.status || p.paymentStatus || 'pending';
+    return status === 'completed';
+  }).length;
 
   if (loading) {
     return (
@@ -82,16 +89,11 @@ function AdminPurchases() {
             </div>
             <div className="stat-card">
               <h3>Total Purchases</h3>
-              <p className="stat-value">{filteredPurchases.length}</p>
+              <p className="stat-value">{purchases.length}</p>
             </div>
             <div className="stat-card">
               <h3>Completed</h3>
-              <p className="stat-value">
-                {filteredPurchases.filter(p => {
-                  const status = (p as any).status || p.status || p.paymentStatus || 'pending';
-                  return status === 'completed';
-                }).length}
-              </p>
+              <p className="stat-value">{completedCount}</p>
             </div>
           </div>
 

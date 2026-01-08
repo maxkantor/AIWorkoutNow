@@ -31,4 +31,6 @@ public class UserPurchase
     public DateTime? ExpiresAt { get; set; } // For unlimited plans
     public int? TokensGranted { get; set; }
     public bool IsUnlimited { get; set; }
+    public string? CustomerEmail { get; set; } // From Stripe customer_details
+    public string? CustomerName { get; set; } // From Stripe customer_details
 }

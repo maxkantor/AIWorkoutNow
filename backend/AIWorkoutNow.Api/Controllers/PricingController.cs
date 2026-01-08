@@ -399,6 +399,46 @@ public class PricingController : ControllerBase
             if (unlimitedPurchase != null)
             {
                 Console.WriteLine($"[PricingController] Unlimited purchase found - PlanId: {unlimitedPurchase.PlanId}, ExpiresAt: {unlimitedPurchase.ExpiresAt}");
+                
+                // AGGRESSIVE FIX: If expiration is less than 1 year from purchase, update it
+                if (unlimitedPurchase.ExpiresAt.HasValue && unlimitedPurchase.PurchasedAt != default)
+                {
+                    var expectedExpiration = unlimitedPurchase.PurchasedAt.AddDays(365);
+                    if (unlimitedPurchase.ExpiresAt.Value < expectedExpiration)
+                    {
+                        Console.WriteLine($"[PricingController] FIXING: Expiration {unlimitedPurchase.ExpiresAt} is less than 1 year, updating to {expectedExpiration}");
+                        unlimitedPurchase.ExpiresAt = expectedExpiration;
+                        await _dynamoService.SaveUserPurchaseAsync(unlimitedPurchase);
+                        
+                        // Also update tokens expiration
+                        if (tokens != null)
+                        {
+                            tokens.ExpiresAt = expectedExpiration;
+                            await _dynamoService.SaveUserTokensAsync(tokens);
+                        }
+                    }
+                }
+            }
+            
+            // AGGRESSIVE FIX: If tokens have expiration but it's less than 1 year from now, check purchases and fix
+            if (tokens != null && tokens.ExpiresAt.HasValue && hasUnlimitedFromTokens)
+            {
+                var purchases = await _dynamoService.GetUserPurchasesAsync(deviceId);
+                var latestUnlimitedPurchase = purchases
+                    .Where(p => p.IsUnlimited && p.Status == "completed")
+                    .OrderByDescending(p => p.PurchasedAt)
+                    .FirstOrDefault();
+                
+                if (latestUnlimitedPurchase != null && latestUnlimitedPurchase.PurchasedAt != default)
+                {
+                    var expectedExpiration = latestUnlimitedPurchase.PurchasedAt.AddDays(365);
+                    if (tokens.ExpiresAt.Value < expectedExpiration)
+                    {
+                        Console.WriteLine($"[PricingController] FIXING: Token expiration {tokens.ExpiresAt} is less than 1 year from purchase, updating to {expectedExpiration}");
+                        tokens.ExpiresAt = expectedExpiration;
+                        await _dynamoService.SaveUserTokensAsync(tokens);
+                    }
+                }
             }
             
             // User has unlimited if either check passes

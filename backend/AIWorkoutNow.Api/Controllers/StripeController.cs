@@ -240,10 +240,11 @@ public class StripeController : ControllerBase
                             TokensGranted = plan.TokenCount
                         };
 
-                        if (plan.IsUnlimited && plan.UnlimitedDays.HasValue)
+                        if (plan.IsUnlimited)
                         {
                             // AGGRESSIVE FIX: Always use 365 days (1 year) for unlimited, regardless of plan setting
                             purchase.ExpiresAt = purchase.PurchasedAt.AddDays(365);
+                            Console.WriteLine($"[StripeController] Set unlimited expiration to {purchase.ExpiresAt} (1 year from {purchase.PurchasedAt})");
                         }
                     }
                     else
@@ -251,7 +252,59 @@ public class StripeController : ControllerBase
                         Console.WriteLine($"[StripeController] Found existing purchase: {purchase.PurchaseId}");
                         purchase.Status = "completed";
                         purchase.StripePaymentIntentId = paymentIntentId;
+                        
+                        // AGGRESSIVE FIX: Update expiration to 1 year from purchase date if unlimited
+                        if (purchase.IsUnlimited)
+                        {
+                            purchase.ExpiresAt = purchase.PurchasedAt.AddDays(365);
+                            Console.WriteLine($"[StripeController] Updated unlimited expiration to {purchase.ExpiresAt} (1 year from purchase)");
+                        }
                     }
+                    
+                    // AGGRESSIVE FIX: Fetch customer name/email from Stripe session
+                    string? customerEmail = null;
+                    string? customerName = null;
+                    try
+                    {
+                        var stripeSecretKey = await _configService.GetStripeSecretKeyAsync();
+                        if (!string.IsNullOrEmpty(stripeSecretKey) && !string.IsNullOrEmpty(sessionId))
+                        {
+                            using var httpClient = new HttpClient();
+                            httpClient.DefaultRequestHeaders.Authorization = 
+                                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", stripeSecretKey);
+                            
+                            // Fetch session details to get customer info
+                            var sessionUrl = $"https://api.stripe.com/v1/checkout/sessions/{sessionId}";
+                            var sessionResponse = await httpClient.GetAsync(sessionUrl);
+                            
+                            if (sessionResponse.IsSuccessStatusCode)
+                            {
+                                var sessionContent = await sessionResponse.Content.ReadAsStringAsync();
+                                var sessionData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(sessionContent);
+                                
+                                // Get customer_details
+                                if (sessionData != null && sessionData.ContainsKey("customer_details"))
+                                {
+                                    var customerDetails = (System.Text.Json.JsonElement)sessionData["customer_details"];
+                                    if (customerDetails.TryGetProperty("email", out var emailElement))
+                                        customerEmail = emailElement.GetString();
+                                    if (customerDetails.TryGetProperty("name", out var nameElement))
+                                        customerName = nameElement.GetString();
+                                    
+                                    Console.WriteLine($"[StripeController] Fetched customer info - Email: {customerEmail}, Name: {customerName}");
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[StripeController] Error fetching customer info from Stripe: {ex.Message}");
+                        // Non-critical, continue processing
+                    }
+                    
+                    // AGGRESSIVE FIX: Set customer info on purchase
+                    purchase.CustomerEmail = customerEmail;
+                    purchase.CustomerName = customerName;
 
                     // Grant tokens or unlimited access
                     Console.WriteLine($"[StripeController] Granting access - IsUnlimited: {purchase.IsUnlimited}, TokensGranted: {purchase.TokensGranted}");
@@ -272,9 +325,24 @@ public class StripeController : ControllerBase
                         else
                         {
                             tokens.TokensRemaining = 999999;
+                            // AGGRESSIVE FIX: Always set expiration to 1 year from purchase date
                             if (purchase.ExpiresAt.HasValue)
                             {
                                 tokens.ExpiresAt = purchase.ExpiresAt;
+                            }
+                            else if (purchase.PurchasedAt != default)
+                            {
+                                // If ExpiresAt is not set, calculate 1 year from purchase date
+                                tokens.ExpiresAt = purchase.PurchasedAt.AddDays(365);
+                                purchase.ExpiresAt = tokens.ExpiresAt;
+                                Console.WriteLine($"[StripeController] Calculated expiration: {tokens.ExpiresAt} (1 year from purchase)");
+                            }
+                            else
+                            {
+                                // Fallback: 1 year from now
+                                tokens.ExpiresAt = DateTime.UtcNow.AddDays(365);
+                                purchase.ExpiresAt = tokens.ExpiresAt;
+                                Console.WriteLine($"[StripeController] Set expiration to 1 year from now: {tokens.ExpiresAt}");
                             }
                         }
                         await _dynamoService.SaveUserTokensAsync(tokens);
