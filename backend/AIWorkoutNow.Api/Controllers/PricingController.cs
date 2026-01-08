@@ -123,12 +123,24 @@ public class PricingController : ControllerBase
             var tokens = await _dynamoService.GetUserTokensAsync(deviceId);
             var tokensRemaining = tokens?.TokensRemaining ?? 0;
             
+            Console.WriteLine($"[PricingController] GetUserAccessStatus - DeviceId: {deviceId}, TokensRemaining: {tokensRemaining}, HasTokens: {tokens != null}");
+            if (tokens != null && tokens.ExpiresAt.HasValue)
+            {
+                Console.WriteLine($"[PricingController] Token expires at: {tokens.ExpiresAt}");
+            }
+            
             // Check if tokens indicate unlimited access (999999 is our marker for unlimited)
             var hasUnlimitedFromTokens = tokensRemaining >= 999999;
             
             // Check unlimited access from purchases table
             var unlimitedPurchase = await _dynamoService.GetActiveUnlimitedPurchaseAsync(deviceId);
             var hasUnlimitedFromPurchase = unlimitedPurchase != null;
+            
+            Console.WriteLine($"[PricingController] Unlimited check - FromTokens: {hasUnlimitedFromTokens}, FromPurchase: {hasUnlimitedFromPurchase}");
+            if (unlimitedPurchase != null)
+            {
+                Console.WriteLine($"[PricingController] Unlimited purchase found - PlanId: {unlimitedPurchase.PlanId}, ExpiresAt: {unlimitedPurchase.ExpiresAt}");
+            }
             
             // User has unlimited if either check passes
             var hasUnlimitedAccess = hasUnlimitedFromTokens || hasUnlimitedFromPurchase;
@@ -137,6 +149,8 @@ public class PricingController : ControllerBase
             var unlimitedExpiresAt = unlimitedPurchase?.ExpiresAt ?? tokens?.ExpiresAt;
             
             var hasTokenAccess = tokens != null && tokensRemaining > 0 && !hasUnlimitedAccess;
+
+            Console.WriteLine($"[PricingController] Final status - HasUnlimited: {hasUnlimitedAccess}, TokensRemaining: {tokensRemaining}, HasTokenAccess: {hasTokenAccess}");
 
             return Ok(new
             {
