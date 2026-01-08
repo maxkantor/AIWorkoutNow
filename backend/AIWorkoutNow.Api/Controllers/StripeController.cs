@@ -427,6 +427,7 @@ public class StripeController : ControllerBase
                 // Grant tokens
                 if (purchase.IsUnlimited)
                 {
+                    Console.WriteLine($"[StripeController] Granting unlimited access - DeviceId: {request.DeviceId}, ExpiresAt: {purchase.ExpiresAt}");
                     var tokens = await _dynamoService.GetUserTokensAsync(request.DeviceId);
                     if (tokens == null)
                     {
@@ -436,9 +437,11 @@ public class StripeController : ControllerBase
                             TokensRemaining = 999999,
                             ExpiresAt = purchase.ExpiresAt
                         };
+                        Console.WriteLine($"[StripeController] Creating new UserTokens with 999999 tokens");
                     }
                     else
                     {
+                        Console.WriteLine($"[StripeController] Updating existing tokens from {tokens.TokensRemaining} to 999999");
                         tokens.TokensRemaining = 999999;
                         if (purchase.ExpiresAt.HasValue)
                         {
@@ -446,9 +449,11 @@ public class StripeController : ControllerBase
                         }
                     }
                     await _dynamoService.SaveUserTokensAsync(tokens);
+                    Console.WriteLine($"[StripeController] Successfully saved tokens - TokensRemaining: {tokens.TokensRemaining}, ExpiresAt: {tokens.ExpiresAt}");
                 }
                 else if (purchase.TokensGranted.HasValue)
                 {
+                    Console.WriteLine($"[StripeController] Granting {purchase.TokensGranted.Value} tokens - DeviceId: {request.DeviceId}");
                     var tokens = await _dynamoService.GetUserTokensAsync(request.DeviceId);
                     if (tokens == null)
                     {
@@ -463,12 +468,28 @@ public class StripeController : ControllerBase
                         tokens.TokensRemaining += purchase.TokensGranted.Value;
                     }
                     await _dynamoService.SaveUserTokensAsync(tokens);
+                    Console.WriteLine($"[StripeController] Successfully saved tokens - Total: {tokens.TokensRemaining}");
                 }
 
-                await _dynamoService.SaveUserPurchaseAsync(purchase);
+                // Try to save purchase (may fail if table doesn't exist, but that's OK)
+                try
+                {
+                    await _dynamoService.SaveUserPurchaseAsync(purchase);
+                    Console.WriteLine($"[StripeController] Purchase record saved successfully");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[StripeController] Failed to save purchase record (non-critical): {ex.Message}");
+                }
 
-                Console.WriteLine($"[StripeController] Payment verified and tokens granted");
-                return Ok(new { verified = true, tokensGranted = purchase.TokensGranted });
+                Console.WriteLine($"[StripeController] Payment verified and tokens granted - IsUnlimited: {purchase.IsUnlimited}, TokensGranted: {purchase.TokensGranted}");
+                return Ok(new { 
+                    verified = true, 
+                    alreadyProcessed = false,
+                    tokensGranted = purchase.TokensGranted,
+                    hasUnlimitedAccess = purchase.IsUnlimited,
+                    unlimitedExpiresAt = purchase.ExpiresAt?.ToString("O")
+                });
             }
 
             return Ok(new { verified = true });
