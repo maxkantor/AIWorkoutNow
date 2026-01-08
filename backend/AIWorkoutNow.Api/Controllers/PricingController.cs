@@ -370,7 +370,12 @@ public class PricingController : ControllerBase
                                                 
                                                 // Check if this is an unlimited plan
                                                 var plan = await _dynamoService.GetPricingPlanAsync(planId ?? "");
-                                                if (plan != null && plan.IsUnlimited)
+                                                Console.WriteLine($"[PricingController] Plan lookup result - PlanId: {planId}, Plan found: {plan != null}, IsUnlimited: {plan?.IsUnlimited ?? false}");
+                                                
+                                                // CRITICAL FIX: Also check if planId contains "unlimited" as fallback
+                                                var isUnlimitedPlan = (plan != null && plan.IsUnlimited) || (planId?.Contains("unlimited", StringComparison.OrdinalIgnoreCase) == true);
+                                                
+                                                if (isUnlimitedPlan)
                                                 {
                                                     Console.WriteLine($"[PricingController] AGGRESSIVE FIX: Granting unlimited access from Stripe check!");
                                                     
@@ -423,6 +428,31 @@ public class PricingController : ControllerBase
                                                     
                                                     await _dynamoService.SaveUserTokensAsync(tokens);
                                                     tokensRemaining = 999999;
+                                                    
+                                                    // CRITICAL FIX: Also create/save purchase record so it shows up in purchases
+                                                    try
+                                                    {
+                                                        var purchase = new UserPurchase
+                                                        {
+                                                            PurchaseId = Guid.NewGuid().ToString(),
+                                                            DeviceId = deviceId,
+                                                            PlanId = planId ?? "",
+                                                            StripeSessionId = sessionId ?? "",
+                                                            StripePaymentIntentId = "",
+                                                            Status = "completed",
+                                                            PurchasedAt = purchaseDate,
+                                                            ExpiresAt = expirationDate,
+                                                            IsUnlimited = true,
+                                                            TokensGranted = null
+                                                        };
+                                                        await _dynamoService.SaveUserPurchaseAsync(purchase);
+                                                        Console.WriteLine($"[PricingController] Created purchase record: {purchase.PurchaseId}");
+                                                    }
+                                                    catch (Exception purchaseEx)
+                                                    {
+                                                        Console.WriteLine($"[PricingController] Error creating purchase record (non-critical): {purchaseEx.Message}");
+                                                    }
+                                                    
                                                     Console.WriteLine($"[PricingController] Successfully granted unlimited access via aggressive fix - Expires: {expirationDate} (1 year from purchase date: {purchaseDate})");
                                                     
                                                     // Break after first match
