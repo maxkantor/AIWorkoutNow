@@ -1262,7 +1262,7 @@ public class DynamoDBService : IDynamoDBService
                 Currency = "USD",
                 TokenCount = 0,
                 IsUnlimited = true,
-                UnlimitedDays = 7,
+                UnlimitedDays = 365, // 1 year
                 DisplayOrder = 4,
                 IsRecommended = false,
                 MicroCopy = "Unlimited workouts. No recurring charges.",
