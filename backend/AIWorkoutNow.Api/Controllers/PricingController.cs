@@ -344,6 +344,37 @@ public class PricingController : ControllerBase
                                                 {
                                                     Console.WriteLine($"[PricingController] AGGRESSIVE FIX: Granting unlimited access from Stripe check!");
                                                     
+                                                    // CRITICAL FIX: Get the actual purchase date, not use DateTime.UtcNow
+                                                    DateTime purchaseDate = DateTime.UtcNow; // Default fallback
+                                                    
+                                                    // First, try to get purchase date from UserPurchases table
+                                                    var existingPurchase = await _dynamoService.GetUserPurchasesAsync(deviceId);
+                                                    var matchingPurchase = existingPurchase
+                                                        .FirstOrDefault(p => p.PlanId == planId && p.Status == "completed" && p.IsUnlimited);
+                                                    
+                                                    if (matchingPurchase != null && matchingPurchase.PurchasedAt != default)
+                                                    {
+                                                        purchaseDate = matchingPurchase.PurchasedAt;
+                                                        Console.WriteLine($"[PricingController] Using purchase date from database: {purchaseDate}");
+                                                    }
+                                                    else
+                                                    {
+                                                        // Try to get created timestamp from Stripe session
+                                                        if (session.TryGetProperty("created", out var createdElement))
+                                                        {
+                                                            var createdUnix = createdElement.GetInt64();
+                                                            purchaseDate = DateTimeOffset.FromUnixTimeSeconds(createdUnix).UtcDateTime;
+                                                            Console.WriteLine($"[PricingController] Using purchase date from Stripe session: {purchaseDate}");
+                                                        }
+                                                        else
+                                                        {
+                                                            Console.WriteLine($"[PricingController] WARNING: Could not find purchase date, using current time as fallback");
+                                                        }
+                                                    }
+                                                    
+                                                    // Calculate expiration as 1 year from purchase date (not from now!)
+                                                    var expirationDate = purchaseDate.AddDays(365);
+                                                    
                                                     // Grant unlimited access immediately
                                                     if (tokens == null)
                                                     {
@@ -351,21 +382,18 @@ public class PricingController : ControllerBase
                                                         {
                                                             DeviceId = deviceId,
                                                             TokensRemaining = 999999,
-                                                            ExpiresAt = plan.UnlimitedDays.HasValue ? DateTime.UtcNow.AddDays(plan.UnlimitedDays.Value) : null
+                                                            ExpiresAt = expirationDate
                                                         };
                                                     }
                                                     else
                                                     {
                                                         tokens.TokensRemaining = 999999;
-                                                        if (plan.UnlimitedDays.HasValue)
-                                                        {
-                                                            tokens.ExpiresAt = DateTime.UtcNow.AddDays(plan.UnlimitedDays.Value);
-                                                        }
+                                                        tokens.ExpiresAt = expirationDate;
                                                     }
                                                     
                                                     await _dynamoService.SaveUserTokensAsync(tokens);
                                                     tokensRemaining = 999999;
-                                                    Console.WriteLine($"[PricingController] Successfully granted unlimited access via aggressive fix");
+                                                    Console.WriteLine($"[PricingController] Successfully granted unlimited access via aggressive fix - Expires: {expirationDate} (1 year from purchase date: {purchaseDate})");
                                                     
                                                     // Break after first match
                                                     break;
@@ -400,13 +428,15 @@ public class PricingController : ControllerBase
             {
                 Console.WriteLine($"[PricingController] Unlimited purchase found - PlanId: {unlimitedPurchase.PlanId}, ExpiresAt: {unlimitedPurchase.ExpiresAt}");
                 
-                // AGGRESSIVE FIX: If expiration is less than 1 year from purchase, update it
-                if (unlimitedPurchase.ExpiresAt.HasValue && unlimitedPurchase.PurchasedAt != default)
+                // AGGRESSIVE FIX: If expiration is missing or less than 1 year from purchase, update it
+                if (unlimitedPurchase.PurchasedAt != default)
                 {
                     var expectedExpiration = unlimitedPurchase.PurchasedAt.AddDays(365);
-                    if (unlimitedPurchase.ExpiresAt.Value < expectedExpiration)
+                    
+                    // If ExpiresAt is null or less than 1 year from purchase, fix it
+                    if (!unlimitedPurchase.ExpiresAt.HasValue || unlimitedPurchase.ExpiresAt.Value < expectedExpiration)
                     {
-                        Console.WriteLine($"[PricingController] FIXING: Expiration {unlimitedPurchase.ExpiresAt} is less than 1 year, updating to {expectedExpiration}");
+                        Console.WriteLine($"[PricingController] FIXING: Expiration {(unlimitedPurchase.ExpiresAt.HasValue ? unlimitedPurchase.ExpiresAt.Value.ToString() : "NULL")} is not 1 year from purchase, updating to {expectedExpiration}");
                         unlimitedPurchase.ExpiresAt = expectedExpiration;
                         await _dynamoService.SaveUserPurchaseAsync(unlimitedPurchase);
                         
@@ -420,8 +450,8 @@ public class PricingController : ControllerBase
                 }
             }
             
-            // AGGRESSIVE FIX: If tokens have expiration but it's less than 1 year from now, check purchases and fix
-            if (tokens != null && tokens.ExpiresAt.HasValue && hasUnlimitedFromTokens)
+            // AGGRESSIVE FIX: If tokens have unlimited access, ensure expiration is 1 year from purchase date
+            if (tokens != null && hasUnlimitedFromTokens)
             {
                 var purchases = await _dynamoService.GetUserPurchasesAsync(deviceId);
                 var latestUnlimitedPurchase = purchases
@@ -432,9 +462,11 @@ public class PricingController : ControllerBase
                 if (latestUnlimitedPurchase != null && latestUnlimitedPurchase.PurchasedAt != default)
                 {
                     var expectedExpiration = latestUnlimitedPurchase.PurchasedAt.AddDays(365);
-                    if (tokens.ExpiresAt.Value < expectedExpiration)
+                    
+                    // If ExpiresAt is null or less than 1 year from purchase, fix it
+                    if (!tokens.ExpiresAt.HasValue || tokens.ExpiresAt.Value < expectedExpiration)
                     {
-                        Console.WriteLine($"[PricingController] FIXING: Token expiration {tokens.ExpiresAt} is less than 1 year from purchase, updating to {expectedExpiration}");
+                        Console.WriteLine($"[PricingController] FIXING: Token expiration {(tokens.ExpiresAt.HasValue ? tokens.ExpiresAt.Value.ToString() : "NULL")} is not 1 year from purchase, updating to {expectedExpiration}");
                         tokens.ExpiresAt = expectedExpiration;
                         await _dynamoService.SaveUserTokensAsync(tokens);
                     }
