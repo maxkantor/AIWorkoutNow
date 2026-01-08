@@ -136,7 +136,11 @@ public class StripeController : ControllerBase
                 new("line_items[0][quantity]", "1"),
                 new("metadata[deviceId]", request.DeviceId),
                 new("metadata[planId]", plan.PlanId),
-                new("allow_promotion_codes", "true")
+                new("allow_promotion_codes", "true"),
+                // CRITICAL: Ensure customer email and name are collected
+                new("billing_address_collection", "required"), // This ensures email is collected
+                new("customer_creation", "always"), // Always create a customer record
+                new("phone_number_collection[enabled]", "false") // Disable phone, focus on email/name
             };
             
             // Add description if available
@@ -508,6 +512,64 @@ public class StripeController : ControllerBase
             if (existingPurchase != null)
             {
                 Console.WriteLine($"[StripeController] Payment already processed");
+                
+                // CRITICAL FIX: Update customer data if missing, even for existing purchases
+                if (string.IsNullOrEmpty(existingPurchase.CustomerEmail) || string.IsNullOrEmpty(existingPurchase.CustomerName))
+                {
+                    Console.WriteLine($"[StripeController] Existing purchase missing customer data, fetching from Stripe...");
+                    try
+                    {
+                        // Fetch customer data from Stripe session
+                        string? customerEmail = null;
+                        string? customerName = null;
+                        
+                        if (sessionData != null && sessionData.ContainsKey("customer_details"))
+                        {
+                            var customerDetails = (System.Text.Json.JsonElement)sessionData["customer_details"];
+                            if (customerDetails.TryGetProperty("email", out var emailElement))
+                                customerEmail = emailElement.GetString();
+                            if (customerDetails.TryGetProperty("name", out var nameElement))
+                                customerName = nameElement.GetString();
+                        }
+                        
+                        // If not in customer_details, try customer object
+                        if (string.IsNullOrEmpty(customerEmail) && sessionData != null && sessionData.ContainsKey("customer"))
+                        {
+                            var customerId = sessionData["customer"]?.ToString();
+                            if (!string.IsNullOrEmpty(customerId))
+                            {
+                                var customerUrl = $"https://api.stripe.com/v1/customers/{customerId}";
+                                var customerResponse = await httpClient.GetAsync(customerUrl);
+                                if (customerResponse.IsSuccessStatusCode)
+                                {
+                                    var customerContent = await customerResponse.Content.ReadAsStringAsync();
+                                    var customerData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(customerContent);
+                                    if (customerData != null)
+                                    {
+                                        if (customerData.ContainsKey("email"))
+                                            customerEmail = customerData["email"]?.ToString();
+                                        if (customerData.ContainsKey("name"))
+                                            customerName = customerData["name"]?.ToString();
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Update purchase if we got customer data
+                        if (!string.IsNullOrEmpty(customerEmail) || !string.IsNullOrEmpty(customerName))
+                        {
+                            existingPurchase.CustomerEmail = customerEmail ?? existingPurchase.CustomerEmail;
+                            existingPurchase.CustomerName = customerName ?? existingPurchase.CustomerName;
+                            await _dynamoService.SaveUserPurchaseAsync(existingPurchase);
+                            Console.WriteLine($"[StripeController] Updated existing purchase with customer data - Email: {customerEmail}, Name: {customerName}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[StripeController] Error updating customer data for existing purchase: {ex.Message}");
+                    }
+                }
+                
                 return Ok(new { verified = true, alreadyProcessed = true });
             }
 
