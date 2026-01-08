@@ -807,11 +807,20 @@ public class DynamoDBService : IDynamoDBService
             TableName = plansTable,
             Item = document.ToAttributeMap()
         });
+        
+        // Invalidate cache so next request will check the table
+        lock (_tableExistenceLock)
+        {
+            _defaultPlansCache = null; // Clear default cache
+            // Don't reset _pricingPlansTableExists - table exists if we're saving to it
+            _pricingPlansTableExists = true;
+        }
+        Console.WriteLine("[DynamoDBService] Invalidated pricing plans cache after saving plan");
     }
 
     // Cache table existence state to avoid slow scans
+    // NOTE: Only cache that table doesn't exist - always check if table exists (with fast Limit scan)
     private static bool? _pricingPlansTableExists = null;
-    private static bool? _pricingPlansTableEmpty = null; // Cache if table is empty
     private static readonly object _tableExistenceLock = new object();
     // Cache default plans to avoid recreating them
     private static List<PricingPlan>? _defaultPlansCache = null;
@@ -821,23 +830,12 @@ public class DynamoDBService : IDynamoDBService
         var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
         var plansTable = $"{tablePrefix}-PricingPlans";
         
-        // Check cached table existence - if we know it doesn't exist or is empty, return defaults immediately
+        // Check cached table existence - if we know it doesn't exist, return defaults immediately
         lock (_tableExistenceLock)
         {
             if (_pricingPlansTableExists == false)
             {
                 Console.WriteLine($"[DynamoDBService] PricingPlans table known to not exist (cached), returning default plans immediately");
-                if (_defaultPlansCache == null)
-                {
-                    _defaultPlansCache = GetDefaultPricingPlans();
-                }
-                return _defaultPlansCache;
-            }
-            
-            // If we know table is empty, return defaults immediately without scanning
-            if (_pricingPlansTableEmpty == true)
-            {
-                Console.WriteLine($"[DynamoDBService] PricingPlans table known to be empty (cached), returning default plans immediately");
                 if (_defaultPlansCache == null)
                 {
                     _defaultPlansCache = GetDefaultPricingPlans();
@@ -853,7 +851,8 @@ public class DynamoDBService : IDynamoDBService
         {
             var response = await _dynamoDB.ScanAsync(new ScanRequest
             {
-                TableName = plansTable
+                TableName = plansTable,
+                Limit = 20 // Fast scan - we don't expect more than 20 pricing plans
             });
 
             // Table exists - cache this fact
@@ -873,12 +872,6 @@ public class DynamoDBService : IDynamoDBService
                     await CreateDefaultPricingPlansAsync(plansTable);
                     Console.WriteLine("[DynamoDBService] Successfully populated table with default plans");
                     
-                    // Mark table as not empty
-                    lock (_tableExistenceLock)
-                    {
-                        _pricingPlansTableEmpty = false;
-                    }
-                    
                     // Return the default plans we just created
                     var defaultPlans = GetDefaultPricingPlans();
                     return defaultPlans;
@@ -887,22 +880,12 @@ public class DynamoDBService : IDynamoDBService
                 {
                     Console.WriteLine($"[DynamoDBService] Failed to populate default plans: {ex.Message}");
                     // Fallback to returning defaults from code
-                    lock (_tableExistenceLock)
+                    if (_defaultPlansCache == null)
                     {
-                        _pricingPlansTableEmpty = true;
-                        if (_defaultPlansCache == null)
-                        {
-                            _defaultPlansCache = GetDefaultPricingPlans();
-                        }
+                        _defaultPlansCache = GetDefaultPricingPlans();
                     }
                     return _defaultPlansCache;
                 }
-            }
-            
-            // Table has data, mark as not empty
-            lock (_tableExistenceLock)
-            {
-                _pricingPlansTableEmpty = false;
             }
 
             var plans = new List<PricingPlan>();
