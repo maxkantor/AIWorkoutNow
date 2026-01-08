@@ -157,18 +157,30 @@ public class PricingController : ControllerBase
                             
                             if (sessionsData != null && sessionsData.ContainsKey("data"))
                             {
-                                var sessionsList = sessionsData["data"] as System.Text.Json.JsonElement[];
-                                if (sessionsList != null)
+                                // Fix JSON parsing - data is a JsonElement, not an array
+                                var dataElement = (System.Text.Json.JsonElement)sessionsData["data"];
+                                if (dataElement.ValueKind == System.Text.Json.JsonValueKind.Array)
                                 {
-                                    foreach (var session in sessionsList)
+                                    foreach (var session in dataElement.EnumerateArray())
                                     {
                                         try
                                         {
-                                            var metadata = session.GetProperty("metadata");
-                                            var deviceIdFromSession = metadata.GetProperty("deviceId").GetString();
-                                            var planId = metadata.GetProperty("planId").GetString();
-                                            var paymentStatus = session.GetProperty("payment_status").GetString();
-                                            var sessionId = session.GetProperty("id").GetString();
+                                            // Check if metadata exists
+                                            if (!session.TryGetProperty("metadata", out var metadataElement))
+                                                continue;
+                                            
+                                            if (!metadataElement.TryGetProperty("deviceId", out var deviceIdElement) ||
+                                                !metadataElement.TryGetProperty("planId", out var planIdElement))
+                                                continue;
+                                            
+                                            var deviceIdFromSession = deviceIdElement.GetString();
+                                            var planId = planIdElement.GetString();
+                                            
+                                            if (!session.TryGetProperty("payment_status", out var paymentStatusElement))
+                                                continue;
+                                            
+                                            var paymentStatus = paymentStatusElement.GetString();
+                                            var sessionId = session.TryGetProperty("id", out var idElement) ? idElement.GetString() : "";
                                             
                                             if (deviceIdFromSession == deviceId && paymentStatus == "paid")
                                             {

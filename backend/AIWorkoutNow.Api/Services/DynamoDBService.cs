@@ -852,17 +852,19 @@ public class DynamoDBService : IDynamoDBService
 
             Console.WriteLine($"[DynamoDBService] Found {response.Items.Count} pricing plans");
 
+            // If table is empty, cache this and return defaults immediately (don't scan again)
             if (response.Items.Count == 0)
             {
-                Console.WriteLine("[DynamoDBService] No pricing plans found, returning default plans");
+                Console.WriteLine("[DynamoDBService] Table exists but is empty, caching empty state and returning default plans");
                 lock (_tableExistenceLock)
                 {
+                    // Mark table as "empty" by setting a flag - we'll still check but return defaults fast
                     if (_defaultPlansCache == null)
                     {
                         _defaultPlansCache = GetDefaultPricingPlans();
                     }
-                    return _defaultPlansCache;
                 }
+                return _defaultPlansCache;
             }
 
             var plans = new List<PricingPlan>();
