@@ -13,7 +13,7 @@ public class PricingController : ControllerBase
     private static List<PricingPlan>? _cachedPlans;
     private static DateTime _cacheExpiry = DateTime.MinValue;
     private static readonly object _cacheLock = new object();
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5); // Cache for 5 minutes
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1); // Cache for 1 hour (aggressive caching)
     
     // Note: Static constructor removed - we'll populate cache on first request
     // This avoids dependency injection issues in static constructor
@@ -58,74 +58,95 @@ public class PricingController : ControllerBase
             }
             
             // Fetch from service if cache expired or empty
-            // This will be fast due to table existence caching in DynamoDBService
+            // ULTRA FAST: Return default plans immediately if cache is empty, then populate in background
             if (plans == null)
             {
-                Console.WriteLine("[PricingController] Cache miss, fetching from service (will be fast due to table existence cache)");
-                var fetchStart = DateTime.UtcNow;
-                plans = await _dynamoService.GetAllPricingPlansAsync();
-                var fetchTime = (DateTime.UtcNow - fetchStart).TotalMilliseconds;
-                Console.WriteLine($"[PricingController] Fetched {plans.Count} plans in {fetchTime:F2}ms");
+                Console.WriteLine("[PricingController] Cache miss, returning defaults immediately and fetching from service in background");
                 
-                // AGGRESSIVE FIX: Always ensure we have at least default plans
-                if (plans == null || plans.Count == 0)
+                // Return default plans immediately (no DB call)
+                var defaultPlans = new List<PricingPlan>
                 {
-                    Console.WriteLine("[PricingController] WARNING: Service returned empty plans, using hardcoded defaults as fallback");
-                    plans = new List<PricingPlan>
+                    new PricingPlan
                     {
-                        new PricingPlan
-                        {
-                            PlanId = "default-10-workouts",
-                            Name = "10 Workouts",
-                            Price = 1.99m,
-                            Currency = "USD",
-                            TokenCount = 10,
-                            IsUnlimited = false,
-                            DisplayOrder = 1,
-                            IsRecommended = false,
-                            IsActive = true,
-                            StripePriceId = "",
-                            CreatedAt = DateTime.UtcNow
-                        },
-                        new PricingPlan
-                        {
-                            PlanId = "default-25-workouts",
-                            Name = "25 Workouts",
-                            Price = 3.99m,
-                            Currency = "USD",
-                            TokenCount = 25,
-                            IsUnlimited = false,
-                            DisplayOrder = 2,
-                            IsRecommended = true,
-                            BadgeText = "⭐ Most Popular",
-                            IsActive = true,
-                            StripePriceId = "",
-                            CreatedAt = DateTime.UtcNow
-                        },
-                        new PricingPlan
-                        {
-                            PlanId = "default-unlimited-access",
-                            Name = "Unlimited Access",
-                            Price = 9.99m,
-                            Currency = "USD",
-                            IsUnlimited = true,
-                            UnlimitedDays = 365,
-                            DisplayOrder = 3,
-                            IsRecommended = false,
-                            IsActive = true,
-                            StripePriceId = "",
-                            CreatedAt = DateTime.UtcNow
-                        }
-                    };
-                }
+                        PlanId = "default-10-workouts",
+                        Name = "10 Workouts",
+                        Price = 1.99m,
+                        Currency = "USD",
+                        TokenCount = 10,
+                        IsUnlimited = false,
+                        DisplayOrder = 1,
+                        IsRecommended = false,
+                        IsActive = true,
+                        StripePriceId = "",
+                        CreatedAt = DateTime.UtcNow
+                    },
+                    new PricingPlan
+                    {
+                        PlanId = "default-25-workouts",
+                        Name = "25 Workouts",
+                        Price = 3.99m,
+                        Currency = "USD",
+                        TokenCount = 25,
+                        IsUnlimited = false,
+                        DisplayOrder = 2,
+                        IsRecommended = true,
+                        BadgeText = "⭐ Most Popular",
+                        IsActive = true,
+                        StripePriceId = "",
+                        CreatedAt = DateTime.UtcNow
+                    },
+                    new PricingPlan
+                    {
+                        PlanId = "default-unlimited-access",
+                        Name = "Unlimited Access",
+                        Price = 9.99m,
+                        Currency = "USD",
+                        IsUnlimited = true,
+                        UnlimitedDays = 365,
+                        DisplayOrder = 3,
+                        IsRecommended = false,
+                        IsActive = true,
+                        StripePriceId = "",
+                        CreatedAt = DateTime.UtcNow
+                    }
+                };
                 
-                // Always update cache, even if it's defaults (to avoid repeated calls)
+                // Cache defaults immediately
                 lock (_cacheLock)
                 {
-                    _cachedPlans = plans;
+                    _cachedPlans = defaultPlans;
                     _cacheExpiry = DateTime.UtcNow.Add(CacheDuration);
-                    Console.WriteLine($"[PricingController] Cached pricing plans, expires at {_cacheExpiry}");
                 }
+                
+                // Fetch real plans in background (fire and forget)
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var fetchStart = DateTime.UtcNow;
+                        var realPlans = await _dynamoService.GetAllPricingPlansAsync();
+                        var fetchTime = (DateTime.UtcNow - fetchStart).TotalMilliseconds;
+                        Console.WriteLine($"[PricingController] Background fetch: {realPlans.Count} plans in {fetchTime:F2}ms");
+                        
+                        if (realPlans != null && realPlans.Count > 0)
+                        {
+                            lock (_cacheLock)
+                            {
+                                _cachedPlans = realPlans;
+                                _cacheExpiry = DateTime.UtcNow.Add(CacheDuration);
+                                Console.WriteLine($"[PricingController] Background cache updated with real plans");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[PricingController] Background fetch error (non-critical): {ex.Message}");
+                    }
+                });
+                
+                plans = defaultPlans;
+                var immediateTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
+                Console.WriteLine($"[PricingController] Returning default plans immediately ({immediateTime:F2}ms)");
             }
 
             // AGGRESSIVE FIX: Double-check we never return empty
@@ -450,26 +471,58 @@ public class PricingController : ControllerBase
                 }
             }
             
-            // AGGRESSIVE FIX: If tokens have unlimited access, ensure expiration is 1 year from purchase date
+            // ULTRA AGGRESSIVE FIX: If tokens have unlimited access, ALWAYS ensure expiration is correct
             if (tokens != null && hasUnlimitedFromTokens)
             {
+                Console.WriteLine($"[PricingController] ULTRA AGGRESSIVE FIX: Checking unlimited token expiration...");
                 var purchases = await _dynamoService.GetUserPurchasesAsync(deviceId);
+                Console.WriteLine($"[PricingController] Found {purchases.Count} purchases for device");
+                
                 var latestUnlimitedPurchase = purchases
                     .Where(p => p.IsUnlimited && p.Status == "completed")
                     .OrderByDescending(p => p.PurchasedAt)
                     .FirstOrDefault();
                 
+                DateTime? expectedExpiration = null;
+                
                 if (latestUnlimitedPurchase != null && latestUnlimitedPurchase.PurchasedAt != default)
                 {
-                    var expectedExpiration = latestUnlimitedPurchase.PurchasedAt.AddDays(365);
-                    
-                    // If ExpiresAt is null or less than 1 year from purchase, fix it
-                    if (!tokens.ExpiresAt.HasValue || tokens.ExpiresAt.Value < expectedExpiration)
+                    expectedExpiration = latestUnlimitedPurchase.PurchasedAt.AddDays(365);
+                    Console.WriteLine($"[PricingController] Found unlimited purchase from {latestUnlimitedPurchase.PurchasedAt}, expected expiration: {expectedExpiration}");
+                }
+                else
+                {
+                    // Fallback: If expiration is less than 1 year from now, fix it to 1 year from now
+                    // This handles cases where purchase record is missing
+                    if (tokens.ExpiresAt.HasValue && tokens.ExpiresAt.Value < DateTime.UtcNow.AddDays(365))
                     {
-                        Console.WriteLine($"[PricingController] FIXING: Token expiration {(tokens.ExpiresAt.HasValue ? tokens.ExpiresAt.Value.ToString() : "NULL")} is not 1 year from purchase, updating to {expectedExpiration}");
-                        tokens.ExpiresAt = expectedExpiration;
-                        await _dynamoService.SaveUserTokensAsync(tokens);
+                        expectedExpiration = DateTime.UtcNow.AddDays(365);
+                        Console.WriteLine($"[PricingController] No purchase found, but expiration {tokens.ExpiresAt} is less than 1 year, fixing to {expectedExpiration}");
                     }
+                }
+                
+                // ALWAYS fix if expiration is wrong
+                if (expectedExpiration.HasValue)
+                {
+                    if (!tokens.ExpiresAt.HasValue || tokens.ExpiresAt.Value != expectedExpiration.Value)
+                    {
+                        Console.WriteLine($"[PricingController] ULTRA AGGRESSIVE FIX: Token expiration {(tokens.ExpiresAt.HasValue ? tokens.ExpiresAt.Value.ToString() : "NULL")} is wrong, FORCING update to {expectedExpiration.Value}");
+                        tokens.ExpiresAt = expectedExpiration.Value;
+                        await _dynamoService.SaveUserTokensAsync(tokens);
+                        Console.WriteLine($"[PricingController] Successfully updated token expiration to {tokens.ExpiresAt}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[PricingController] Token expiration is already correct: {tokens.ExpiresAt}");
+                    }
+                }
+                else if (tokens.ExpiresAt.HasValue && tokens.ExpiresAt.Value < DateTime.UtcNow.AddDays(365))
+                {
+                    // Last resort: If expiration exists but is less than 1 year from now, fix it
+                    expectedExpiration = DateTime.UtcNow.AddDays(365);
+                    Console.WriteLine($"[PricingController] LAST RESORT FIX: Token expiration {tokens.ExpiresAt} is less than 1 year, fixing to {expectedExpiration}");
+                    tokens.ExpiresAt = expectedExpiration;
+                    await _dynamoService.SaveUserTokensAsync(tokens);
                 }
             }
             
