@@ -266,9 +266,9 @@ public class DynamoDBService : IDynamoDBService
         });
         stats.TotalWorkouts = workoutsResponse.Count;
 
-        // Count token purchases from Stripe purchases table
+        // Count token purchases from UserPurchases table (not StripePurchases)
         var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
-        var purchasesTable = $"{tablePrefix}-StripePurchases";
+        var purchasesTable = $"{tablePrefix}-UserPurchases";
         try
         {
             var purchasesResponse = await _dynamoDB.ScanAsync(new ScanRequest
@@ -277,9 +277,11 @@ public class DynamoDBService : IDynamoDBService
                 Select = Select.COUNT
             });
             stats.TokenPurchases = purchasesResponse.Count;
+            Console.WriteLine($"[DynamoDBService] TokenPurchases count: {stats.TokenPurchases}");
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"[DynamoDBService] Error counting token purchases: {ex.Message}");
             stats.TokenPurchases = 0;
         }
 
@@ -291,19 +293,41 @@ public class DynamoDBService : IDynamoDBService
     {
         try
         {
+            // Use ProjectionExpression to ensure we get all necessary fields
             var response = await _dynamoDB.ScanAsync(new ScanRequest
             {
                 TableName = _contactMessagesTable,
+                ProjectionExpression = "MessageId, #E, #M, CreatedAt",
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    { "#E", "Email" },
+                    { "#M", "Message" }
+                },
                 Limit = 1000 // Reasonable limit
             });
 
-            return response.Items.Select(item => new ContactMessage
+            var messages = new List<ContactMessage>();
+            foreach (var item in response.Items)
             {
-                MessageId = item["MessageId"].S,
-                Email = item["Email"].S,
-                Message = item["Message"].S,
-                CreatedAt = DateTime.Parse(item["CreatedAt"].S)
-            }).OrderByDescending(m => m.CreatedAt).ToList();
+                try
+                {
+                    messages.Add(new ContactMessage
+                    {
+                        MessageId = item.ContainsKey("MessageId") ? item["MessageId"].S : Guid.NewGuid().ToString(),
+                        Email = item.ContainsKey("Email") ? item["Email"].S : item.ContainsKey("#E") ? item["#E"].S : "",
+                        Message = item.ContainsKey("Message") ? item["Message"].S : item.ContainsKey("#M") ? item["#M"].S : "",
+                        CreatedAt = item.ContainsKey("CreatedAt") ? DateTime.Parse(item["CreatedAt"].S) : DateTime.UtcNow
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[DynamoDBService] Error parsing contact message item: {ex.Message}");
+                    // Skip this item and continue
+                }
+            }
+            
+            Console.WriteLine($"[DynamoDBService] Retrieved {messages.Count} contact messages");
+            return messages.OrderByDescending(m => m.CreatedAt).ToList();
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
@@ -313,6 +337,7 @@ public class DynamoDBService : IDynamoDBService
         catch (Exception ex)
         {
             Console.WriteLine($"[DynamoDBService] Error getting contact messages: {ex.Message}");
+            Console.WriteLine($"[DynamoDBService] Stack trace: {ex.StackTrace}");
             return new List<ContactMessage>();
         }
     }

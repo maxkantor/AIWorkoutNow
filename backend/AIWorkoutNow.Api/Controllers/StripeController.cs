@@ -309,7 +309,32 @@ public class StripeController : ControllerBase
                                     if (customerDetails.TryGetProperty("name", out var nameElement))
                                         customerName = nameElement.GetString();
                                     
-                                    Console.WriteLine($"[StripeController] Fetched customer info - Email: {customerEmail}, Name: {customerName}");
+                                    Console.WriteLine($"[StripeController] Fetched customer info from customer_details - Email: {customerEmail}, Name: {customerName}");
+                                }
+                                
+                                // If not in customer_details, try to get from customer object
+                                if (string.IsNullOrEmpty(customerEmail) && sessionData != null && sessionData.ContainsKey("customer"))
+                                {
+                                    var customerId = sessionData["customer"]?.ToString();
+                                    if (!string.IsNullOrEmpty(customerId))
+                                    {
+                                        var customerUrl = $"https://api.stripe.com/v1/customers/{customerId}";
+                                        var customerResponse = await httpClient.GetAsync(customerUrl);
+                                        if (customerResponse.IsSuccessStatusCode)
+                                        {
+                                            var customerContent = await customerResponse.Content.ReadAsStringAsync();
+                                            var customerData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(customerContent);
+                                            if (customerData != null)
+                                            {
+                                                if (customerData.ContainsKey("email"))
+                                                    customerEmail = customerData["email"]?.ToString();
+                                                if (customerData.ContainsKey("name"))
+                                                    customerName = customerData["name"]?.ToString();
+                                                
+                                                Console.WriteLine($"[StripeController] Fetched customer info from customer object - Email: {customerEmail}, Name: {customerName}");
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -513,6 +538,58 @@ public class StripeController : ControllerBase
                             // AGGRESSIVE FIX: Always set expiration to 1 year (365 days) from purchase date
                             purchase.ExpiresAt = purchase.PurchasedAt.AddDays(365);
                         }
+                
+                // CRITICAL FIX: Fetch customer email/name from Stripe session
+                string? customerEmail = null;
+                string? customerName = null;
+                try
+                {
+                    // Get customer_details from session
+                    if (sessionData != null && sessionData.ContainsKey("customer_details"))
+                    {
+                        var customerDetails = (System.Text.Json.JsonElement)sessionData["customer_details"];
+                        if (customerDetails.TryGetProperty("email", out var emailElement))
+                            customerEmail = emailElement.GetString();
+                        if (customerDetails.TryGetProperty("name", out var nameElement))
+                            customerName = nameElement.GetString();
+                        
+                        Console.WriteLine($"[StripeController] VerifyPayment - Fetched customer info - Email: {customerEmail}, Name: {customerName}");
+                    }
+                    
+                    // If not in customer_details, try to get from customer object
+                    if (string.IsNullOrEmpty(customerEmail) && sessionData != null && sessionData.ContainsKey("customer"))
+                    {
+                        var customerId = sessionData["customer"]?.ToString();
+                        if (!string.IsNullOrEmpty(customerId))
+                        {
+                            var customerUrl = $"https://api.stripe.com/v1/customers/{customerId}";
+                            var customerResponse = await httpClient.GetAsync(customerUrl);
+                            if (customerResponse.IsSuccessStatusCode)
+                            {
+                                var customerContent = await customerResponse.Content.ReadAsStringAsync();
+                                var customerData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(customerContent);
+                                if (customerData != null)
+                                {
+                                    if (customerData.ContainsKey("email"))
+                                        customerEmail = customerData["email"]?.ToString();
+                                    if (customerData.ContainsKey("name"))
+                                        customerName = customerData["name"]?.ToString();
+                                    
+                                    Console.WriteLine($"[StripeController] VerifyPayment - Fetched from customer object - Email: {customerEmail}, Name: {customerName}");
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[StripeController] VerifyPayment - Error fetching customer info: {ex.Message}");
+                    // Non-critical, continue processing
+                }
+                
+                // Set customer info on purchase
+                purchase.CustomerEmail = customerEmail;
+                purchase.CustomerName = customerName;
 
                 // Grant tokens
                 if (purchase.IsUnlimited)
