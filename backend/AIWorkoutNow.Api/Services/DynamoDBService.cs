@@ -615,13 +615,14 @@ public class DynamoDBService : IDynamoDBService
         foreach (var item in paidUsersResponse.Items)
         {
             var deviceId = item["DeviceId"].S;
+            var tokensRemaining = int.Parse(item["TokensRemaining"].N);
             if (!customers.ContainsKey(deviceId))
             {
                 customers[deviceId] = new CustomerSummary
                 {
                     DeviceId = deviceId,
                     IsPaidUser = true,
-                    TokensRemaining = int.Parse(item["TokensRemaining"].N),
+                    TokensRemaining = tokensRemaining,
                     TotalWorkouts = 0,
                     TotalPurchases = 0,
                     TotalSpent = 0
@@ -630,7 +631,7 @@ public class DynamoDBService : IDynamoDBService
             else
             {
                 customers[deviceId].IsPaidUser = true;
-                customers[deviceId].TokensRemaining = int.Parse(item["TokensRemaining"].N);
+                customers[deviceId].TokensRemaining = tokensRemaining;
             }
         }
 
