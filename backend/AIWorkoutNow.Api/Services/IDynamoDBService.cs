@@ -23,8 +23,10 @@ public interface IDynamoDBService
     
     // CRM Methods
     Task SaveStripePurchaseAsync(StripePurchase purchase);
-    Task<List<StripePurchase>> GetAllStripePurchasesAsync();
-    Task<List<StripePurchase>> GetPurchasesByDeviceIdAsync(string deviceId);
+    Task<List<StripePurchase>> GetAllStripePurchasesAsync(); // Legacy - use GetAllUserPurchasesAsync
+    Task<List<StripePurchase>> GetPurchasesByDeviceIdAsync(string deviceId); // Legacy - use GetUserPurchasesByDeviceIdAsync
+    Task<List<UserPurchase>> GetAllUserPurchasesAsync();
+    Task<List<UserPurchase>> GetUserPurchasesByDeviceIdAsync(string deviceId);
     Task SaveCustomerActivityAsync(CustomerActivity activity);
     Task<List<CustomerActivity>> GetCustomerActivitiesAsync(string deviceId, int limit = 50);
     Task<List<CustomerActivity>> GetAllActivitiesAsync(int limit = 100);
