@@ -61,7 +61,7 @@ function Layout({ children }: LayoutProps) {
             {/* Access Status */}
             {!checkingAccess && (
               <div className="flex justify-center mb-2">
-                {accessStatus?.hasUnlimitedAccess || (tokenBalance !== null && tokenBalance >= 999999) ? (
+                {accessStatus?.hasUnlimitedAccess || (tokenBalance !== null && tokenBalance !== undefined && tokenBalance >= 999999) ? (
                   <div className="inline-block px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold text-xs md:text-sm shadow-md">
                     ∞ Unlimited Access
                     {accessStatus?.unlimitedExpiresAt && (
