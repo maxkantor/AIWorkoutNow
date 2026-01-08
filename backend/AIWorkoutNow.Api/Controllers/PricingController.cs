@@ -21,6 +21,7 @@ public class PricingController : ControllerBase
     public PricingController(IDynamoDBService dynamoService, IConfigService configService)
     {
         _dynamoService = dynamoService;
+        _configService = configService;
     }
 
     public static void InvalidateCache()
