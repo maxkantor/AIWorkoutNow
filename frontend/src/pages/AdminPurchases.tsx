@@ -38,11 +38,17 @@ function AdminPurchases() {
 
   const filteredPurchases = filter === 'all'
     ? purchases
-    : purchases.filter(p => (p.status || p.paymentStatus).toLowerCase() === filter.toLowerCase());
+    : purchases.filter(p => {
+        const status = (p as any).status || p.status || p.paymentStatus || 'pending';
+        return status.toLowerCase() === filter.toLowerCase();
+      });
 
   const totalRevenue = filteredPurchases
-    .filter(p => (p.status || p.paymentStatus) === 'completed')
-    .reduce((sum, p) => sum + (p.amount || p.amountTotal), 0);
+    .filter(p => {
+      const status = (p as any).status || p.status || p.paymentStatus || 'pending';
+      return status === 'completed';
+    })
+    .reduce((sum, p) => sum + ((p as any).amount || p.amount || p.amountTotal || 0), 0);
 
   if (loading) {
     return (
@@ -81,7 +87,10 @@ function AdminPurchases() {
             <div className="stat-card">
               <h3>Completed</h3>
               <p className="stat-value">
-                {filteredPurchases.filter(p => (p.status || p.paymentStatus) === 'completed').length}
+                {filteredPurchases.filter(p => {
+                  const status = (p as any).status || p.status || p.paymentStatus || 'pending';
+                  return status === 'completed';
+                }).length}
               </p>
             </div>
           </div>
@@ -134,34 +143,53 @@ function AdminPurchases() {
                     <td colSpan={9} className="no-data">No purchases found</td>
                   </tr>
                 ) : (
-                  filteredPurchases.map((purchase) => (
-                    <tr key={purchase.purchaseId}>
-                      <td>{new Date(purchase.createdAt).toLocaleString()}</td>
-                      <td>{purchase.customerName || purchase.deviceId.substring(0, 8)}</td>
-                      <td>{purchase.customerEmail || '-'}</td>
-                      <td>
-                        <span className="pack-badge">{purchase.packType || purchase.planName}</span>
-                      </td>
-                      <td className="amount">${(purchase.amount || purchase.amountTotal).toFixed(2)}</td>
-                      <td>{purchase.tokensPurchased || '-'}</td>
-                      <td>
-                        <span className={`status-badge status-${(purchase.status || purchase.paymentStatus).toLowerCase()}`}>
-                          {purchase.status || purchase.paymentStatus}
-                        </span>
-                      </td>
-                      <td className="payment-id">
-                        {purchase.stripePaymentIntentId ? purchase.stripePaymentIntentId.substring(0, 20) + '...' : purchase.purchaseId.substring(0, 20) + '...'}
-                      </td>
-                      <td>
-                        <Link
-                          to={`/admin/customers/${purchase.deviceId}`}
-                          className="btn btn-sm btn-primary"
-                        >
-                          View Customer
-                        </Link>
-                      </td>
-                    </tr>
-                  ))
+                  filteredPurchases.map((purchase) => {
+                    // Fix date parsing - handle both createdAt and PurchasedAt
+                    const dateStr = (purchase as any).purchasedAt || purchase.createdAt;
+                    let purchaseDate: Date;
+                    try {
+                      purchaseDate = dateStr ? new Date(dateStr) : new Date();
+                      if (isNaN(purchaseDate.getTime())) {
+                        purchaseDate = new Date();
+                      }
+                    } catch {
+                      purchaseDate = new Date();
+                    }
+                    
+                    // Fix status - use Status field from enriched response
+                    const status = (purchase as any).status || purchase.status || purchase.paymentStatus || 'pending';
+                    
+                    return (
+                      <tr key={purchase.purchaseId}>
+                        <td>{purchaseDate.toLocaleString()}</td>
+                        <td>{purchase.customerName || purchase.deviceId?.substring(0, 12) || 'Unknown'}</td>
+                        <td>{purchase.customerEmail || '-'}</td>
+                        <td>
+                          <span className="pack-badge">{purchase.packType || purchase.planName || 'Unknown'}</span>
+                        </td>
+                        <td className="amount">${((purchase as any).amount || purchase.amount || purchase.amountTotal || 0).toFixed(2)}</td>
+                        <td>{(purchase as any).tokensGranted || purchase.tokensPurchased || '-'}</td>
+                        <td>
+                          <span className={`status-badge status-${status.toLowerCase()}`}>
+                            {status}
+                          </span>
+                        </td>
+                        <td className="payment-id">
+                          {(purchase as any).stripePaymentIntentId || purchase.stripePaymentIntentId 
+                            ? ((purchase as any).stripePaymentIntentId || purchase.stripePaymentIntentId).substring(0, 20) + '...' 
+                            : purchase.purchaseId.substring(0, 20) + '...'}
+                        </td>
+                        <td>
+                          <Link
+                            to={`/admin/customers/${purchase.deviceId}`}
+                            className="btn btn-sm btn-primary"
+                          >
+                            View Customer
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

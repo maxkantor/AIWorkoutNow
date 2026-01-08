@@ -154,13 +154,15 @@ public class StripeController : ControllerBase
                 PlanId = plan.PlanId,
                 StripeSessionId = sessionId ?? "",
                 Status = "pending",
+                PurchasedAt = DateTime.UtcNow,
                 IsUnlimited = plan.IsUnlimited,
                 TokensGranted = plan.TokenCount
             };
 
-            if (plan.IsUnlimited && plan.UnlimitedDays.HasValue)
+            if (plan.IsUnlimited)
             {
-                purchase.ExpiresAt = DateTime.UtcNow.AddDays(plan.UnlimitedDays.Value);
+                // AGGRESSIVE FIX: Always set expiration to 1 year (365 days) from purchase date
+                purchase.ExpiresAt = purchase.PurchasedAt.AddDays(365);
             }
 
             await _dynamoService.SaveUserPurchaseAsync(purchase);
@@ -240,7 +242,8 @@ public class StripeController : ControllerBase
 
                         if (plan.IsUnlimited && plan.UnlimitedDays.HasValue)
                         {
-                            purchase.ExpiresAt = DateTime.UtcNow.AddDays(plan.UnlimitedDays.Value);
+                            // AGGRESSIVE FIX: Always use 365 days (1 year) for unlimited, regardless of plan setting
+                            purchase.ExpiresAt = purchase.PurchasedAt.AddDays(365);
                         }
                     }
                     else
@@ -419,10 +422,11 @@ public class StripeController : ControllerBase
                     TokensGranted = plan.TokenCount
                 };
 
-                if (plan.IsUnlimited && plan.UnlimitedDays.HasValue)
-                {
-                    purchase.ExpiresAt = DateTime.UtcNow.AddDays(plan.UnlimitedDays.Value);
-                }
+                        if (plan.IsUnlimited)
+                        {
+                            // AGGRESSIVE FIX: Always set expiration to 1 year (365 days) from purchase date
+                            purchase.ExpiresAt = purchase.PurchasedAt.AddDays(365);
+                        }
 
                 // Grant tokens
                 if (purchase.IsUnlimited)
