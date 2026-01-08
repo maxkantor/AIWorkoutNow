@@ -119,22 +119,33 @@ public class PricingController : ControllerBase
             var freeWorkoutsRemaining = Math.Max(0, 3 - totalWorkouts);
             var hasFreeAccess = freeWorkoutsRemaining > 0;
 
-            // Check unlimited access
-            var unlimitedPurchase = await _dynamoService.GetActiveUnlimitedPurchaseAsync(deviceId);
-            var hasUnlimitedAccess = unlimitedPurchase != null;
-
-            // Check token balance
+            // Check token balance first (to detect unlimited via 999999 tokens)
             var tokens = await _dynamoService.GetUserTokensAsync(deviceId);
-            var hasTokenAccess = tokens != null && tokens.TokensRemaining > 0;
+            var tokensRemaining = tokens?.TokensRemaining ?? 0;
+            
+            // Check if tokens indicate unlimited access (999999 is our marker for unlimited)
+            var hasUnlimitedFromTokens = tokensRemaining >= 999999;
+            
+            // Check unlimited access from purchases table
+            var unlimitedPurchase = await _dynamoService.GetActiveUnlimitedPurchaseAsync(deviceId);
+            var hasUnlimitedFromPurchase = unlimitedPurchase != null;
+            
+            // User has unlimited if either check passes
+            var hasUnlimitedAccess = hasUnlimitedFromTokens || hasUnlimitedFromPurchase;
+            
+            // Use expiration from purchase if available, otherwise from tokens
+            var unlimitedExpiresAt = unlimitedPurchase?.ExpiresAt ?? tokens?.ExpiresAt;
+            
+            var hasTokenAccess = tokens != null && tokensRemaining > 0 && !hasUnlimitedAccess;
 
             return Ok(new
             {
                 hasFreeAccess,
                 freeWorkoutsRemaining,
                 hasUnlimitedAccess,
-                unlimitedExpiresAt = unlimitedPurchase?.ExpiresAt?.ToString("O"),
+                unlimitedExpiresAt = unlimitedExpiresAt?.ToString("O"),
                 hasTokenAccess,
-                tokensRemaining = tokens?.TokensRemaining ?? 0,
+                tokensRemaining = hasUnlimitedAccess ? 999999 : tokensRemaining, // Show 999999 for unlimited
                 canGenerateWorkout = hasFreeAccess || hasUnlimitedAccess || hasTokenAccess
             });
         }
