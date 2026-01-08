@@ -129,6 +129,100 @@ public class PricingController : ControllerBase
                 Console.WriteLine($"[PricingController] Token expires at: {tokens.ExpiresAt}");
             }
             
+            // AGGRESSIVE FIX: If tokens are low (< 999999), check Stripe for completed payments
+            if (tokensRemaining < 999999)
+            {
+                Console.WriteLine($"[PricingController] Tokens are low ({tokensRemaining}), checking Stripe for completed unlimited purchases...");
+                try
+                {
+                    var configService = HttpContext.RequestServices.GetRequiredService<IConfigService>();
+                    var stripeSecretKey = await configService.GetStripeSecretKeyAsync();
+                    
+                    if (!string.IsNullOrEmpty(stripeSecretKey))
+                    {
+                        // Check recent Stripe sessions for this device
+                        using var httpClient = new HttpClient();
+                        httpClient.DefaultRequestHeaders.Authorization = 
+                            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", stripeSecretKey);
+                        
+                        // List recent checkout sessions (last 10)
+                        var sessionsUrl = "https://api.stripe.com/v1/checkout/sessions?limit=10";
+                        var sessionsResponse = await httpClient.GetAsync(sessionsUrl);
+                        
+                        if (sessionsResponse.IsSuccessStatusCode)
+                        {
+                            var sessionsContent = await sessionsResponse.Content.ReadAsStringAsync();
+                            var sessionsData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(sessionsContent);
+                            
+                            if (sessionsData != null && sessionsData.ContainsKey("data"))
+                            {
+                                var sessionsList = sessionsData["data"] as System.Text.Json.JsonElement[];
+                                if (sessionsList != null)
+                                {
+                                    foreach (var session in sessionsList)
+                                    {
+                                        try
+                                        {
+                                            var metadata = session.GetProperty("metadata");
+                                            var deviceIdFromSession = metadata.GetProperty("deviceId").GetString();
+                                            var planId = metadata.GetProperty("planId").GetString();
+                                            var paymentStatus = session.GetProperty("payment_status").GetString();
+                                            var sessionId = session.GetProperty("id").GetString();
+                                            
+                                            if (deviceIdFromSession == deviceId && paymentStatus == "paid")
+                                            {
+                                                Console.WriteLine($"[PricingController] Found paid session {sessionId} for device {deviceId}, plan: {planId}");
+                                                
+                                                // Check if this is an unlimited plan
+                                                var plan = await _dynamoService.GetPricingPlanAsync(planId ?? "");
+                                                if (plan != null && plan.IsUnlimited)
+                                                {
+                                                    Console.WriteLine($"[PricingController] AGGRESSIVE FIX: Granting unlimited access from Stripe check!");
+                                                    
+                                                    // Grant unlimited access immediately
+                                                    if (tokens == null)
+                                                    {
+                                                        tokens = new UserTokens
+                                                        {
+                                                            DeviceId = deviceId,
+                                                            TokensRemaining = 999999,
+                                                            ExpiresAt = plan.UnlimitedDays.HasValue ? DateTime.UtcNow.AddDays(plan.UnlimitedDays.Value) : null
+                                                        };
+                                                    }
+                                                    else
+                                                    {
+                                                        tokens.TokensRemaining = 999999;
+                                                        if (plan.UnlimitedDays.HasValue)
+                                                        {
+                                                            tokens.ExpiresAt = DateTime.UtcNow.AddDays(plan.UnlimitedDays.Value);
+                                                        }
+                                                    }
+                                                    
+                                                    await _dynamoService.SaveUserTokensAsync(tokens);
+                                                    tokensRemaining = 999999;
+                                                    Console.WriteLine($"[PricingController] Successfully granted unlimited access via aggressive fix");
+                                                    
+                                                    // Break after first match
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Console.WriteLine($"[PricingController] Error processing Stripe session: {ex.Message}");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[PricingController] Error checking Stripe (non-critical): {ex.Message}");
+                }
+            }
+            
             // Check if tokens indicate unlimited access (999999 is our marker for unlimited)
             var hasUnlimitedFromTokens = tokensRemaining >= 999999;
             
