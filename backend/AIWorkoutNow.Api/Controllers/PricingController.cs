@@ -130,11 +130,20 @@ public class PricingController : ControllerBase
                         
                         if (realPlans != null && realPlans.Count > 0)
                         {
-                            lock (_cacheLock)
+                            // CRITICAL FIX: Only update cache with ACTIVE plans
+                            var activePlans = realPlans.Where(p => p.IsActive).ToList();
+                            if (activePlans.Count > 0)
                             {
-                                _cachedPlans = realPlans;
-                                _cacheExpiry = DateTime.UtcNow.Add(CacheDuration);
-                                Console.WriteLine($"[PricingController] Background cache updated with real plans");
+                                lock (_cacheLock)
+                                {
+                                    _cachedPlans = activePlans;
+                                    _cacheExpiry = DateTime.UtcNow.Add(CacheDuration);
+                                    Console.WriteLine($"[PricingController] Background cache updated with {activePlans.Count} active plans (filtered from {realPlans.Count} total)");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine($"[PricingController] WARNING: All {realPlans.Count} fetched plans are inactive, keeping default plans in cache");
                             }
                         }
                     }
