@@ -864,19 +864,39 @@ public class DynamoDBService : IDynamoDBService
 
             Console.WriteLine($"[DynamoDBService] Found {response.Items.Count} pricing plans");
 
-            // If table is empty, cache this and return defaults immediately (don't scan again)
+            // If table is empty, populate it with default plans and return them
             if (response.Items.Count == 0)
             {
-                Console.WriteLine("[DynamoDBService] Table exists but is empty, caching empty state and returning default plans");
-                lock (_tableExistenceLock)
+                Console.WriteLine("[DynamoDBService] Table exists but is empty, populating with default plans...");
+                try
                 {
-                    _pricingPlansTableEmpty = true; // Cache that table is empty
-                    if (_defaultPlansCache == null)
+                    await CreateDefaultPricingPlansAsync(plansTable);
+                    Console.WriteLine("[DynamoDBService] Successfully populated table with default plans");
+                    
+                    // Mark table as not empty
+                    lock (_tableExistenceLock)
                     {
-                        _defaultPlansCache = GetDefaultPricingPlans();
+                        _pricingPlansTableEmpty = false;
                     }
+                    
+                    // Return the default plans we just created
+                    var defaultPlans = GetDefaultPricingPlans();
+                    return defaultPlans;
                 }
-                return _defaultPlansCache;
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[DynamoDBService] Failed to populate default plans: {ex.Message}");
+                    // Fallback to returning defaults from code
+                    lock (_tableExistenceLock)
+                    {
+                        _pricingPlansTableEmpty = true;
+                        if (_defaultPlansCache == null)
+                        {
+                            _defaultPlansCache = GetDefaultPricingPlans();
+                        }
+                    }
+                    return _defaultPlansCache;
+                }
             }
             
             // Table has data, mark as not empty
