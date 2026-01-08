@@ -811,6 +811,7 @@ public class DynamoDBService : IDynamoDBService
 
     // Cache table existence state to avoid slow scans
     private static bool? _pricingPlansTableExists = null;
+    private static bool? _pricingPlansTableEmpty = null; // Cache if table is empty
     private static readonly object _tableExistenceLock = new object();
     // Cache default plans to avoid recreating them
     private static List<PricingPlan>? _defaultPlansCache = null;
@@ -820,12 +821,23 @@ public class DynamoDBService : IDynamoDBService
         var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
         var plansTable = $"{tablePrefix}-PricingPlans";
         
-        // Check cached table existence - if we know it doesn't exist, return defaults immediately
+        // Check cached table existence - if we know it doesn't exist or is empty, return defaults immediately
         lock (_tableExistenceLock)
         {
             if (_pricingPlansTableExists == false)
             {
                 Console.WriteLine($"[DynamoDBService] PricingPlans table known to not exist (cached), returning default plans immediately");
+                if (_defaultPlansCache == null)
+                {
+                    _defaultPlansCache = GetDefaultPricingPlans();
+                }
+                return _defaultPlansCache;
+            }
+            
+            // If we know table is empty, return defaults immediately without scanning
+            if (_pricingPlansTableEmpty == true)
+            {
+                Console.WriteLine($"[DynamoDBService] PricingPlans table known to be empty (cached), returning default plans immediately");
                 if (_defaultPlansCache == null)
                 {
                     _defaultPlansCache = GetDefaultPricingPlans();
@@ -858,13 +870,19 @@ public class DynamoDBService : IDynamoDBService
                 Console.WriteLine("[DynamoDBService] Table exists but is empty, caching empty state and returning default plans");
                 lock (_tableExistenceLock)
                 {
-                    // Mark table as "empty" by setting a flag - we'll still check but return defaults fast
+                    _pricingPlansTableEmpty = true; // Cache that table is empty
                     if (_defaultPlansCache == null)
                     {
                         _defaultPlansCache = GetDefaultPricingPlans();
                     }
                 }
                 return _defaultPlansCache;
+            }
+            
+            // Table has data, mark as not empty
+            lock (_tableExistenceLock)
+            {
+                _pricingPlansTableEmpty = false;
             }
 
             var plans = new List<PricingPlan>();
