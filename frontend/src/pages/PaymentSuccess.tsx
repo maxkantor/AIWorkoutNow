@@ -39,9 +39,26 @@ function PaymentSuccess() {
           setVerifying(false);
         }
 
-        // Then check access status
-        const status = await getUserAccessStatus(deviceId);
+        // Wait a moment for backend to process, then check access status
+        // Retry a few times to ensure unlimited access is detected
+        let status: UserAccessStatus | null = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1))); // 500ms, 1s, 1.5s
+          status = await getUserAccessStatus(deviceId);
+          setAccessStatus(status);
+          
+          // If we have unlimited access, we're done
+          if (status.hasUnlimitedAccess) {
+            break;
+          }
+        }
+        
         setAccessStatus(status);
+        
+        // Auto-redirect to home after 3 seconds
+        setTimeout(() => {
+          navigate('/');
+        }, 3000);
       } catch (error) {
         console.error('Failed to check access status:', error);
       } finally {
@@ -50,7 +67,7 @@ function PaymentSuccess() {
     };
 
     processPayment();
-  }, [sessionId]);
+  }, [sessionId, navigate]);
 
   const handleGoHome = () => {
     navigate('/');
@@ -87,14 +104,25 @@ function PaymentSuccess() {
                     </span>
                   )}
                 </div>
-              ) : accessStatus.tokensRemaining > 0 ? (
+              ) : accessStatus.tokensRemaining > 0 && accessStatus.tokensRemaining < 999999 ? (
                 <div className="status-item">
                   <span className="status-icon">💪</span>
                   <span>{accessStatus.tokensRemaining} Workouts Available</span>
                 </div>
+              ) : accessStatus.tokensRemaining >= 999999 ? (
+                <div className="status-item">
+                  <span className="status-icon">∞</span>
+                  <span>Unlimited Access Active</span>
+                </div>
               ) : null}
             </div>
           ) : null}
+          
+          {!loading && !verifying && (
+            <p className="redirect-message" style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#64748b' }}>
+              Redirecting to home page in 3 seconds...
+            </p>
+          )}
 
           <button onClick={handleGoHome} className="cta-button">
             Start Generating Workouts
