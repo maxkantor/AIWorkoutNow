@@ -274,7 +274,7 @@ public class AdminController : ControllerBase
     {
         try
         {
-            var purchases = await _dynamoService.GetAllStripePurchasesAsync();
+            var purchases = await _dynamoService.GetAllUserPurchasesAsync();
             return Ok(purchases);
         }
         catch (Exception ex)
@@ -289,7 +289,7 @@ public class AdminController : ControllerBase
     {
         try
         {
-            var purchases = await _dynamoService.GetPurchasesByDeviceIdAsync(deviceId);
+            var purchases = await _dynamoService.GetUserPurchasesByDeviceIdAsync(deviceId);
             return Ok(purchases);
         }
         catch (Exception ex)
