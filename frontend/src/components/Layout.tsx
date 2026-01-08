@@ -61,16 +61,16 @@ function Layout({ children }: LayoutProps) {
             {/* Access Status */}
             {!checkingAccess && (
               <div className="flex justify-center mb-2">
-                {accessStatus?.hasUnlimitedAccess ? (
+                {accessStatus?.hasUnlimitedAccess || (tokenBalance !== null && tokenBalance >= 999999) ? (
                   <div className="inline-block px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold text-xs md:text-sm shadow-md">
                     ∞ Unlimited Access
-                    {accessStatus.unlimitedExpiresAt && (
+                    {accessStatus?.unlimitedExpiresAt && (
                       <span className="text-xs opacity-90 ml-2">
                         (expires {new Date(accessStatus.unlimitedExpiresAt).toLocaleDateString()})
                       </span>
                     )}
                   </div>
-                ) : tokenBalance !== null && tokenBalance !== undefined && tokenBalance > 0 ? (
+                ) : tokenBalance !== null && tokenBalance !== undefined && tokenBalance > 0 && tokenBalance < 999999 ? (
                   <div className="inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-semibold text-xs md:text-sm shadow-sm">
                     Tokens: {tokenBalance}
                   </div>
