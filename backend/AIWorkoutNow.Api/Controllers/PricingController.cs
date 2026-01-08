@@ -9,6 +9,7 @@ namespace AIWorkoutNow.Api.Controllers;
 public class PricingController : ControllerBase
 {
     private readonly IDynamoDBService _dynamoService;
+    private readonly IConfigService _configService;
     private static List<PricingPlan>? _cachedPlans;
     private static DateTime _cacheExpiry = DateTime.MinValue;
     private static readonly object _cacheLock = new object();
@@ -17,7 +18,7 @@ public class PricingController : ControllerBase
     // Note: Static constructor removed - we'll populate cache on first request
     // This avoids dependency injection issues in static constructor
 
-    public PricingController(IDynamoDBService dynamoService)
+    public PricingController(IDynamoDBService dynamoService, IConfigService configService)
     {
         _dynamoService = dynamoService;
     }
@@ -135,8 +136,7 @@ public class PricingController : ControllerBase
                 Console.WriteLine($"[PricingController] Tokens are low ({tokensRemaining}), checking Stripe for completed unlimited purchases...");
                 try
                 {
-                    var configService = HttpContext.RequestServices.GetRequiredService<IConfigService>();
-                    var stripeSecretKey = await configService.GetStripeSecretKeyAsync();
+                    var stripeSecretKey = await _configService.GetStripeSecretKeyAsync();
                     
                     if (!string.IsNullOrEmpty(stripeSecretKey))
                     {
