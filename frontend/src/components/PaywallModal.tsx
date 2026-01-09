@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getPricingPlans, createCheckoutSession, PricingPlan } from '../services/api';
 import { getDeviceId } from '../utils/storage';
 import './PaywallModal.css';
@@ -10,10 +11,15 @@ interface PaywallModalProps {
 }
 
 function PaywallModal({ isOpen, onClose, onPurchaseComplete: _onPurchaseComplete }: PaywallModalProps) {
+  const navigate = useNavigate();
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  const handleBackToHome = () => {
+    navigate('/');
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -77,8 +83,8 @@ function PaywallModal({ isOpen, onClose, onPurchaseComplete: _onPurchaseComplete
       <div className="paywall-modal" onClick={(e) => e.stopPropagation()}>
         <button className="paywall-close" onClick={onClose}>×</button>
         
-        <button className="paywall-back" onClick={onClose}>
-          ← Back
+        <button className="paywall-back" onClick={handleBackToHome}>
+          ← Back to Home
         </button>
         
         <div className="paywall-header">

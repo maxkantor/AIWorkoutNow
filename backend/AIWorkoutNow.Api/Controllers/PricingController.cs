@@ -591,13 +591,20 @@ public class PricingController : ControllerBase
                 }
             }
             
-            // User has unlimited if either check passes
-            var hasUnlimitedAccess = hasUnlimitedFromTokens || hasUnlimitedFromPurchase;
+            // CRITICAL FIX: If tokens are < 999999 (admin reset), NEVER show unlimited
+            // Admin resets take absolute precedence
+            var hasUnlimitedAccess = false;
+            DateTime? unlimitedExpiresAt = null;
             
-            // Use expiration from purchase if available, otherwise from tokens
-            var unlimitedExpiresAt = unlimitedPurchase?.ExpiresAt ?? tokens?.ExpiresAt;
+            if (hasUnlimitedFromTokens)
+            {
+                // Only grant unlimited if tokens are actually 999999+
+                hasUnlimitedAccess = true;
+                unlimitedExpiresAt = unlimitedPurchase?.ExpiresAt ?? tokens?.ExpiresAt;
+            }
+            // If tokens are < 999999, hasUnlimitedAccess stays false (admin reset override)
             
-            var hasTokenAccess = tokens != null && tokensRemaining > 0 && !hasUnlimitedAccess;
+            var hasTokenAccess = tokens != null && tokensRemaining > 0 && tokensRemaining < 999999;
 
             Console.WriteLine($"[PricingController] Final status - HasUnlimited: {hasUnlimitedAccess}, TokensRemaining: {tokensRemaining}, HasTokenAccess: {hasTokenAccess}");
 
@@ -608,7 +615,7 @@ public class PricingController : ControllerBase
                 hasUnlimitedAccess,
                 unlimitedExpiresAt = unlimitedExpiresAt?.ToString("O"),
                 hasTokenAccess,
-                tokensRemaining = hasUnlimitedAccess ? 999999 : tokensRemaining, // Show 999999 for unlimited
+                tokensRemaining = tokensRemaining, // Always return actual token count, not 999999 override
                 canGenerateWorkout = hasFreeAccess || hasUnlimitedAccess || hasTokenAccess
             });
         }

@@ -124,9 +124,23 @@ function PaymentSuccess() {
             </p>
           )}
 
-          <button onClick={handleGoHome} className="cta-button">
-            Start Generating Workouts
-          </button>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button onClick={handleGoHome} className="cta-button">
+              Start Generating Workouts
+            </button>
+            <button onClick={handleGoHome} className="back-button" style={{ 
+              padding: '0.75rem 1.5rem',
+              background: 'transparent',
+              border: '1px solid #e5e7eb',
+              borderRadius: '0.5rem',
+              color: '#64748b',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              fontWeight: '500'
+            }}>
+              ← Back to Home
+            </button>
+          </div>
 
           {sessionId && (
             <p className="session-info">
