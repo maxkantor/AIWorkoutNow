@@ -47,9 +47,6 @@ function Layout({ children }: LayoutProps) {
                   Get Your Perfect Workout in Seconds
                 </h1>
               </div>
-              <p className="text-white text-base md:text-lg text-center max-w-3xl mx-auto mb-6 font-medium">
-                AI-powered, personalized fitness plans tailored to your goals, equipment, and schedule. No signup. No subscription. Just results.
-              </p>
               
               {/* Primary CTA Button - Visually Dominant with Glow Effect */}
               <div className="mb-5">

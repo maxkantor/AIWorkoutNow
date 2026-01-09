@@ -2,6 +2,9 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  margin: 0;
+  padding: 0;
+  width: 100%;
 }
 
 /* ============================================
@@ -20,6 +23,9 @@
   justify-content: center;
   overflow: hidden;
   animation: fadeIn 0.3s ease-in;
+  margin: 0;
+  padding: 0;
+  width: 100%;
 }
 
 @keyframes fadeIn {
