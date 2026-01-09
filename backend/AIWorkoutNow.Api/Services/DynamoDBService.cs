@@ -843,12 +843,19 @@ public class DynamoDBService : IDynamoDBService
         }
         summary.TotalSpent = totalSpent;
         
-        // Try to get customer email/name from Stripe if available
-        // (For now, we'll leave these empty - can be enhanced to fetch from Stripe API)
-        if (completedPurchases.Any())
+        // CRITICAL FIX: Get customer email/name from purchases (check all purchases, not just completed)
+        if (purchases.Any())
         {
-            // Check if we stored customer info in purchase metadata
-            // This would need to be added when saving purchases
+            // Find first purchase with customer data
+            var purchaseWithCustomerData = purchases
+                .FirstOrDefault(p => !string.IsNullOrEmpty(p.CustomerEmail) || !string.IsNullOrEmpty(p.CustomerName));
+            
+            if (purchaseWithCustomerData != null)
+            {
+                summary.Email = purchaseWithCustomerData.CustomerEmail;
+                summary.Name = purchaseWithCustomerData.CustomerName;
+                Console.WriteLine($"[DynamoDBService] Found customer data for {deviceId}: Email={summary.Email}, Name={summary.Name}");
+            }
         }
 
         // Get activities and count workouts
