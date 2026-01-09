@@ -49,14 +49,22 @@ function Layout({ children }: LayoutProps) {
                 AI-powered, personalized fitness plans tailored to your goals, equipment, and schedule. No signup. No subscription. Just results.
               </p>
               
-              {/* Primary CTA Button - More Prominent */}
-              <div className="mb-4">
+              {/* Primary CTA Button - Visually Dominant with Glow Effect */}
+              <div className="mb-5">
                 <a 
                   href="#workout-generator" 
-                  className="inline-block px-8 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 text-white font-bold text-lg rounded-xl shadow-2xl hover:shadow-blue-500/50 transform hover:-translate-y-1 transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-offset-2 focus:ring-offset-transparent"
+                  className="inline-block px-10 py-5 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 text-white font-black text-xl rounded-2xl shadow-2xl hover:shadow-[0_0_30px_rgba(59,130,246,0.6)] transform hover:-translate-y-1.5 transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-400 focus:ring-offset-4 focus:ring-offset-transparent relative overflow-hidden group"
                   aria-label="Scroll to workout generator"
+                  style={{
+                    animation: 'slideUpFade 0.4s ease-out 0.3s both'
+                  }}
                 >
-                  Generate AI Workout →
+                  {/* Subtle glow effect */}
+                  <span className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></span>
+                  <span className="relative z-10 flex items-center gap-2">
+                    Generate AI Workout
+                    <span className="text-2xl group-hover:translate-x-1 transition-transform duration-300">→</span>
+                  </span>
                 </a>
               </div>
             </div>
@@ -72,7 +80,10 @@ function Layout({ children }: LayoutProps) {
             {/* Access Status */}
             {!checkingAccess && (
               <div className="flex justify-center mb-2">
-                {accessStatus?.hasUnlimitedAccess || (tokenBalance !== null && tokenBalance !== undefined && tokenBalance >= 999999) ? (
+                {/* CRITICAL FIX: Prioritize API response hasUnlimitedAccess flag and tokensRemaining value */}
+                {/* Only show unlimited if API explicitly says so AND tokens are actually 999999+ */}
+                {accessStatus?.hasUnlimitedAccess === true && 
+                 accessStatus?.tokensRemaining >= 999999 ? (
                   <div className="inline-block px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold text-xs md:text-sm shadow-md">
                     ∞ Unlimited Access
                     {accessStatus?.unlimitedExpiresAt && (
@@ -81,9 +92,11 @@ function Layout({ children }: LayoutProps) {
                       </span>
                     )}
                   </div>
-                ) : tokenBalance !== null && tokenBalance !== undefined && tokenBalance > 0 && tokenBalance < 999999 ? (
+                ) : accessStatus?.tokensRemaining !== undefined && 
+                    accessStatus.tokensRemaining > 0 && 
+                    accessStatus.tokensRemaining < 999999 ? (
                   <div className="inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-semibold text-xs md:text-sm shadow-sm">
-                    Tokens: {tokenBalance}
+                    Tokens: {accessStatus.tokensRemaining}
                   </div>
                 ) : freeWorkoutsRemaining !== undefined && freeWorkoutsRemaining > 0 ? (
                   <div className="inline-block px-4 py-2 bg-green-100 text-green-800 rounded-lg font-semibold text-xs md:text-sm shadow-sm">

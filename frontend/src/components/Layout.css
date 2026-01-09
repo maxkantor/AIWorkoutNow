@@ -5,21 +5,32 @@
 }
 
 .header {
-  /* New sexy fitness image - athletic, confident, powerful */
-  background-image: url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3');
+  /* High-energy fitness image - sweaty, mid-motion, cinematic lighting */
+  background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 2rem 0;
+  padding: 2.5rem 0;
   position: relative;
   z-index: 100;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   overflow: hidden;
-  min-height: 320px;
+  min-height: 360px;
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Subtle fade-in animation on load */
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .header::before {
@@ -29,26 +40,37 @@
   left: 0;
   right: 0;
   bottom: 0;
-  /* Stronger gradient overlay for better text readability */
+  /* Dark gradient overlay (top to bottom) for maximum text contrast - WCAG compliant */
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.85) 0%,
-    rgba(0, 0, 0, 0.75) 40%,
-    rgba(0, 0, 0, 0.7) 60%,
-    rgba(0, 0, 0, 0.75) 100%
+    rgba(0, 0, 0, 0.75) 0%,
+    rgba(0, 0, 0, 0.65) 30%,
+    rgba(0, 0, 0, 0.55) 60%,
+    rgba(0, 0, 0, 0.6) 100%
   );
   z-index: 1;
+}
+
+/* Vignette effect to focus attention on center content */
+.header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.3) 100%);
+  z-index: 1;
+  pointer-events: none;
 }
 
 .header-container {
   position: relative;
   z-index: 2;
-}
-
-.header-container {
   max-width: 1280px;
   margin: 0 auto;
   padding: 0 1rem;
+  /* Ensure content is above all overlays */
 }
 
 .header-content {
@@ -76,31 +98,50 @@
 }
 
 .header-title {
-  font-size: clamp(1.5rem, 5vw, 2.25rem);
+  font-size: clamp(1.75rem, 6vw, 2.5rem);
   font-weight: 900;
-  line-height: 1.15;
-  margin: 0;
-  color: white !important;
-  /* Enhanced text shadow for maximum contrast and readability */
+  line-height: 1.1;
+  margin: 0 0 0.5rem 0;
+  color: #ffffff !important;
+  /* Maximum contrast text shadow for WCAG AAA compliance */
   text-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.95),
-    0 2px 8px rgba(0, 0, 0, 0.9),
-    0 1px 4px rgba(0, 0, 0, 0.85),
-    0 0 2px rgba(0, 0, 0, 1);
-  -webkit-text-fill-color: white !important;
-  letter-spacing: -0.025em;
+    0 6px 20px rgba(0, 0, 0, 0.98),
+    0 3px 12px rgba(0, 0, 0, 0.95),
+    0 1px 6px rgba(0, 0, 0, 0.9),
+    0 0 3px rgba(0, 0, 0, 1);
+  -webkit-text-fill-color: #ffffff !important;
+  letter-spacing: -0.03em;
+  /* Subtle animation on load */
+  animation: slideUpFade 0.4s ease-out 0.1s both;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .header-subtitle {
-  font-size: clamp(1rem, 2.5vw, 1.125rem);
-  color: rgba(255, 255, 255, 1) !important;
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  color: #ffffff !important;
   line-height: 1.6;
-  margin: 0.5rem 0 0 0;
+  margin: 0.75rem 0 0 0;
   max-width: 42rem;
   margin-left: auto;
   margin-right: auto;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85), 0 1px 3px rgba(0, 0, 0, 0.7);
+  /* Strong text shadow for readability over gradient */
+  text-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.9),
+    0 2px 6px rgba(0, 0, 0, 0.85),
+    0 1px 3px rgba(0, 0, 0, 0.8);
   font-weight: 500;
+  /* Subtle animation on load */
+  animation: slideUpFade 0.4s ease-out 0.2s both;
 }
 
 .header-badges {
@@ -112,17 +153,26 @@
 }
 
 .header-badge {
-  padding: 0.375rem 0.75rem;
-  background: rgba(255, 255, 255, 0.35) !important;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.25) !important;
   color: white !important;
-  border-radius: 1rem;
+  border-radius: 1.5rem;
   font-size: clamp(0.75rem, 1.5vw, 0.875rem);
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  /* Subtle animation on load */
+  animation: slideUpFade 0.4s ease-out 0.4s both;
+  transition: all 0.2s;
+}
+
+.header-badge:hover {
+  background: rgba(255, 255, 255, 0.35) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
 }
 
 .header-status {
@@ -141,12 +191,12 @@
 }
 
 .status-unlimited {
-  background: rgba(37, 99, 235, 0.9) !important;
   background: linear-gradient(135deg, rgba(37, 99, 235, 0.95) 0%, rgba(124, 58, 237, 0.95) 100%) !important;
   color: white !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .status-tokens {
@@ -185,74 +235,99 @@
 /* Desktop (1024px+) */
 @media (min-width: 1024px) {
   .header {
-    padding: 1.25rem 0;
+    padding: 3rem 0;
+    min-height: 400px;
   }
 
   .header-title-wrapper {
     gap: 1rem;
-    margin-bottom: 0.875rem;
+    margin-bottom: 1rem;
   }
 
   .header-icon {
-    font-size: 2.5rem;
+    font-size: 3rem;
   }
 
   .header-badges {
     gap: 0.75rem;
-    margin-bottom: 0.875rem;
+    margin-bottom: 1rem;
   }
 }
 
 /* Tablet (768px - 1023px) */
 @media (min-width: 768px) and (max-width: 1023px) {
   .header {
-    padding: 1rem 0;
+    padding: 2rem 0;
+    min-height: 340px;
   }
 
   .header-title-wrapper {
     flex-wrap: nowrap;
+  }
+  
+  .header-title {
+    font-size: clamp(1.75rem, 5vw, 2rem);
   }
 }
 
 /* Mobile (max 767px) */
 @media (max-width: 767px) {
   .header {
-    padding: 0.875rem 0;
+    padding: 2rem 0;
+    min-height: 300px;
+    /* Ensure hero image crops correctly on mobile - no hidden faces/text */
+    background-position: center 30%;
+  }
+
+  .header::before {
+    /* Stronger overlay on mobile for better text contrast */
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.8) 0%,
+      rgba(0, 0, 0, 0.7) 40%,
+      rgba(0, 0, 0, 0.65) 70%,
+      rgba(0, 0, 0, 0.7) 100%
+    );
   }
 
   .header-container {
-    padding: 0 0.75rem;
+    padding: 0 1rem;
   }
 
   .header-title-wrapper {
     flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 0.625rem;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
   }
 
   .header-icon {
-    font-size: 1.75rem;
+    font-size: 2rem;
   }
 
   .header-title {
-    font-size: 1.25rem;
-    line-height: 1.3;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    margin-bottom: 0.75rem;
   }
 
   .header-subtitle {
-    font-size: 0.875rem;
-    margin-top: 0.375rem;
+    font-size: 0.9375rem;
+    margin-top: 0.5rem;
+    padding: 0 0.5rem;
   }
 
   .header-badges {
-    gap: 0.375rem;
-    margin-bottom: 0.625rem;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0 0.5rem;
   }
 
   .header-badge {
-    padding: 0.375rem 0.625rem;
+    padding: 0.5rem 0.875rem;
     font-size: 0.75rem;
-  }  .status-badge {
+  }
+  
+  .status-badge {
     padding: 0.5rem 0.875rem;
     font-size: 0.75rem;
   }

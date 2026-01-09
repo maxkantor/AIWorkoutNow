@@ -43,13 +43,18 @@ function Home() {
       const status = await getUserAccessStatus(deviceId);
       setAccessStatus(status);
       
-      // Use tokensRemaining from API response (prioritize paid tokens)
-      if (status.tokensRemaining > 0) {
+      // CRITICAL FIX: Always use API response values, never localStorage for unlimited detection
+      // If API says hasUnlimitedAccess is false, respect that even if tokensRemaining is high
+      if (status.hasUnlimitedAccess && status.tokensRemaining >= 999999) {
+        // Only set unlimited if API explicitly confirms it
         setTokenBalance(status.tokensRemaining);
-        // Update localStorage for consistency
+        updateTokenStorage(deviceId, status.tokensRemaining);
+      } else if (status.tokensRemaining > 0 && status.tokensRemaining < 999999) {
+        // Regular token count (not unlimited)
+        setTokenBalance(status.tokensRemaining);
         updateTokenStorage(deviceId, status.tokensRemaining);
       } else {
-        // Only check free workouts if no paid tokens
+        // No paid tokens, check free workouts
         const freeWorkouts = await getFreeWorkoutsRemaining(deviceId);
         setFreeWorkoutsRemaining(freeWorkouts.remaining);
         setTokenBalance(null);
