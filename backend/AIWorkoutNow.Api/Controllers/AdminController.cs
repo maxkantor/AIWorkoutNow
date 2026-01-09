@@ -281,23 +281,56 @@ public class AdminController : ControllerBase
             foreach (var purchase in purchases)
             {
                 var plan = await _dynamoService.GetPricingPlanAsync(purchase.PlanId);
+                
+                // CRITICAL FIX: If plan not found, create default plan based on PlanId
+                if (plan == null)
+                {
+                    Console.WriteLine($"[AdminController] Plan {purchase.PlanId} not found, creating default plan");
+                    plan = new PricingPlan
+                    {
+                        PlanId = purchase.PlanId,
+                        Name = purchase.PlanId.Contains("unlimited") ? "Unlimited Access" : 
+                               purchase.PlanId.Contains("10") ? "10 Workouts" : 
+                               purchase.PlanId.Contains("25") ? "25 Workouts" : "Workout Plan",
+                        Price = purchase.PlanId.Contains("unlimited") ? 9.99m : 
+                                purchase.PlanId.Contains("10") ? 1.99m : 
+                                purchase.PlanId.Contains("25") ? 3.99m : 1.99m,
+                        Currency = "USD",
+                        TokenCount = purchase.PlanId.Contains("unlimited") ? null : 
+                                    (purchase.PlanId.Contains("10") ? 10 : 
+                                     purchase.PlanId.Contains("25") ? 25 : 10),
+                        IsUnlimited = purchase.PlanId.Contains("unlimited"),
+                        UnlimitedDays = purchase.PlanId.Contains("unlimited") ? 365 : null,
+                        DisplayOrder = 1,
+                        IsRecommended = false,
+                        IsActive = true,
+                        StripePriceId = string.Empty,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                }
+                
                 enrichedPurchases.Add(new
                 {
-                    purchase.PurchaseId,
-                    purchase.DeviceId,
-                    purchase.PlanId,
-                    PlanName = plan?.Name ?? "Unknown Plan",
-                    Amount = plan?.Price ?? 0,
-                    Currency = plan?.Currency ?? "USD",
-                    purchase.Status,
-                    purchase.PurchasedAt,
-                    purchase.ExpiresAt,
-                    purchase.TokensGranted,
-                    purchase.IsUnlimited,
-                    purchase.StripeSessionId,
-                    purchase.StripePaymentIntentId,
-                    purchase.CustomerEmail,
-                    purchase.CustomerName
+                    purchaseId = purchase.PurchaseId,
+                    deviceId = purchase.DeviceId,
+                    planId = purchase.PlanId,
+                    planName = plan.Name,
+                    packType = plan.Name, // Use plan name as pack type
+                    amount = plan.Price,
+                    amountTotal = plan.Price, // Frontend expects both
+                    currency = plan.Currency ?? "USD",
+                    status = purchase.Status,
+                    paymentStatus = purchase.Status, // Frontend expects both
+                    purchasedAt = purchase.PurchasedAt,
+                    createdAt = purchase.PurchasedAt, // Frontend expects both
+                    expiresAt = purchase.ExpiresAt,
+                    tokensGranted = purchase.TokensGranted,
+                    tokensPurchased = purchase.TokensGranted, // Frontend expects both
+                    isUnlimited = purchase.IsUnlimited,
+                    stripeSessionId = purchase.StripeSessionId,
+                    stripePaymentIntentId = purchase.StripePaymentIntentId,
+                    customerEmail = purchase.CustomerEmail ?? string.Empty,
+                    customerName = purchase.CustomerName ?? string.Empty
                 });
             }
             
