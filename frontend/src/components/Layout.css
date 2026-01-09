@@ -5,53 +5,7 @@
 }
 
 /* ============================================
-   STICKY HEADER BAR (Modern SaaS Style)
-   ============================================ */
-
-.header-bar {
-  position: sticky;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  height: 4.5rem; /* 72px on desktop */
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  transition: box-shadow 0.2s ease;
-}
-
-.header-bar-container {
-  width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Subtitle Text - Single Row */
-.header-subtitle-text {
-  margin: 0;
-  font-size: clamp(0.75rem, 1.2vw, 0.9375rem);
-  font-weight: 500;
-  color: #475569;
-  line-height: 1.5;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-  padding: 0 0.5rem;
-}
-
-/* ============================================
-   HERO SECTION (Below Header)
+   HERO SECTION
    ============================================ */
 
 .hero-section {
@@ -193,18 +147,6 @@
 
 /* Desktop (1024px+) */
 @media (min-width: 1024px) {
-  .header-bar {
-    height: 4.5rem; /* 72px */
-  }
-
-  .header-bar-container {
-    padding: 0 2rem;
-  }
-
-  .header-subtitle-text {
-    font-size: 0.9375rem;
-  }
-
   .hero-section {
     min-height: 400px;
   }
@@ -216,21 +158,6 @@
 
 /* Tablet (768px - 1023px) */
 @media (min-width: 768px) and (max-width: 1023px) {
-  .header-bar {
-    height: 4rem; /* 64px */
-  }
-
-  .header-bar-container {
-    padding: 0 1.25rem;
-  }
-
-  .header-subtitle-text {
-    font-size: clamp(0.75rem, 1.1vw, 0.875rem);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
   .hero-section {
     min-height: 340px;
   }
@@ -242,27 +169,6 @@
 
 /* Mobile (max 767px) */
 @media (max-width: 767px) {
-  .header-bar {
-    height: auto;
-    min-height: 3.5rem; /* 56px minimum */
-    padding: 0.75rem 0;
-  }
-
-  .header-bar-container {
-    padding: 0 1rem;
-  }
-
-  .header-subtitle-text {
-    font-size: clamp(0.6875rem, 2.5vw, 0.8125rem);
-    white-space: normal;
-    line-height: 1.4;
-    text-align: center;
-    padding: 0 0.5rem;
-    /* Allow wrapping on mobile for readability */
-    overflow: visible;
-    text-overflow: clip;
-  }
-
   .hero-section {
     min-height: 300px;
     background-position: center 30%;
@@ -292,23 +198,6 @@
     font-size: 0.9375rem;
     margin-top: 0.5rem;
     padding: 0 0.5rem;
-  }
-}
-
-/* Small Mobile (max 375px) */
-@media (max-width: 375px) {
-  .header-bar {
-    min-height: 3rem; /* 48px minimum */
-    padding: 0.625rem 0;
-  }
-
-  .header-bar-container {
-    padding: 0 0.75rem;
-  }
-
-  .header-subtitle-text {
-    font-size: clamp(0.625rem, 2.2vw, 0.75rem);
-    line-height: 1.3;
   }
 }
 

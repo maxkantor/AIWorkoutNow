@@ -35,17 +35,7 @@ function Layout({ children }: LayoutProps) {
 
   return (
     <div className="layout">
-      {/* Sticky Header Bar */}
-      <header className="header-bar" role="banner">
-        <div className="header-bar-container">
-          {/* Subtitle Text - Single Row */}
-          <p className="header-subtitle-text">
-            AI-powered, personalized fitness plans tailored to your goals, equipment, and schedule. No signup. No subscription. Just results.
-          </p>
-        </div>
-      </header>
-
-      {/* Hero Section (moved below header) */}
+      {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-container">
           <div className="hero-content">
