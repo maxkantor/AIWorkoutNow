@@ -38,20 +38,10 @@ function Layout({ children }: LayoutProps) {
       {/* Sticky Header Bar */}
       <header className="header-bar" role="banner">
         <div className="header-bar-container">
-          {/* Left: Logo + Site Name */}
-          <div className="header-brand">
-            <span className="header-logo" aria-hidden="true">💪</span>
-            <span className="header-site-name">AIWorkoutNow</span>
-          </div>
-          
-          {/* Right: Primary CTA Button */}
-          <a 
-            href="#workout-generator" 
-            className="header-cta-button"
-            aria-label="Scroll to workout generator"
-          >
-            Generate Workout
-          </a>
+          {/* Subtitle Text - Single Row */}
+          <p className="header-subtitle-text">
+            AI-powered, personalized fitness plans tailored to your goals, equipment, and schedule. No signup. No subscription. Just results.
+          </p>
         </div>
       </header>
 
