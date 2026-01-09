@@ -44,6 +44,15 @@ public interface IDynamoDBService
     Task<List<UserPurchase>> GetUserPurchasesAsync(string deviceId);
     Task<UserPurchase?> GetActiveUnlimitedPurchaseAsync(string deviceId);
     Task<int> GetTotalFreeWorkoutsAsync(string deviceId);
+    
+    // Email Verification & Cross-Device Methods
+    Task SaveEmailVerificationCodeAsync(EmailVerificationCode code);
+    Task<EmailVerificationCode?> GetEmailVerificationCodeAsync(string email);
+    Task DeleteEmailVerificationCodeAsync(string email);
+    Task SaveEmailVisitorMappingAsync(EmailVisitorMapping mapping);
+    Task<EmailVisitorMapping?> GetEmailVisitorMappingAsync(string email);
+    Task<List<string>> GetVisitorIdsByEmailAsync(string email);
+    Task MergeCreditsFromVisitorIdsAsync(string targetDeviceId, List<string> sourceVisitorIds);
 }
 
 public class AdminStats

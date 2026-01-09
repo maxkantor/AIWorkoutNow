@@ -582,3 +582,56 @@ export async function getAllActivities(token: string, limit?: number): Promise<C
 
   return response.json();
 }
+
+// Email Verification API Functions
+export async function sendVerificationCode(email: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/email-verification/send-code`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Failed to send verification code' }));
+    throw new Error(error.message || 'Failed to send verification code');
+  }
+}
+
+export async function verifyAndRestoreCredits(email: string, code: string, deviceId: string): Promise<{
+  message: string;
+  tokensRemaining: number;
+  hasUnlimited: boolean;
+  expiresAt?: string;
+}> {
+  const response = await fetch(`${API_BASE_URL}/api/email-verification/verify-and-restore`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, code, deviceId }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Failed to verify code' }));
+    throw new Error(error.message || 'Failed to verify code');
+  }
+
+  return response.json();
+}
+
+export async function checkEmailLinked(email: string): Promise<{ hasLinkedDevices: boolean; linkedDeviceCount: number }> {
+  const response = await fetch(`${API_BASE_URL}/api/email-verification/check-email?email=${encodeURIComponent(email)}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to check email');
+  }
+
+  return response.json();
+}

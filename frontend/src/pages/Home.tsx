@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import WorkoutGenerator from '../components/WorkoutGenerator';
 import PricingPlans from '../components/PricingPlans';
 import PaywallModal from '../components/PaywallModal';
+import RestoreCredits from '../components/RestoreCredits';
 import { getDeviceId, getTokenBalance, setTokenBalance as updateTokenStorage } from '../utils/storage';
 import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus } from '../services/api';
 import { useHeroContext } from '../components/Layout';
@@ -16,6 +17,7 @@ function Home() {
   const [freeWorkoutsRemaining, setFreeWorkoutsRemaining] = useState<number>(3);
   const [accessStatus, setAccessStatus] = useState<UserAccessStatus | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [showRestoreCredits, setShowRestoreCredits] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
   const { setHeroContent } = useHeroContext();
 

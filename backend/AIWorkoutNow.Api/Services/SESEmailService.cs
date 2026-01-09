@@ -74,5 +74,22 @@ Message:
 
         await SendEmailAsync(adminEmail, subject, body);
     }
+
+    public async Task SendVerificationCodeAsync(string email, string code)
+    {
+        var subject = "Your AIWorkoutNow Verification Code";
+        var body = $@"Hello,
+
+Your verification code for AIWorkoutNow is: {code}
+
+This code will expire in 10 minutes.
+
+If you didn't request this code, please ignore this email.
+
+Best regards,
+AIWorkoutNow Team";
+
+        await SendEmailAsync(email, subject, body);
+    }
 }
 

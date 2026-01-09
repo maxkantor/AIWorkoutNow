@@ -16,6 +16,8 @@ public class DynamoDBService : IDynamoDBService
     private readonly string _progressLogsTable;
     private readonly string _adminUsersTable;
     private readonly string _contactMessagesTable;
+    private readonly string _emailVerificationTable;
+    private readonly string _emailVisitorMappingTable;
 
     public DynamoDBService(IAmazonDynamoDB dynamoDB)
     {
@@ -31,6 +33,8 @@ public class DynamoDBService : IDynamoDBService
         _progressLogsTable = Environment.GetEnvironmentVariable("PROGRESS_LOGS_TABLE") ?? $"{tablePrefix}-ProgressLogs";
         _adminUsersTable = Environment.GetEnvironmentVariable("ADMIN_USERS_TABLE") ?? $"{tablePrefix}-AdminUsers";
         _contactMessagesTable = Environment.GetEnvironmentVariable("CONTACT_MESSAGES_TABLE") ?? $"{tablePrefix}-ContactMessages";
+        _emailVerificationTable = Environment.GetEnvironmentVariable("EMAIL_VERIFICATION_TABLE") ?? $"{tablePrefix}-EmailVerification";
+        _emailVisitorMappingTable = Environment.GetEnvironmentVariable("EMAIL_VISITOR_MAPPING_TABLE") ?? $"{tablePrefix}-EmailVisitorMapping";
     }
 
     public async Task SaveWorkoutAsync(Workout workout)
@@ -1438,6 +1442,227 @@ public class DynamoDBService : IDynamoDBService
         }
 
         return total;
+    }
+
+    // Email Verification Methods
+    public async Task SaveEmailVerificationCodeAsync(EmailVerificationCode code)
+    {
+        try
+        {
+            var document = new Document();
+            document["Email"] = code.Email.ToLowerInvariant();
+            document["Code"] = code.Code;
+            document["ExpiresAt"] = code.ExpiresAt.ToString("O");
+            document["Attempts"] = code.Attempts;
+
+            await _dynamoDB.PutItemAsync(new PutItemRequest
+            {
+                TableName = _emailVerificationTable,
+                Item = document.ToAttributeMap()
+            });
+        }
+        catch (ResourceNotFoundException)
+        {
+            Console.WriteLine($"[DynamoDBService] EmailVerification table does not exist: {_emailVerificationTable}");
+            throw;
+        }
+    }
+
+    public async Task<EmailVerificationCode?> GetEmailVerificationCodeAsync(string email)
+    {
+        try
+        {
+            var response = await _dynamoDB.GetItemAsync(new GetItemRequest
+            {
+                TableName = _emailVerificationTable,
+                Key = new Dictionary<string, AttributeValue>
+                {
+                    { "Email", new AttributeValue { S = email.ToLowerInvariant() } }
+                }
+            });
+
+            if (!response.Item.Any())
+                return null;
+
+            return new EmailVerificationCode
+            {
+                Email = response.Item["Email"].S,
+                Code = response.Item["Code"].S,
+                ExpiresAt = DateTime.Parse(response.Item["ExpiresAt"].S),
+                Attempts = response.Item.ContainsKey("Attempts") ? int.Parse(response.Item["Attempts"].N) : 0
+            };
+        }
+        catch (ResourceNotFoundException)
+        {
+            Console.WriteLine($"[DynamoDBService] EmailVerification table does not exist: {_emailVerificationTable}");
+            return null;
+        }
+    }
+
+    public async Task DeleteEmailVerificationCodeAsync(string email)
+    {
+        try
+        {
+            await _dynamoDB.DeleteItemAsync(new DeleteItemRequest
+            {
+                TableName = _emailVerificationTable,
+                Key = new Dictionary<string, AttributeValue>
+                {
+                    { "Email", new AttributeValue { S = email.ToLowerInvariant() } }
+                }
+            });
+        }
+        catch (ResourceNotFoundException)
+        {
+            Console.WriteLine($"[DynamoDBService] EmailVerification table does not exist: {_emailVerificationTable}");
+        }
+    }
+
+    // Email-Visitor ID Mapping Methods
+    public async Task SaveEmailVisitorMappingAsync(EmailVisitorMapping mapping)
+    {
+        try
+        {
+            var document = new Document();
+            document["Email"] = mapping.Email.ToLowerInvariant();
+            document["VisitorIds"] = string.Join(",", mapping.VisitorIds);
+            document["CreatedAt"] = mapping.CreatedAt.ToString("O");
+            document["UpdatedAt"] = mapping.UpdatedAt.ToString("O");
+
+            await _dynamoDB.PutItemAsync(new PutItemRequest
+            {
+                TableName = _emailVisitorMappingTable,
+                Item = document.ToAttributeMap()
+            });
+        }
+        catch (ResourceNotFoundException)
+        {
+            Console.WriteLine($"[DynamoDBService] EmailVisitorMapping table does not exist: {_emailVisitorMappingTable}");
+            throw;
+        }
+    }
+
+    public async Task<EmailVisitorMapping?> GetEmailVisitorMappingAsync(string email)
+    {
+        try
+        {
+            var response = await _dynamoDB.GetItemAsync(new GetItemRequest
+            {
+                TableName = _emailVisitorMappingTable,
+                Key = new Dictionary<string, AttributeValue>
+                {
+                    { "Email", new AttributeValue { S = email.ToLowerInvariant() } }
+                }
+            });
+
+            if (!response.Item.Any())
+                return null;
+
+            var visitorIdsStr = response.Item["VisitorIds"].S;
+            var visitorIds = string.IsNullOrEmpty(visitorIdsStr) 
+                ? new List<string>() 
+                : visitorIdsStr.Split(',').Where(id => !string.IsNullOrEmpty(id)).ToList();
+
+            return new EmailVisitorMapping
+            {
+                Email = response.Item["Email"].S,
+                VisitorIds = visitorIds,
+                CreatedAt = DateTime.Parse(response.Item["CreatedAt"].S),
+                UpdatedAt = DateTime.Parse(response.Item["UpdatedAt"].S)
+            };
+        }
+        catch (ResourceNotFoundException)
+        {
+            Console.WriteLine($"[DynamoDBService] EmailVisitorMapping table does not exist: {_emailVisitorMappingTable}");
+            return null;
+        }
+    }
+
+    public async Task<List<string>> GetVisitorIdsByEmailAsync(string email)
+    {
+        var mapping = await GetEmailVisitorMappingAsync(email);
+        return mapping?.VisitorIds ?? new List<string>();
+    }
+
+    public async Task MergeCreditsFromVisitorIdsAsync(string targetDeviceId, List<string> sourceVisitorIds)
+    {
+        Console.WriteLine($"[DynamoDBService] Merging credits from {sourceVisitorIds.Count} visitor IDs to {targetDeviceId}");
+        
+        // Get target device tokens
+        var targetTokens = await GetUserTokensAsync(targetDeviceId) ?? new UserTokens
+        {
+            DeviceId = targetDeviceId,
+            TokensRemaining = 0,
+            ExpiresAt = null
+        };
+
+        int totalTokens = targetTokens.TokensRemaining;
+        DateTime? latestExpiration = targetTokens.ExpiresAt;
+
+        // Merge tokens from all source visitor IDs
+        foreach (var visitorId in sourceVisitorIds)
+        {
+            if (visitorId == targetDeviceId) continue; // Skip self
+
+            var sourceTokens = await GetUserTokensAsync(visitorId);
+            if (sourceTokens != null && sourceTokens.TokensRemaining > 0)
+            {
+                Console.WriteLine($"[DynamoDBService] Merging {sourceTokens.TokensRemaining} tokens from {visitorId}");
+                
+                // If source has unlimited (999999), preserve unlimited status
+                if (sourceTokens.TokensRemaining >= 999999)
+                {
+                    totalTokens = 999999;
+                    // Use the latest expiration date
+                    if (sourceTokens.ExpiresAt.HasValue && 
+                        (!latestExpiration.HasValue || sourceTokens.ExpiresAt.Value > latestExpiration.Value))
+                    {
+                        latestExpiration = sourceTokens.ExpiresAt;
+                    }
+                }
+                else if (totalTokens < 999999)
+                {
+                    // Add regular tokens (but don't exceed 999999)
+                    totalTokens = Math.Min(totalTokens + sourceTokens.TokensRemaining, 999998);
+                }
+
+                // Merge purchases - copy all purchases from source to target
+                var sourcePurchases = await GetUserPurchasesAsync(visitorId);
+                foreach (var purchase in sourcePurchases)
+                {
+                    // Check if purchase already exists for target device
+                    var existingPurchases = await GetUserPurchasesAsync(targetDeviceId);
+                    if (!existingPurchases.Any(p => p.PurchaseId == purchase.PurchaseId))
+                    {
+                        // Create a copy of the purchase with target device ID
+                        var newPurchase = new UserPurchase
+                        {
+                            PurchaseId = purchase.PurchaseId,
+                            DeviceId = targetDeviceId,
+                            PlanId = purchase.PlanId,
+                            Status = purchase.Status,
+                            PurchasedAt = purchase.PurchasedAt,
+                            ExpiresAt = purchase.ExpiresAt,
+                            IsUnlimited = purchase.IsUnlimited,
+                            TokensGranted = purchase.TokensGranted,
+                            CustomerEmail = purchase.CustomerEmail,
+                            CustomerName = purchase.CustomerName,
+                            StripeSessionId = purchase.StripeSessionId,
+                            StripePaymentIntentId = purchase.StripePaymentIntentId
+                        };
+                        await SaveUserPurchaseAsync(newPurchase);
+                        Console.WriteLine($"[DynamoDBService] Copied purchase {purchase.PurchaseId} to target device");
+                    }
+                }
+            }
+        }
+
+        // Update target device tokens
+        targetTokens.TokensRemaining = totalTokens;
+        targetTokens.ExpiresAt = latestExpiration;
+        await SaveUserTokensAsync(targetTokens);
+        
+        Console.WriteLine($"[DynamoDBService] Merged credits complete - Target device now has {totalTokens} tokens, expires: {latestExpiration}");
     }
 
     private List<PricingPlan> GetDefaultPricingPlans()

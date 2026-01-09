@@ -75,3 +75,18 @@ public class ContactMessage
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
+public class EmailVerificationCode
+{
+    public string Email { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+    public DateTime ExpiresAt { get; set; } = DateTime.UtcNow.AddMinutes(10);
+    public int Attempts { get; set; } = 0;
+}
+
+public class EmailVisitorMapping
+{
+    public string Email { get; set; } = string.Empty;
+    public List<string> VisitorIds { get; set; } = new();
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+}

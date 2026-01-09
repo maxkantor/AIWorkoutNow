@@ -488,6 +488,39 @@ public class StripeController : ControllerBase
                     // Save purchase record (may fail if table doesn't exist, but that's OK)
                     await _dynamoService.SaveUserPurchaseAsync(purchase);
 
+                    // Link email to visitor ID for cross-device access
+                    if (!string.IsNullOrEmpty(customerEmail))
+                    {
+                        try
+                        {
+                            var mapping = await _dynamoService.GetEmailVisitorMappingAsync(customerEmail);
+                            if (mapping == null)
+                            {
+                                mapping = new EmailVisitorMapping
+                                {
+                                    Email = customerEmail.ToLowerInvariant(),
+                                    VisitorIds = new List<string> { deviceId },
+                                    CreatedAt = DateTime.UtcNow,
+                                    UpdatedAt = DateTime.UtcNow
+                                };
+                            }
+                            else
+                            {
+                                if (!mapping.VisitorIds.Contains(deviceId))
+                                {
+                                    mapping.VisitorIds.Add(deviceId);
+                                }
+                                mapping.UpdatedAt = DateTime.UtcNow;
+                            }
+                            await _dynamoService.SaveEmailVisitorMappingAsync(mapping);
+                            Console.WriteLine($"[StripeController] Linked email {customerEmail} to device {deviceId}");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[StripeController] Failed to link email to visitor ID (non-critical): {ex.Message}");
+                        }
+                    }
+
                     // Track activity
                     try
                     {
@@ -801,6 +834,39 @@ public class StripeController : ControllerBase
                 catch (Exception ex)
                 {
                     Console.WriteLine($"[StripeController] Failed to save purchase record (non-critical): {ex.Message}");
+                }
+
+                // Link email to visitor ID for cross-device access
+                if (!string.IsNullOrEmpty(customerEmail))
+                {
+                    try
+                    {
+                        var mapping = await _dynamoService.GetEmailVisitorMappingAsync(customerEmail);
+                        if (mapping == null)
+                        {
+                            mapping = new EmailVisitorMapping
+                            {
+                                Email = customerEmail.ToLowerInvariant(),
+                                VisitorIds = new List<string> { request.DeviceId },
+                                CreatedAt = DateTime.UtcNow,
+                                UpdatedAt = DateTime.UtcNow
+                            };
+                        }
+                        else
+                        {
+                            if (!mapping.VisitorIds.Contains(request.DeviceId))
+                            {
+                                mapping.VisitorIds.Add(request.DeviceId);
+                            }
+                            mapping.UpdatedAt = DateTime.UtcNow;
+                        }
+                        await _dynamoService.SaveEmailVisitorMappingAsync(mapping);
+                        Console.WriteLine($"[StripeController] VerifyPayment - Linked email {customerEmail} to device {request.DeviceId}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[StripeController] VerifyPayment - Failed to link email to visitor ID (non-critical): {ex.Message}");
+                    }
                 }
 
                 Console.WriteLine($"[StripeController] Payment verified and tokens granted - IsUnlimited: {purchase.IsUnlimited}, TokensGranted: {purchase.TokensGranted}");
