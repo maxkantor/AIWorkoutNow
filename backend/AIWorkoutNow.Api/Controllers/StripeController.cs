@@ -142,7 +142,7 @@ public class StripeController : ControllerBase
 
             var frontendBaseUrl = _configService.GetFrontendBaseUrl();
             var successUrl = $"{frontendBaseUrl}/payment-success?session_id={{CHECKOUT_SESSION_ID}}";
-            var cancelUrl = $"{frontendBaseUrl}/payment-cancel";
+            var cancelUrl = $"{frontendBaseUrl}/"; // Redirect directly to home, no cancellation screen
 
             // Create checkout session with amount directly (no need for pre-created products/prices)
             var amountInCents = (int)(plan.Price * 100); // Convert to cents
