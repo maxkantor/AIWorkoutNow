@@ -12,15 +12,18 @@ public class AdminController : ControllerBase
     private readonly IDynamoDBService _dynamoService;
     private readonly IAuthService _authService;
     private readonly IEmailService _emailService;
+    private readonly IConfigService _configService;
 
     public AdminController(
         IDynamoDBService dynamoService,
         IAuthService authService,
-        IEmailService emailService)
+        IEmailService emailService,
+        IConfigService configService)
     {
         _dynamoService = dynamoService;
         _authService = authService;
         _emailService = emailService;
+        _configService = configService;
     }
 
     [HttpPost("admin/login")]
@@ -278,6 +281,18 @@ public class AdminController : ControllerBase
             
             // AGGRESSIVE FIX: Enrich purchases with plan details for Admin CRM
             var enrichedPurchases = new List<object>();
+            
+            // Get Stripe secret key for fetching customer data
+            string? stripeSecretKey = null;
+            try
+            {
+                stripeSecretKey = await _configService.GetStripeSecretKeyAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[AdminController] Error getting Stripe secret key: {ex.Message}");
+            }
+            
             foreach (var purchase in purchases)
             {
                 var plan = await _dynamoService.GetPricingPlanAsync(purchase.PlanId);
@@ -309,6 +324,97 @@ public class AdminController : ControllerBase
                     };
                 }
                 
+                // CRITICAL FIX: Backfill customer data from Stripe if missing
+                string? customerEmail = purchase.CustomerEmail;
+                string? customerName = purchase.CustomerName;
+                bool needsUpdate = false;
+                
+                if ((string.IsNullOrEmpty(customerEmail) || string.IsNullOrEmpty(customerName)) && 
+                    !string.IsNullOrEmpty(purchase.StripeSessionId) && 
+                    !string.IsNullOrEmpty(stripeSecretKey))
+                {
+                    Console.WriteLine($"[AdminController] Purchase {purchase.PurchaseId} missing customer data, fetching from Stripe session {purchase.StripeSessionId}");
+                    try
+                    {
+                        using var httpClient = new HttpClient();
+                        httpClient.DefaultRequestHeaders.Authorization = 
+                            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", stripeSecretKey);
+                        
+                        var sessionUrl = $"https://api.stripe.com/v1/checkout/sessions/{purchase.StripeSessionId}";
+                        var sessionResponse = await httpClient.GetAsync(sessionUrl);
+                        
+                        if (sessionResponse.IsSuccessStatusCode)
+                        {
+                            var sessionContent = await sessionResponse.Content.ReadAsStringAsync();
+                            var sessionData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(sessionContent);
+                            
+                            // Get customer_details
+                            if (sessionData != null && sessionData.ContainsKey("customer_details"))
+                            {
+                                var customerDetails = (System.Text.Json.JsonElement)sessionData["customer_details"];
+                                if (customerDetails.TryGetProperty("email", out var emailElement))
+                                    customerEmail = emailElement.GetString();
+                                if (customerDetails.TryGetProperty("name", out var nameElement))
+                                    customerName = nameElement.GetString();
+                                
+                                Console.WriteLine($"[AdminController] Fetched from customer_details - Email: {customerEmail}, Name: {customerName}");
+                            }
+                            
+                            // If not in customer_details, try customer object
+                            if (string.IsNullOrEmpty(customerEmail) && sessionData != null && sessionData.ContainsKey("customer"))
+                            {
+                                var customerId = sessionData["customer"]?.ToString();
+                                if (!string.IsNullOrEmpty(customerId))
+                                {
+                                    var customerUrl = $"https://api.stripe.com/v1/customers/{customerId}";
+                                    var customerResponse = await httpClient.GetAsync(customerUrl);
+                                    if (customerResponse.IsSuccessStatusCode)
+                                    {
+                                        var customerContent = await customerResponse.Content.ReadAsStringAsync();
+                                        var customerData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(customerContent);
+                                        if (customerData != null)
+                                        {
+                                            if (customerData.ContainsKey("email"))
+                                                customerEmail = customerData["email"]?.ToString();
+                                            if (customerData.ContainsKey("name"))
+                                                customerName = customerData["name"]?.ToString();
+                                            
+                                            Console.WriteLine($"[AdminController] Fetched from customer object - Email: {customerEmail}, Name: {customerName}");
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Update purchase if we got customer data
+                            if (!string.IsNullOrEmpty(customerEmail) || !string.IsNullOrEmpty(customerName))
+                            {
+                                purchase.CustomerEmail = customerEmail ?? purchase.CustomerEmail;
+                                purchase.CustomerName = customerName ?? purchase.CustomerName;
+                                needsUpdate = true;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[AdminController] Error fetching customer data from Stripe: {ex.Message}");
+                        // Non-critical, continue with existing data
+                    }
+                }
+                
+                // Save updated purchase if we fetched customer data
+                if (needsUpdate)
+                {
+                    try
+                    {
+                        await _dynamoService.SaveUserPurchaseAsync(purchase);
+                        Console.WriteLine($"[AdminController] Updated purchase {purchase.PurchaseId} with customer data - Email: {customerEmail}, Name: {customerName}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[AdminController] Error saving updated purchase: {ex.Message}");
+                    }
+                }
+                
                 enrichedPurchases.Add(new
                 {
                     purchaseId = purchase.PurchaseId,
@@ -329,8 +435,8 @@ public class AdminController : ControllerBase
                     isUnlimited = purchase.IsUnlimited,
                     stripeSessionId = purchase.StripeSessionId,
                     stripePaymentIntentId = purchase.StripePaymentIntentId,
-                    customerEmail = purchase.CustomerEmail ?? string.Empty,
-                    customerName = purchase.CustomerName ?? string.Empty
+                    customerEmail = customerEmail ?? string.Empty,
+                    customerName = customerName ?? string.Empty
                 });
             }
             
