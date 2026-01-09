@@ -155,6 +155,39 @@ function PaywallModal({ isOpen, onClose, onPurchaseComplete: _onPurchaseComplete
               <p className="comparison-text">
                 Other fitness apps charge $10–$30/month. We don't.
               </p>
+              <button
+                onClick={() => {
+                  onClose();
+                  // Trigger restore credits on home page
+                  setTimeout(() => {
+                    const event = new CustomEvent('openRestoreCredits');
+                    window.dispatchEvent(event);
+                  }, 300);
+                }}
+                className="restore-credits-link"
+                style={{
+                  marginTop: '1rem',
+                  padding: '0.5rem 1rem',
+                  background: 'transparent',
+                  border: '1px solid #3b82f6',
+                  borderRadius: '0.5rem',
+                  color: '#3b82f6',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#3b82f6';
+                  e.currentTarget.style.color = 'white';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = '#3b82f6';
+                }}
+              >
+                📱 Restore credits from another device
+              </button>
             </div>
           </>
         )}

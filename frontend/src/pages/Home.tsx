@@ -23,6 +23,20 @@ function Home() {
 
   useEffect(() => {
     checkAccessStatus();
+    
+    // Listen for restore credits event from PricingPlans
+    const handleOpenRestoreCredits = () => {
+      setShowRestoreCredits(true);
+      setTimeout(() => {
+        const section = document.getElementById('restore-credits-section');
+        if (section) {
+          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    };
+    
+    window.addEventListener('openRestoreCredits', handleOpenRestoreCredits);
+    return () => window.removeEventListener('openRestoreCredits', handleOpenRestoreCredits);
   }, []);
 
   useEffect(() => {
@@ -272,13 +286,19 @@ function Home() {
                 />
               </div>
 
-              {/* Restore Credits Section */}
-              {!checkingAccess && (tokenBalance === null || tokenBalance === 0) && freeWorkoutsRemaining === 0 && !accessStatus?.hasUnlimitedAccess && (
-                <div className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-6 mt-8">
+              {/* Restore Credits Section - Always visible */}
+              {!checkingAccess && (
+                <div id="restore-credits-section" className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-6 mt-8">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h3 className="text-lg font-bold text-slate-800 mb-1">Access Your Credits from Another Device?</h3>
-                      <p className="text-sm text-slate-600">If you purchased credits on another device, restore them here.</p>
+                      <h3 className="text-lg font-bold text-slate-800 mb-1">
+                        {!showRestoreCredits ? 'Access Your Credits from Another Device?' : 'Restore Credits'}
+                      </h3>
+                      <p className="text-sm text-slate-600">
+                        {!showRestoreCredits 
+                          ? 'Purchased credits on another device? Enter your email to restore them here.' 
+                          : 'Enter the email you used when purchasing to restore your credits.'}
+                      </p>
                     </div>
                   </div>
                   {!showRestoreCredits ? (
