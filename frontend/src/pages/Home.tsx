@@ -44,14 +44,16 @@ function Home() {
       const status = await getUserAccessStatus(deviceId);
       setAccessStatus(status);
       
-      // CRITICAL FIX: Always use API response values, never localStorage for unlimited detection
-      // If API says hasUnlimitedAccess is false, respect that even if tokensRemaining is high
-      if (status.hasUnlimitedAccess && status.tokensRemaining >= 999999) {
+      // CRITICAL FIX: Backend returns hasUnlimitedAccess=false when tokens are reset (e.g., to 7)
+      // ALWAYS respect the API response - if hasUnlimitedAccess is false, never show unlimited
+      // Even if tokensRemaining is high, if hasUnlimitedAccess is false, treat it as regular tokens
+      if (status.hasUnlimitedAccess === true && status.tokensRemaining >= 999999) {
         // Only set unlimited if API explicitly confirms it
         setTokenBalance(status.tokensRemaining);
         updateTokenStorage(deviceId, status.tokensRemaining);
-      } else if (status.tokensRemaining > 0 && status.tokensRemaining < 999999) {
-        // Regular token count (not unlimited)
+      } else if (status.tokensRemaining > 0) {
+        // Regular token count (including when reset to 7 - hasUnlimitedAccess will be false)
+        // This handles both regular tokens AND admin resets
         setTokenBalance(status.tokensRemaining);
         updateTokenStorage(deviceId, status.tokensRemaining);
       } else {
