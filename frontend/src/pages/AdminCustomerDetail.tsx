@@ -73,7 +73,7 @@ function AdminCustomerDetail() {
       setShowResetModal(false);
       setResetReason('');
     } catch (err: any) {
-      setError(err.message || 'Failed to reset tokens');
+      setError(err.message || 'Failed to reset workouts');
     } finally {
       setResetting(false);
     }
@@ -116,7 +116,7 @@ function AdminCustomerDetail() {
               onClick={() => setShowResetModal(true)}
               className="btn btn-warning"
             >
-              Reset Tokens
+              Reset Workouts
             </button>
           </div>
 
@@ -148,7 +148,7 @@ function AdminCustomerDetail() {
             <div className="info-card">
               <h3>Account Stats</h3>
               <div className="info-row">
-                <span className="label">Tokens Remaining:</span>
+                <span className="label">💪Remaining Workouts:</span>
                 <span className="value highlight">{customer.tokensRemaining}</span>
               </div>
               <div className="info-row">
@@ -221,12 +221,12 @@ function AdminCustomerDetail() {
       {showResetModal && (
         <div className="modal-overlay" onClick={() => setShowResetModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Reset User Tokens</h2>
+            <h2>Reset User Workouts</h2>
             <div className="form-group">
-              <label>Current Tokens: {customer.tokensRemaining}</label>
+              <label>Current 💪Remaining Workouts: {customer.tokensRemaining}</label>
             </div>
             <div className="form-group">
-              <label>New Token Count:</label>
+              <label>New Workout Count:</label>
               <input
                 type="number"
                 value={newTokenCount}
@@ -240,7 +240,7 @@ function AdminCustomerDetail() {
               <textarea
                 value={resetReason}
                 onChange={(e) => setResetReason(e.target.value)}
-                placeholder="Reason for resetting tokens..."
+                placeholder="Reason for resetting workouts..."
                 className="input"
                 rows={3}
               />

@@ -133,7 +133,7 @@ function AdminPurchases() {
                   <th>Email</th>
                   <th>Pack Type</th>
                   <th>Amount</th>
-                  <th>Tokens</th>
+                  <th>💪Remaining Workouts</th>
                   <th>Status</th>
                   <th>Payment Intent</th>
                   <th>Actions</th>

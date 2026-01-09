@@ -85,7 +85,7 @@ function AdminCustomers() {
                   <th>Email</th>
                   <th>Name</th>
                   <th>Type</th>
-                  <th>Tokens</th>
+                  <th>💪Remaining Workouts</th>
                   <th>Workouts</th>
                   <th>Purchases</th>
                   <th>Total Spent</th>

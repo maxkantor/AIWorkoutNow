@@ -64,7 +64,7 @@ function TokenPacks() {
             <div className="pack-price">
               <span className="price-amount">${pack.price}</span>
             </div>
-            <div className="pack-tokens">{pack.tokens} Tokens</div>
+            <div className="pack-tokens">{pack.tokens} Workouts</div>
             <p className="pack-description">{pack.description}</p>
             <ul className="pack-features">
               <li>✓ Unlimited AI workouts</li>
@@ -84,7 +84,7 @@ function TokenPacks() {
       </div>
       
       <p className="pack-note">
-        * 1 token = 1 workout. Tokens never expire. No subscription required.
+        * 1 workout = 1 remaining workout. Workouts never expire. No subscription required.
       </p>
     </div>
   );
