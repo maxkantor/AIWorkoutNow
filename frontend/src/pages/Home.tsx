@@ -29,6 +29,7 @@ function Home() {
       accessStatus: accessStatus ? {
         hasUnlimitedAccess: accessStatus.hasUnlimitedAccess,
         unlimitedExpiresAt: accessStatus.unlimitedExpiresAt || undefined,
+        tokensRemaining: accessStatus.tokensRemaining,
       } : undefined,
       tokenBalance,
       checkingAccess,
