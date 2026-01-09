@@ -72,7 +72,6 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
     setCode('');
     setError(null);
     setSuccess(null);
-    setCodeSent(false);
     setAttemptsRemaining(null);
   };
 
