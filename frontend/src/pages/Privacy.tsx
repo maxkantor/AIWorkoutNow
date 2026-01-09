@@ -1,7 +1,10 @@
 import { Helmet } from 'react-helmet-async';
+import { useNavigate } from 'react-router-dom';
 import './Privacy.css';
 
 function Privacy() {
+  const navigate = useNavigate();
+  
   return (
     <>
       <Helmet>
@@ -11,6 +14,9 @@ function Privacy() {
       
       <div className="privacy-page">
         <div className="container">
+          <button onClick={() => navigate('/')} className="back-button">
+            ← Back to Home
+          </button>
           <div className="content-card">
             <h1>Privacy Policy</h1>
             <p className="last-updated">Last Updated: {new Date().toLocaleDateString()}</p>

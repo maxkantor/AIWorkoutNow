@@ -1,7 +1,10 @@
 import { Helmet } from 'react-helmet-async';
+import { useNavigate } from 'react-router-dom';
 import './About.css';
 
 function About() {
+  const navigate = useNavigate();
+  
   return (
     <>
       <Helmet>
@@ -11,6 +14,9 @@ function About() {
       
       <div className="about-page">
         <div className="container">
+          <button onClick={() => navigate('/')} className="back-button">
+            ← Back to Home
+          </button>
           <div className="content-card">
             <h1>About AIWorkoutNow</h1>
             

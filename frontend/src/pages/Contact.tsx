@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useNavigate } from 'react-router-dom';
 import { submitContact } from '../services/api';
 import './Contact.css';
 
 function Contact() {
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('');
@@ -88,6 +90,9 @@ function Contact() {
       
       <div className="contact-page">
         <div className="container">
+          <button onClick={() => navigate('/')} className="back-button">
+            ← Back to Home
+          </button>
           <div className="content-card">
             <h1>Contact Us</h1>
             <p>

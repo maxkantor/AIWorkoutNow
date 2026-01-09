@@ -12,9 +12,31 @@ html, body {
 main.min-h-screen {
   min-height: calc(100vh - 200px);
   background: #f8fafc;
+  background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  position: relative;
   padding: clamp(1.25rem, 2.5vw, 2rem) 0;
   width: 100%;
   overflow-x: hidden;
+}
+
+main.min-h-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(248, 250, 252, 0.85);
+  z-index: 0;
+}
+
+main.min-h-screen > * {
+  position: relative;
+  z-index: 1;
 }
 
 .max-w-7xl {

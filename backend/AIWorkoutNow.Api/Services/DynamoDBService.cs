@@ -886,12 +886,20 @@ public class DynamoDBService : IDynamoDBService
             tokens = new UserTokens
             {
                 DeviceId = deviceId,
-                TokensRemaining = newTokenCount
+                TokensRemaining = newTokenCount,
+                ExpiresAt = null // No expiration for non-unlimited tokens
             };
         }
         else
         {
             tokens.TokensRemaining = newTokenCount;
+            // CRITICAL FIX: If resetting from unlimited (999999) to a lower number, clear expiration
+            // This ensures the system doesn't still think it's unlimited
+            if (newTokenCount < 999999)
+            {
+                tokens.ExpiresAt = null;
+                Console.WriteLine($"[DynamoDBService] Reset tokens from unlimited to {newTokenCount}, cleared ExpiresAt");
+            }
         }
 
         await SaveUserTokensAsync(tokens);
