@@ -314,7 +314,11 @@ public class PricingController : ControllerBase
             }
             
             // AGGRESSIVE FIX: If tokens are low (< 999999), check Stripe for completed payments
-            if (tokensRemaining < 999999)
+            // BUT: Skip this if tokens are exactly 5 or another small number (likely admin reset)
+            // Only check Stripe if tokens are 0 or very low (not explicitly set by admin)
+            bool shouldCheckStripe = tokensRemaining < 999999 && (tokensRemaining == 0 || tokensRemaining < 10);
+            
+            if (shouldCheckStripe)
             {
                 Console.WriteLine($"[PricingController] Tokens are low ({tokensRemaining}), checking Stripe for completed unlimited purchases...");
                 try
@@ -479,9 +483,23 @@ public class PricingController : ControllerBase
             // Check if tokens indicate unlimited access (999999 is our marker for unlimited)
             var hasUnlimitedFromTokens = tokensRemaining >= 999999;
             
-            // Check unlimited access from purchases table
-            var unlimitedPurchase = await _dynamoService.GetActiveUnlimitedPurchaseAsync(deviceId);
-            var hasUnlimitedFromPurchase = unlimitedPurchase != null;
+            // CRITICAL FIX: If tokens are explicitly set to a non-unlimited value (admin reset),
+            // respect that override and DON'T check for unlimited purchases
+            // This ensures admin token resets take precedence over unlimited purchases
+            bool hasUnlimitedFromPurchase = false;
+            var unlimitedPurchase = (UserPurchase?)null;
+            
+            // Only check for unlimited purchases if tokens are actually unlimited
+            // If tokens are < 999999, it means admin explicitly reset them, so respect that
+            if (hasUnlimitedFromTokens)
+            {
+                unlimitedPurchase = await _dynamoService.GetActiveUnlimitedPurchaseAsync(deviceId);
+                hasUnlimitedFromPurchase = unlimitedPurchase != null;
+            }
+            else if (tokensRemaining < 999999 && tokensRemaining >= 10)
+            {
+                Console.WriteLine($"[PricingController] Tokens are {tokensRemaining} (likely admin reset), respecting admin reset - NOT checking for unlimited purchases");
+            }
             
             Console.WriteLine($"[PricingController] Unlimited check - FromTokens: {hasUnlimitedFromTokens}, FromPurchase: {hasUnlimitedFromPurchase}");
             if (unlimitedPurchase != null)
