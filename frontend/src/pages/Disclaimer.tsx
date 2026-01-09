@@ -1,7 +1,10 @@
 import { Helmet } from 'react-helmet-async';
+import { useNavigate } from 'react-router-dom';
 import './Disclaimer.css';
 
 function Disclaimer() {
+  const navigate = useNavigate();
+  
   return (
     <>
       <Helmet>
@@ -11,6 +14,9 @@ function Disclaimer() {
       
       <div className="disclaimer-page">
         <div className="container">
+          <button onClick={() => navigate('/')} className="back-button">
+            ← Back to Home
+          </button>
           <div className="content-card">
             <h1>Disclaimer</h1>
             
