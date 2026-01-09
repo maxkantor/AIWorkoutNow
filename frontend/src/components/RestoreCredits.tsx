@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { getDeviceId } from '../utils/storage';
-import { sendVerificationCode, verifyAndRestoreCredits, checkEmailLinked } from '../services/api';
+import { sendVerificationCode, verifyAndRestoreCredits } from '../services/api';
 import './RestoreCredits.css';
 
 interface RestoreCreditsProps {
@@ -14,7 +14,6 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<{ tokensRemaining: number; hasUnlimited: boolean; expiresAt?: string } | null>(null);
-  const [codeSent, setCodeSent] = useState(false);
   const [attemptsRemaining, setAttemptsRemaining] = useState<number | null>(null);
 
   const handleSendCode = async () => {
@@ -28,7 +27,6 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
 
     try {
       await sendVerificationCode(email);
-      setCodeSent(true);
       setStep('code');
     } catch (err: any) {
       setError(err.message || 'Failed to send verification code. Please try again.');

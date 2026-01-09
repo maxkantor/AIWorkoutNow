@@ -272,6 +272,32 @@ function Home() {
                 />
               </div>
 
+              {/* Restore Credits Section */}
+              {!checkingAccess && (tokenBalance === null || tokenBalance === 0) && freeWorkoutsRemaining === 0 && !accessStatus?.hasUnlimitedAccess && (
+                <div className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-6 mt-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-800 mb-1">Access Your Credits from Another Device?</h3>
+                      <p className="text-sm text-slate-600">If you purchased credits on another device, restore them here.</p>
+                    </div>
+                  </div>
+                  {!showRestoreCredits ? (
+                    <button
+                      onClick={() => setShowRestoreCredits(true)}
+                      className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all hover:-translate-y-0.5"
+                    >
+                      Restore Credits
+                    </button>
+                  ) : (
+                    <RestoreCredits
+                      onCreditsRestored={() => {
+                        setShowRestoreCredits(false);
+                        checkAccessStatus();
+                      }}
+                    />
+                  )}
+                </div>
+              )}
 
               {/* Trust Badges - Cleaner, More Prominent */}
               <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
