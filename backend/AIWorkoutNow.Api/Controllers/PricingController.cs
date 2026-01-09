@@ -529,6 +529,7 @@ public class PricingController : ControllerBase
             }
             
             // ULTRA AGGRESSIVE FIX: If tokens have unlimited access, ALWAYS ensure expiration is correct
+            // BUT: Skip this entirely if tokens are < 999999 (admin reset) - don't re-grant unlimited
             if (tokens != null && hasUnlimitedFromTokens)
             {
                 Console.WriteLine($"[PricingController] ULTRA AGGRESSIVE FIX: Checking unlimited token expiration...");
@@ -591,6 +592,17 @@ public class PricingController : ControllerBase
                 }
                 // REMOVED: Last resort fix that used UtcNow - this was causing expiration to be set from current date
                 // Instead, we rely on the purchase-based calculation above
+            }
+            else if (tokens != null && tokensRemaining < 999999 && tokensRemaining > 0)
+            {
+                // CRITICAL: If tokens are explicitly set to a non-unlimited value (admin reset),
+                // ensure ExpiresAt is cleared to prevent any confusion
+                if (tokens.ExpiresAt.HasValue)
+                {
+                    Console.WriteLine($"[PricingController] Tokens reset to {tokensRemaining} (admin reset), clearing ExpiresAt to prevent unlimited status");
+                    tokens.ExpiresAt = null;
+                    await _dynamoService.SaveUserTokensAsync(tokens);
+                }
             }
             
             // CRITICAL FIX: If tokens are < 999999 (admin reset), NEVER show unlimited
