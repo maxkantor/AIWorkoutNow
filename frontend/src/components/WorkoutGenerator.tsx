@@ -42,81 +42,102 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = fals
         </p>
       </header>
       
-      <form onSubmit={handleSubmit} className="space-y-4" aria-label="Workout preferences form">
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="fitnessLevel" className="block text-sm font-semibold text-slate-700 mb-2">
-              Fitness Level
-            </label>
-            <select
-              id="fitnessLevel"
-              value={fitnessLevel}
-              onChange={(e) => setFitnessLevel(e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-            >
-              <option value="beginner">Beginner</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
-            </select>
+      <form onSubmit={handleSubmit} className="space-y-6" aria-label="Workout preferences form">
+        {/* Core Preferences Group */}
+        <div className="space-y-5">
+          <div className="border-b border-slate-200 pb-3 mb-1">
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Core Preferences</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label htmlFor="fitnessLevel" className="block text-sm font-bold text-slate-800 mb-2.5">
+                Fitness Level <span className="text-slate-500 font-normal">*</span>
+              </label>
+              <select
+                id="fitnessLevel"
+                value={fitnessLevel}
+                onChange={(e) => setFitnessLevel(e.target.value)}
+                className="w-full px-4 py-3.5 border-2 border-slate-300 rounded-xl bg-white text-slate-800 font-medium focus:ring-4 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all hover:border-slate-400"
+                aria-required="true"
+              >
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="workoutType" className="block text-sm font-bold text-slate-800 mb-2.5">
+                Workout Type <span className="text-slate-500 font-normal">*</span>
+              </label>
+              <select
+                id="workoutType"
+                value={workoutType}
+                onChange={(e) => setWorkoutType(e.target.value)}
+                className="w-full px-4 py-3.5 border-2 border-slate-300 rounded-xl bg-white text-slate-800 font-medium focus:ring-4 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all hover:border-slate-400"
+                aria-required="true"
+              >
+                <option value="full-body">Full Body</option>
+                <option value="upper-body">Upper Body</option>
+                <option value="lower-body">Lower Body</option>
+                <option value="cardio">Cardio</option>
+                <option value="strength">Strength</option>
+                <option value="hiit">HIIT</option>
+                <option value="yoga">Yoga</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label htmlFor="duration" className="block text-sm font-bold text-slate-800 mb-2.5">
+                Duration <span className="text-slate-500 font-normal">*</span>
+              </label>
+              <select
+                id="duration"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                className="w-full px-4 py-3.5 border-2 border-slate-300 rounded-xl bg-white text-slate-800 font-medium focus:ring-4 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all hover:border-slate-400"
+                aria-required="true"
+              >
+                <option value="15">15 min</option>
+                <option value="30">30 min</option>
+                <option value="45">45 min</option>
+                <option value="60">60 min</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="equipment" className="block text-sm font-bold text-slate-800 mb-2.5">
+                Equipment <span className="text-slate-500 font-normal">*</span>
+              </label>
+              <select
+                id="equipment"
+                value={equipment}
+                onChange={(e) => setEquipment(e.target.value)}
+                className="w-full px-4 py-3.5 border-2 border-slate-300 rounded-xl bg-white text-slate-800 font-medium focus:ring-4 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all hover:border-slate-400"
+                aria-required="true"
+              >
+                <option value="minimal">Minimal (Bodyweight)</option>
+                <option value="dumbbells">Dumbbells</option>
+                <option value="full-gym">Full Gym</option>
+                <option value="resistance-bands">Resistance Bands</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Optional Details Group */}
+        <div className="space-y-5 pt-2">
+          <div className="border-b border-slate-200 pb-3 mb-1">
+            <h3 className="text-sm font-bold text-slate-600 uppercase tracking-wide">Optional Details</h3>
           </div>
 
           <div>
-            <label htmlFor="workoutType" className="block text-sm font-semibold text-slate-700 mb-2">
-              Workout Type
-            </label>
-            <select
-              id="workoutType"
-              value={workoutType}
-              onChange={(e) => setWorkoutType(e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-            >
-              <option value="full-body">Full Body</option>
-              <option value="upper-body">Upper Body</option>
-              <option value="lower-body">Lower Body</option>
-              <option value="cardio">Cardio</option>
-              <option value="strength">Strength</option>
-              <option value="hiit">HIIT</option>
-              <option value="yoga">Yoga</option>
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="duration" className="block text-sm font-semibold text-slate-700 mb-2">
-              Duration (minutes)
-            </label>
-            <select
-              id="duration"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-            >
-              <option value="15">15 min</option>
-              <option value="30">30 min</option>
-              <option value="45">45 min</option>
-              <option value="60">60 min</option>
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="equipment" className="block text-sm font-semibold text-slate-700 mb-2">
-              Equipment Available
-            </label>
-            <select
-              id="equipment"
-              value={equipment}
-              onChange={(e) => setEquipment(e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-            >
-              <option value="minimal">Minimal (Bodyweight)</option>
-              <option value="dumbbells">Dumbbells</option>
-              <option value="full-gym">Full Gym</option>
-              <option value="resistance-bands">Resistance Bands</option>
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="injuries" className="block text-sm font-semibold text-slate-700 mb-2">
-              Injuries or Limitations <span className="text-slate-400 font-normal text-xs">(optional)</span>
+            <label htmlFor="injuries" className="block text-sm font-semibold text-slate-700 mb-2.5">
+              Injuries or Limitations
+              <span className="text-slate-400 font-normal text-xs ml-1">(optional)</span>
             </label>
             <input
               type="text"
@@ -124,13 +145,14 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = fals
               value={injuries}
               onChange={(e) => setInjuries(e.target.value)}
               placeholder="e.g., knee injury, lower back pain"
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="w-full px-4 py-3.5 border-2 border-slate-300 rounded-xl bg-white text-slate-800 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all hover:border-slate-400 placeholder:text-slate-400"
             />
           </div>
 
           <div>
-            <label htmlFor="goals" className="block text-sm font-semibold text-slate-700 mb-2">
-              Fitness Goals <span className="text-slate-400 font-normal text-xs">(optional)</span>
+            <label htmlFor="goals" className="block text-sm font-semibold text-slate-700 mb-2.5">
+              Fitness Goals
+              <span className="text-slate-400 font-normal text-xs ml-1">(optional)</span>
             </label>
             <input
               type="text"
@@ -138,7 +160,7 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = fals
               value={goals}
               onChange={(e) => setGoals(e.target.value)}
               placeholder="e.g., weight loss, muscle gain, endurance"
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="w-full px-4 py-3.5 border-2 border-slate-300 rounded-xl bg-white text-slate-800 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all hover:border-slate-400 placeholder:text-slate-400"
             />
           </div>
         </div>
@@ -152,9 +174,22 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = fals
         <button 
           type="submit" 
           disabled={loading || disabled}
-          className="w-full bg-gradient-to-r from-blue-600 to-green-500 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+          className="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 text-white font-bold py-4.5 px-8 rounded-xl shadow-xl hover:shadow-2xl hover:shadow-blue-500/30 transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none focus:outline-none focus:ring-4 focus:ring-blue-500/50 focus:ring-offset-2 text-lg"
+          aria-label={loading ? 'Generating workout' : disabled ? 'Unlock more workouts to continue' : 'Generate AI workout'}
         >
-          {loading ? 'Generating Workout...' : disabled ? 'Unlock More Workouts' : 'Generate AI Workout'}
+          {loading ? (
+            <span className="flex items-center justify-center gap-2">
+              <span className="animate-spin">⚙️</span>
+              Generating Workout...
+            </span>
+          ) : disabled ? (
+            'Unlock More Workouts'
+          ) : (
+            <span className="flex items-center justify-center gap-2">
+              Generate AI Workout
+              <span>→</span>
+            </span>
+          )}
         </button>
       </form>
 

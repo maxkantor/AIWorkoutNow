@@ -39,15 +39,26 @@ function Layout({ children }: LayoutProps) {
           <div className="header-hero">
             {/* Main Title */}
             <div className="header-title-section">
-              <div className="flex items-center justify-center gap-3 mb-2">
+              <div className="flex items-center justify-center gap-3 mb-3">
                 <span className="text-4xl md:text-5xl animate-pulse">💪</span>
-                <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white">
                   Get Your Perfect Workout in Seconds
                 </h1>
               </div>
-              <p className="text-slate-600 text-sm md:text-base text-center max-w-3xl mx-auto mb-4">
+              <p className="text-white text-base md:text-lg text-center max-w-3xl mx-auto mb-6 font-medium">
                 AI-powered, personalized fitness plans tailored to your goals, equipment, and schedule. No signup. No subscription. Just results.
               </p>
+              
+              {/* Primary CTA Button - More Prominent */}
+              <div className="mb-4">
+                <a 
+                  href="#workout-generator" 
+                  className="inline-block px-8 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 text-white font-bold text-lg rounded-xl shadow-2xl hover:shadow-blue-500/50 transform hover:-translate-y-1 transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-offset-2 focus:ring-offset-transparent"
+                  aria-label="Scroll to workout generator"
+                >
+                  Generate AI Workout →
+                </a>
+              </div>
             </div>
 
             {/* Trust Signals */}

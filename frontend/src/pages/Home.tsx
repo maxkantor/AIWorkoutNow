@@ -204,55 +204,55 @@ function Home() {
             {/* Left Column: Why Choose AIWorkoutNow? - Benefits, Stats */}
             <aside className="md:col-span-2 lg:col-span-3 space-y-6 order-3 md:order-3 lg:order-1">
               {/* Why Choose Us */}
-              <section className="bg-slate-50/50 rounded-xl p-6">
-                <h2 className="text-xl font-bold text-slate-800 mb-4">Why Choose AIWorkoutNow?</h2>
+              <section className="bg-slate-50/50 rounded-2xl p-6 border-2 border-slate-200 shadow-lg">
+                <h2 className="text-xl font-bold text-slate-900 mb-5">Why Choose AIWorkoutNow?</h2>
                 <div className="space-y-4">
-                  <div className="bg-white rounded-lg p-4 shadow-sm">
-                    <div className="text-3xl mb-2">🎯</div>
-                    <h3 className="font-semibold text-slate-800 mb-1">100% Personalized</h3>
-                    <p className="text-sm text-slate-600">Every workout is tailored to your fitness level, goals, and available equipment.</p>
+                  <div className="bg-white rounded-xl p-5 shadow-md border border-slate-100 hover:shadow-lg transition-all">
+                    <div className="text-3xl mb-3">🎯</div>
+                    <h3 className="font-bold text-slate-900 mb-2 text-base">100% Personalized</h3>
+                    <p className="text-sm text-slate-600 leading-relaxed">Every workout is tailored to your fitness level, goals, and available equipment.</p>
                   </div>
-                  <div className="bg-white rounded-lg p-4 shadow-sm">
-                    <div className="text-3xl mb-2">⚡</div>
-                    <h3 className="font-semibold text-slate-800 mb-1">Instant Generation</h3>
-                    <p className="text-sm text-slate-600">Get professional-quality workout plans in seconds, not hours of research.</p>
+                  <div className="bg-white rounded-xl p-5 shadow-md border border-slate-100 hover:shadow-lg transition-all">
+                    <div className="text-3xl mb-3">⚡</div>
+                    <h3 className="font-bold text-slate-900 mb-2 text-base">Instant Generation</h3>
+                    <p className="text-sm text-slate-600 leading-relaxed">Get professional-quality workout plans in seconds, not hours of research.</p>
                   </div>
-                  <div className="bg-white rounded-lg p-4 shadow-sm">
-                    <div className="text-3xl mb-2">🏠</div>
-                    <h3 className="font-semibold text-slate-800 mb-1">Home or Gym</h3>
-                    <p className="text-sm text-slate-600">Works with any equipment—from bodyweight to full gym setups.</p>
+                  <div className="bg-white rounded-xl p-5 shadow-md border border-slate-100 hover:shadow-lg transition-all">
+                    <div className="text-3xl mb-3">🏠</div>
+                    <h3 className="font-bold text-slate-900 mb-2 text-base">Home or Gym</h3>
+                    <p className="text-sm text-slate-600 leading-relaxed">Works with any equipment—from bodyweight to full gym setups.</p>
                   </div>
-                  <div className="bg-white rounded-lg p-4 shadow-sm">
-                    <div className="text-3xl mb-2">🔒</div>
-                    <h3 className="font-semibold text-slate-800 mb-1">No Commitment</h3>
-                    <p className="text-sm text-slate-600">Pay once. No subscriptions. No recurring charges. Ever.</p>
+                  <div className="bg-white rounded-xl p-5 shadow-md border border-slate-100 hover:shadow-lg transition-all">
+                    <div className="text-3xl mb-3">🔒</div>
+                    <h3 className="font-bold text-slate-900 mb-2 text-base">No Commitment</h3>
+                    <p className="text-sm text-slate-600 leading-relaxed">Pay once. No subscriptions. No recurring charges. Ever.</p>
                   </div>
                 </div>
               </section>
 
-              {/* Stats */}
-              <section className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl p-6 text-white">
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="text-3xl font-extrabold mb-1">10,000+</div>
-                    <div className="text-sm opacity-90">Workouts Generated</div>
+              {/* Stats - Enhanced Visual Hierarchy */}
+              <section className="bg-gradient-to-br from-blue-600 via-purple-600 to-blue-700 rounded-2xl p-6 text-white shadow-xl">
+                <div className="space-y-6">
+                  <div className="text-center pb-4 border-b border-white/20">
+                    <div className="text-4xl font-black mb-2">10,000+</div>
+                    <div className="text-sm font-semibold opacity-95 uppercase tracking-wide">Workouts Generated</div>
+                  </div>
+                  <div className="text-center pb-4 border-b border-white/20">
+                    <div className="text-4xl font-black mb-2">4.8★</div>
+                    <div className="text-sm font-semibold opacity-95 uppercase tracking-wide">User Rating</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-extrabold mb-1">4.8★</div>
-                    <div className="text-sm opacity-90">User Rating</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-extrabold mb-1">98%</div>
-                    <div className="text-sm opacity-90">Satisfaction Rate</div>
+                    <div className="text-4xl font-black mb-2">98%</div>
+                    <div className="text-sm font-semibold opacity-95 uppercase tracking-wide">Satisfaction Rate</div>
                   </div>
                 </div>
               </section>
             </aside>
 
             {/* Center Column: Workout Generator Form */}
-            <section className="md:col-span-1 lg:col-span-6 order-1 md:order-1 lg:order-2">
+            <section id="workout-generator" className="md:col-span-1 lg:col-span-6 order-1 md:order-1 lg:order-2">
               {/* Workout Generator Form */}
-              <div className="bg-white shadow-xl rounded-2xl border border-slate-100 p-6 md:p-8">
+              <div className="bg-white shadow-2xl rounded-2xl border-2 border-slate-200 p-6 md:p-8 lg:p-10">
                 <WorkoutGenerator
                   onGenerate={handleGenerateWorkout}
                   loading={loading}
@@ -263,30 +263,30 @@ function Home() {
               </div>
 
 
-              {/* Trust Badges - Under Workout Section */}
-              <section className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
-                <div className="bg-white rounded-lg p-3 text-center border border-slate-200 shadow-sm">
-                  <span className="text-xl block mb-1.5">🔒</span>
-                  <span className="text-xs font-semibold text-slate-700">Secure Payment</span>
+              {/* Trust Badges - Cleaner, More Prominent */}
+              <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+                <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
+                  <span className="text-2xl block mb-2">🔒</span>
+                  <span className="text-sm font-bold text-slate-800">Secure Payment</span>
                 </div>
-                <div className="bg-white rounded-lg p-3 text-center border border-slate-200 shadow-sm">
-                  <span className="text-xl block mb-1.5">🚫</span>
-                  <span className="text-xs font-semibold text-slate-700">No Subscription</span>
+                <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
+                  <span className="text-2xl block mb-2">🚫</span>
+                  <span className="text-sm font-bold text-slate-800">No Subscription</span>
                 </div>
-                <div className="bg-white rounded-lg p-3 text-center border border-slate-200 shadow-sm">
-                  <span className="text-xl block mb-1.5">⚡</span>
-                  <span className="text-xs font-semibold text-slate-700">Instant Access</span>
+                <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
+                  <span className="text-2xl block mb-2">⚡</span>
+                  <span className="text-sm font-bold text-slate-800">Instant Access</span>
                 </div>
-                <div className="bg-white rounded-lg p-3 text-center border border-slate-200 shadow-sm">
-                  <span className="text-xl block mb-1.5">💯</span>
-                  <span className="text-xs font-semibold text-slate-700">Money-Back Guarantee</span>
+                <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
+                  <span className="text-2xl block mb-2">💯</span>
+                  <span className="text-sm font-bold text-slate-800">Money-Back Guarantee</span>
                 </div>
               </section>
             </section>
 
             {/* Right Column: Pricing Plans */}
             <aside className="md:col-span-1 lg:col-span-3 order-2 md:order-2 lg:order-3">
-              <div className="bg-slate-50/50 rounded-xl p-6">
+              <div className="bg-slate-50/50 rounded-2xl p-6 border-2 border-slate-200 shadow-lg">
                 <PricingPlans showHeader={true} vertical={true} />
               </div>
             </aside>

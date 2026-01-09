@@ -131,67 +131,81 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
       )}
 
       {vertical ? (
-        <div className="space-y-4" role="list">
+        <div className="space-y-5" role="list">
           {plans.map((plan) => (
             <article
               key={plan.planId}
-              className={`relative bg-white rounded-lg border-2 p-4 transition-all ${
+              className={`relative bg-white rounded-2xl border-2 p-6 transition-all ${
                 plan.isRecommended 
-                  ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-white shadow-md' 
-                  : 'border-slate-200 shadow-sm hover:shadow-md'
+                  ? 'border-blue-600 bg-gradient-to-br from-blue-50 via-white to-purple-50 shadow-xl ring-2 ring-blue-500/20 scale-[1.02]' 
+                  : 'border-slate-200 shadow-md hover:shadow-lg hover:border-slate-300'
               }`}
               role="listitem"
             >
               {plan.isRecommended && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                  {plan.badgeText || '⭐ Most Popular'}
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg">
+                  {plan.badgeText || '⭐ BEST VALUE'}
                 </div>
               )}
               
-              <h3 className="text-lg font-semibold text-slate-800 mb-2 text-center">
+              {/* Plan Name */}
+              <h3 className={`text-xl font-bold mb-3 text-center ${plan.isRecommended ? 'text-slate-900' : 'text-slate-800'}`}>
                 {plan.name}
               </h3>
               
-              <div className="text-center mb-3">
-                <span className="text-2xl font-bold text-blue-600">
-                  ${plan.price.toFixed(2)}
-                </span>
-                <span className="text-xs text-slate-500 uppercase ml-1">one-time</span>
+              {/* Price - Prominent */}
+              <div className="text-center mb-4">
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className={`text-4xl font-extrabold ${plan.isRecommended ? 'text-blue-600' : 'text-slate-800'}`}>
+                    ${plan.price.toFixed(2)}
+                  </span>
+                </div>
+                <span className="text-xs text-slate-500 font-medium uppercase tracking-wide block mt-1">One-Time Payment</span>
               </div>
 
-              <div className="mb-3">
+              {/* Value Proposition */}
+              <div className="mb-4 pb-4 border-b border-slate-200">
                 {plan.isUnlimited ? (
                   <div className="flex items-center justify-center gap-2 text-slate-700">
-                    <span className="text-xl">∞</span>
-                    <span className="text-sm font-medium">
-                      Unlimited workouts
+                    <span className="text-2xl">∞</span>
+                    <span className="text-base font-semibold">
+                      Unlimited Workouts
                     </span>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2 text-slate-700">
-                    <span className="text-lg">💪</span>
-                    <span className="text-sm font-medium">{plan.tokenCount} workouts</span>
+                    <span className="text-xl">💪</span>
+                    <span className="text-base font-semibold">{plan.tokenCount} Workouts</span>
                   </div>
                 )}
               </div>
 
+              {/* Micro Copy - Simplified */}
               {plan.microCopy && (
-                <p className="text-xs text-slate-500 text-center italic mb-3">
+                <p className="text-sm text-slate-600 text-center mb-5 font-medium">
                   {plan.microCopy}
                 </p>
               )}
 
+              {/* CTA Button */}
               <button
-                className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all ${
+                className={`w-full py-3.5 px-6 rounded-xl font-bold text-base transition-all duration-300 ${
                   plan.isRecommended
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg transform hover:-translate-y-0.5'
-                    : 'bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white'
-                } disabled:opacity-60 disabled:cursor-not-allowed`}
+                    ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 text-white hover:shadow-2xl hover:shadow-blue-500/40 transform hover:-translate-y-1 hover:scale-[1.02]'
+                    : 'bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-700'
+                } disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
                 onClick={() => handlePurchase(plan)}
                 disabled={checkoutLoading === plan.planId}
-                aria-label={`Purchase ${plan.name} plan`}
+                aria-label={`Purchase ${plan.name} plan for $${plan.price.toFixed(2)}`}
               >
-                {checkoutLoading === plan.planId ? 'Processing...' : 'Get Started'}
+                {checkoutLoading === plan.planId ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="animate-spin">⚙️</span>
+                    Processing...
+                  </span>
+                ) : (
+                  'Get Started'
+                )}
               </button>
             </article>
           ))}
