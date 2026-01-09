@@ -500,6 +500,39 @@ export async function resetUserTokens(token: string, deviceId: string, newTokenC
   }
 }
 
+export async function getCustomersByEmail(token: string, email: string): Promise<{ email: string; deviceIds: string[]; customers: any[] }> {
+  const response = await fetch(`${API_BASE_URL}/admin/customers/by-email/${encodeURIComponent(email)}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to get customers by email');
+  }
+
+  return response.json();
+}
+
+export async function resetTokensByEmail(token: string, email: string, newTokenCount: number, reason?: string): Promise<{ message: string; email: string; results: any[] }> {
+  const response = await fetch(`${API_BASE_URL}/admin/customers/by-email/${encodeURIComponent(email)}/reset-tokens`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ newTokenCount, reason }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to reset tokens by email');
+  }
+
+  return response.json();
+}
+
 export async function getAllContacts(token: string): Promise<ContactMessage[]> {
   const response = await fetch(`${API_BASE_URL}/admin/contacts`, {
     method: 'GET',

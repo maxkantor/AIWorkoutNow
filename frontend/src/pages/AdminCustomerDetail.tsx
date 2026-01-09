@@ -5,6 +5,8 @@ import {
   getCustomer,
   getCustomerActivities,
   resetUserTokens,
+  getCustomersByEmail,
+  resetTokensByEmail,
   CustomerSummary,
   CustomerActivity,
 } from '../services/api';
@@ -17,9 +19,12 @@ function AdminCustomerDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [showResetByEmailModal, setShowResetByEmailModal] = useState(false);
   const [newTokenCount, setNewTokenCount] = useState(0);
   const [resetReason, setResetReason] = useState('');
   const [resetting, setResetting] = useState(false);
+  const [linkedDevices, setLinkedDevices] = useState<any[]>([]);
+  const [loadingLinkedDevices, setLoadingLinkedDevices] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,6 +36,13 @@ function AdminCustomerDetail() {
 
     loadCustomerData(token, deviceId);
   }, [deviceId, navigate]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('admin_token');
+    if (token && customer?.email) {
+      loadLinkedDevices(token, customer.email);
+    }
+  }, [customer?.email]);
 
   const loadCustomerData = async (token: string, id: string) => {
     try {
@@ -49,6 +61,19 @@ function AdminCustomerDetail() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadLinkedDevices = async (token: string, email: string) => {
+    try {
+      setLoadingLinkedDevices(true);
+      const data = await getCustomersByEmail(token, email);
+      setLinkedDevices(data.customers || []);
+    } catch (err: any) {
+      // Silently fail - email might not have linked devices
+      setLinkedDevices([]);
+    } finally {
+      setLoadingLinkedDevices(false);
     }
   };
 
@@ -74,6 +99,34 @@ function AdminCustomerDetail() {
       setResetReason('');
     } catch (err: any) {
       setError(err.message || 'Failed to reset workouts');
+    } finally {
+      setResetting(false);
+    }
+  };
+
+  const handleResetByEmail = async () => {
+    if (!customer?.email) return;
+
+    const token = localStorage.getItem('admin_token');
+    if (!token) return;
+
+    setResetting(true);
+    try {
+      const result = await resetTokensByEmail(
+        token,
+        customer.email,
+        newTokenCount,
+        resetReason || `Reset all devices for ${customer.email}`
+      );
+      
+      // Reload customer data and linked devices
+      await loadCustomerData(token, deviceId!);
+      await loadLinkedDevices(token, customer.email);
+      setShowResetByEmailModal(false);
+      setResetReason('');
+      alert(result.message);
+    } catch (err: any) {
+      setError(err.message || 'Failed to reset workouts on all devices');
     } finally {
       setResetting(false);
     }

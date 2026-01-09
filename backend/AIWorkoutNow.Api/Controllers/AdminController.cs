@@ -272,6 +272,106 @@ public class AdminController : ControllerBase
     }
 
     [Authorize]
+    [HttpGet("admin/customers/by-email/{email}")]
+    public async Task<IActionResult> GetCustomersByEmail(string email)
+    {
+        try
+        {
+            var visitorIds = await _dynamoService.GetVisitorIdsByEmailAsync(email);
+            if (!visitorIds.Any())
+            {
+                return Ok(new { email, deviceIds = new List<string>(), message = "No devices found for this email" });
+            }
+
+            var customers = new List<object>();
+            foreach (var deviceId in visitorIds)
+            {
+                var summary = await _dynamoService.GetCustomerSummaryAsync(deviceId);
+                if (summary != null)
+                {
+                    customers.Add(new
+                    {
+                        deviceId = summary.DeviceId,
+                        email = summary.Email,
+                        name = summary.Name,
+                        tokensRemaining = summary.TokensRemaining,
+                        isPaidUser = summary.IsPaidUser,
+                        totalWorkouts = summary.TotalWorkouts,
+                        totalPurchases = summary.TotalPurchases,
+                        totalSpent = summary.TotalSpent,
+                        lastActivity = summary.LastActivity
+                    });
+                }
+            }
+
+            return Ok(new { email, deviceIds = visitorIds, customers });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to get customers by email", error = ex.Message });
+        }
+    }
+
+    [Authorize]
+    [HttpPost("admin/customers/by-email/{email}/reset-tokens")]
+    public async Task<IActionResult> ResetTokensByEmail(string email, [FromBody] ResetTokensRequest request)
+    {
+        try
+        {
+            var visitorIds = await _dynamoService.GetVisitorIdsByEmailAsync(email);
+            if (!visitorIds.Any())
+            {
+                return NotFound(new { message = "No devices found for this email" });
+            }
+
+            var results = new List<object>();
+            foreach (var deviceId in visitorIds)
+            {
+                try
+                {
+                    var tokens = await _dynamoService.GetUserTokensAsync(deviceId);
+                    var previousCount = tokens?.TokensRemaining ?? 0;
+                    
+                    await _dynamoService.ResetUserTokensAsync(deviceId, request.NewTokenCount);
+                    
+                    // Log activity
+                    await _dynamoService.SaveCustomerActivityAsync(new CustomerActivity
+                    {
+                        DeviceId = deviceId,
+                        ActivityType = "tokens_reset",
+                        Description = $"Tokens reset to {request.NewTokenCount} by admin (via email: {email})",
+                        Details = new Dictionary<string, object>
+                        {
+                            { "previousCount", previousCount },
+                            { "newCount", request.NewTokenCount },
+                            { "reason", request.Reason ?? "Admin reset by email" },
+                            { "email", email }
+                        }
+                    });
+
+                    results.Add(new { deviceId, success = true, previousCount, newCount = request.NewTokenCount });
+                }
+                catch (Exception ex)
+                {
+                    results.Add(new { deviceId, success = false, error = ex.Message });
+                }
+            }
+
+            var successCount = results.Count(r => ((dynamic)r).success == true);
+            return Ok(new 
+            { 
+                message = $"Reset tokens on {successCount} of {visitorIds.Count} device(s)",
+                email,
+                results 
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to reset tokens by email", error = ex.Message });
+        }
+    }
+
+    [Authorize]
     [HttpGet("admin/purchases")]
     public async Task<IActionResult> GetAllPurchases()
     {
