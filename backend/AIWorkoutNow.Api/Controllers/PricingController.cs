@@ -549,20 +549,28 @@ public class PricingController : ControllerBase
                 }
                 else
                 {
-                    // Fallback: If expiration is less than 1 year from now, fix it to 1 year from now
-                    // This handles cases where purchase record is missing
-                    // CRITICAL FIX: Use proper comparison - expiration should be at least 1 year from now
-                    var oneYearFromNow = DateTime.UtcNow.AddDays(365);
-                    if (tokens.ExpiresAt.HasValue && tokens.ExpiresAt.Value < oneYearFromNow)
+                    // CRITICAL FIX: If no purchase found, try to get purchase date from existing expiration
+                    // If expiration exists, work backwards to find purchase date, then recalculate
+                    if (tokens.ExpiresAt.HasValue)
                     {
-                        expectedExpiration = oneYearFromNow;
-                        Console.WriteLine($"[PricingController] No purchase found, but expiration {tokens.ExpiresAt} is less than 1 year from now ({oneYearFromNow}), fixing to {expectedExpiration}");
+                        // Try to infer purchase date from expiration (expiration - 365 days)
+                        var inferredPurchaseDate = tokens.ExpiresAt.Value.AddDays(-365);
+                        // Only use this if it's reasonable (not in the future, not too old)
+                        if (inferredPurchaseDate <= DateTime.UtcNow && inferredPurchaseDate > DateTime.UtcNow.AddYears(-2))
+                        {
+                            expectedExpiration = inferredPurchaseDate.AddDays(365);
+                            Console.WriteLine($"[PricingController] No purchase found, but inferred purchase date from expiration: {inferredPurchaseDate}, recalculating expiration to {expectedExpiration}");
+                        }
+                        else
+                        {
+                            // Expiration seems wrong, but we can't fix it without purchase date
+                            Console.WriteLine($"[PricingController] WARNING: No purchase found and expiration {tokens.ExpiresAt} seems incorrect (inferred purchase: {inferredPurchaseDate}), but cannot fix without purchase date");
+                        }
                     }
-                    else if (!tokens.ExpiresAt.HasValue)
+                    else
                     {
-                        // If no expiration set, set it to 1 year from now
-                        expectedExpiration = oneYearFromNow;
-                        Console.WriteLine($"[PricingController] No purchase found and no expiration set, setting to 1 year from now: {expectedExpiration}");
+                        // No expiration and no purchase - this shouldn't happen for unlimited, but log it
+                        Console.WriteLine($"[PricingController] WARNING: No purchase found and no expiration set for unlimited tokens - cannot determine correct expiration");
                     }
                 }
                 
@@ -581,14 +589,8 @@ public class PricingController : ControllerBase
                         Console.WriteLine($"[PricingController] Token expiration is already correct: {tokens.ExpiresAt}");
                     }
                 }
-                else if (tokens.ExpiresAt.HasValue && tokens.ExpiresAt.Value < DateTime.UtcNow.AddDays(365))
-                {
-                    // Last resort: If expiration exists but is less than 1 year from now, fix it
-                    expectedExpiration = DateTime.UtcNow.AddDays(365);
-                    Console.WriteLine($"[PricingController] LAST RESORT FIX: Token expiration {tokens.ExpiresAt} is less than 1 year, fixing to {expectedExpiration}");
-                    tokens.ExpiresAt = expectedExpiration;
-                    await _dynamoService.SaveUserTokensAsync(tokens);
-                }
+                // REMOVED: Last resort fix that used UtcNow - this was causing expiration to be set from current date
+                // Instead, we rely on the purchase-based calculation above
             }
             
             // CRITICAL FIX: If tokens are < 999999 (admin reset), NEVER show unlimited

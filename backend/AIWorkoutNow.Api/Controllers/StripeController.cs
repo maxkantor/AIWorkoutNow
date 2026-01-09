@@ -192,6 +192,26 @@ public class StripeController : ControllerBase
             var sessionId = sessionData?["id"]?.ToString();
             var sessionUrl = sessionData?["url"]?.ToString();
 
+            // CRITICAL FIX: Get actual session creation date from Stripe response
+            DateTime purchaseDate = DateTime.UtcNow; // Fallback
+            if (sessionData != null && sessionData.ContainsKey("created"))
+            {
+                try
+                {
+                    var createdValue = sessionData["created"];
+                    if (createdValue is System.Text.Json.JsonElement createdElement)
+                    {
+                        var createdUnix = createdElement.GetInt64();
+                        purchaseDate = DateTimeOffset.FromUnixTimeSeconds(createdUnix).UtcDateTime;
+                        Console.WriteLine($"[StripeController] CreateCheckoutSession - Using session creation date as purchase date: {purchaseDate}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[StripeController] Error parsing created timestamp: {ex.Message}, using current time");
+                }
+            }
+            
             // Save purchase record
             var purchase = new UserPurchase
             {
@@ -199,15 +219,16 @@ public class StripeController : ControllerBase
                 PlanId = plan.PlanId,
                 StripeSessionId = sessionId ?? "",
                 Status = "pending",
-                PurchasedAt = DateTime.UtcNow,
+                PurchasedAt = purchaseDate, // CRITICAL: Use actual session creation date, not current time
                 IsUnlimited = plan.IsUnlimited,
                 TokensGranted = plan.TokenCount
             };
 
             if (plan.IsUnlimited)
             {
-                // AGGRESSIVE FIX: Always set expiration to 1 year (365 days) from purchase date
+                // CRITICAL FIX: Always set expiration to 1 year (365 days) from actual purchase date
                 purchase.ExpiresAt = purchase.PurchasedAt.AddDays(365);
+                Console.WriteLine($"[StripeController] CreateCheckoutSession - Set unlimited expiration to {purchase.ExpiresAt} (1 year from purchase date: {purchase.PurchasedAt})");
             }
 
             await _dynamoService.SaveUserPurchaseAsync(purchase);
@@ -259,6 +280,26 @@ public class StripeController : ControllerBase
                     var purchases = await _dynamoService.GetUserPurchasesAsync(deviceId);
                     var purchase = purchases.FirstOrDefault(p => p.StripeSessionId == sessionId);
 
+                    // CRITICAL FIX: Get actual purchase date from Stripe session (created timestamp)
+                    DateTime purchaseDate = DateTime.UtcNow; // Fallback
+                    if (sessionObject != null && sessionObject.ContainsKey("created"))
+                    {
+                        try
+                        {
+                            var createdValue = sessionObject["created"];
+                            if (createdValue is System.Text.Json.JsonElement createdElement)
+                            {
+                                var createdUnix = createdElement.GetInt64();
+                                purchaseDate = DateTimeOffset.FromUnixTimeSeconds(createdUnix).UtcDateTime;
+                                Console.WriteLine($"[StripeController] Using purchase date from Stripe session: {purchaseDate}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[StripeController] Error parsing created timestamp: {ex.Message}, using current time");
+                        }
+                    }
+                    
                     // If purchase not found (e.g., table doesn't exist), create it from session data
                     if (purchase == null)
                     {
@@ -280,16 +321,16 @@ public class StripeController : ControllerBase
                             StripeSessionId = sessionId ?? "",
                             StripePaymentIntentId = paymentIntentId,
                             Status = "completed",
-                            PurchasedAt = DateTime.UtcNow,
+                            PurchasedAt = purchaseDate, // CRITICAL: Use actual payment date from Stripe
                             IsUnlimited = plan.IsUnlimited,
                             TokensGranted = plan.TokenCount
                         };
 
                         if (plan.IsUnlimited)
                         {
-                            // AGGRESSIVE FIX: Always use 365 days (1 year) for unlimited, regardless of plan setting
+                            // CRITICAL FIX: Always use 365 days (1 year) from actual purchase date
                             purchase.ExpiresAt = purchase.PurchasedAt.AddDays(365);
-                            Console.WriteLine($"[StripeController] Set unlimited expiration to {purchase.ExpiresAt} (1 year from {purchase.PurchasedAt})");
+                            Console.WriteLine($"[StripeController] Set unlimited expiration to {purchase.ExpiresAt} (1 year from purchase date: {purchase.PurchasedAt})");
                         }
                     }
                     else
@@ -298,11 +339,19 @@ public class StripeController : ControllerBase
                         purchase.Status = "completed";
                         purchase.StripePaymentIntentId = paymentIntentId;
                         
+                        // CRITICAL FIX: If PurchasedAt is wrong (was set to webhook time instead of payment time), fix it
+                        if (purchase.PurchasedAt == default || purchase.PurchasedAt > DateTime.UtcNow.AddMinutes(-5))
+                        {
+                            // PurchasedAt seems wrong (default or very recent), use actual payment date
+                            purchase.PurchasedAt = purchaseDate;
+                            Console.WriteLine($"[StripeController] Fixed PurchasedAt to actual payment date: {purchase.PurchasedAt}");
+                        }
+                        
                         // AGGRESSIVE FIX: Update expiration to 1 year from purchase date if unlimited
                         if (purchase.IsUnlimited)
                         {
                             purchase.ExpiresAt = purchase.PurchasedAt.AddDays(365);
-                            Console.WriteLine($"[StripeController] Updated unlimited expiration to {purchase.ExpiresAt} (1 year from purchase)");
+                            Console.WriteLine($"[StripeController] Updated unlimited expiration to {purchase.ExpiresAt} (1 year from purchase date: {purchase.PurchasedAt})");
                         }
                     }
                     
@@ -381,6 +430,20 @@ public class StripeController : ControllerBase
                     
                     if (purchase.IsUnlimited)
                     {
+                        // CRITICAL FIX: Ensure PurchasedAt is set before calculating expiration
+                        if (purchase.PurchasedAt == default)
+                        {
+                            purchase.PurchasedAt = DateTime.UtcNow;
+                            Console.WriteLine($"[StripeController] Set PurchasedAt to {purchase.PurchasedAt}");
+                        }
+                        
+                        // CRITICAL FIX: Always calculate expiration from purchase date, not current date
+                        if (!purchase.ExpiresAt.HasValue || purchase.ExpiresAt.Value != purchase.PurchasedAt.AddDays(365))
+                        {
+                            purchase.ExpiresAt = purchase.PurchasedAt.AddDays(365);
+                            Console.WriteLine($"[StripeController] Set/Updated expiration to {purchase.ExpiresAt} (1 year from purchase date: {purchase.PurchasedAt})");
+                        }
+                        
                         // For unlimited, we need to track expiration in UserTokens
                         var tokens = await _dynamoService.GetUserTokensAsync(deviceId);
                         if (tokens == null)
@@ -391,32 +454,17 @@ public class StripeController : ControllerBase
                                 TokensRemaining = 999999, // Large number for unlimited
                                 ExpiresAt = purchase.ExpiresAt
                             };
+                            Console.WriteLine($"[StripeController] Creating new UserTokens with expiration: {tokens.ExpiresAt}");
                         }
                         else
                         {
                             tokens.TokensRemaining = 999999;
-                            // AGGRESSIVE FIX: Always set expiration to 1 year from purchase date
-                            if (purchase.ExpiresAt.HasValue)
-                            {
-                                tokens.ExpiresAt = purchase.ExpiresAt;
-                            }
-                            else if (purchase.PurchasedAt != default)
-                            {
-                                // If ExpiresAt is not set, calculate 1 year from purchase date
-                                tokens.ExpiresAt = purchase.PurchasedAt.AddDays(365);
-                                purchase.ExpiresAt = tokens.ExpiresAt;
-                                Console.WriteLine($"[StripeController] Calculated expiration: {tokens.ExpiresAt} (1 year from purchase)");
-                            }
-                            else
-                            {
-                                // Fallback: 1 year from now
-                                tokens.ExpiresAt = DateTime.UtcNow.AddDays(365);
-                                purchase.ExpiresAt = tokens.ExpiresAt;
-                                Console.WriteLine($"[StripeController] Set expiration to 1 year from now: {tokens.ExpiresAt}");
-                            }
+                            // CRITICAL FIX: Always use purchase date for expiration, never current date
+                            tokens.ExpiresAt = purchase.ExpiresAt;
+                            Console.WriteLine($"[StripeController] Updated existing tokens expiration to {tokens.ExpiresAt} (from purchase date: {purchase.PurchasedAt})");
                         }
                         await _dynamoService.SaveUserTokensAsync(tokens);
-                        Console.WriteLine($"[StripeController] Granted unlimited access until {purchase.ExpiresAt}");
+                        Console.WriteLine($"[StripeController] Granted unlimited access until {purchase.ExpiresAt} (purchased on {purchase.PurchasedAt})");
                     }
                     else if (purchase.TokensGranted.HasValue)
                     {
@@ -605,6 +653,26 @@ public class StripeController : ControllerBase
                     return StatusCode(500, new { message = "Pricing plan not found" });
                 }
 
+                // CRITICAL FIX: Get actual session creation date from Stripe
+                DateTime purchaseDate = DateTime.UtcNow; // Fallback
+                if (sessionData != null && sessionData.ContainsKey("created"))
+                {
+                    try
+                    {
+                        var createdValue = sessionData["created"];
+                        if (createdValue is System.Text.Json.JsonElement createdElement)
+                        {
+                            var createdUnix = createdElement.GetInt64();
+                            purchaseDate = DateTimeOffset.FromUnixTimeSeconds(createdUnix).UtcDateTime;
+                            Console.WriteLine($"[StripeController] VerifyPayment - Using session creation date as purchase date: {purchaseDate}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[StripeController] Error parsing created timestamp: {ex.Message}, using current time");
+                    }
+                }
+                
                 var purchase = new UserPurchase
                 {
                     PurchaseId = Guid.NewGuid().ToString(),
@@ -613,16 +681,17 @@ public class StripeController : ControllerBase
                     StripeSessionId = request.SessionId,
                     StripePaymentIntentId = sessionData?["payment_intent"]?.ToString() ?? "",
                     Status = "completed",
-                    PurchasedAt = DateTime.UtcNow,
+                    PurchasedAt = purchaseDate, // CRITICAL: Use actual session creation date, not current time
                     IsUnlimited = plan.IsUnlimited,
                     TokensGranted = plan.TokenCount
                 };
 
-                        if (plan.IsUnlimited)
-                        {
-                            // AGGRESSIVE FIX: Always set expiration to 1 year (365 days) from purchase date
-                            purchase.ExpiresAt = purchase.PurchasedAt.AddDays(365);
-                        }
+                if (plan.IsUnlimited)
+                {
+                    // CRITICAL FIX: Always set expiration to 1 year (365 days) from actual purchase date
+                    purchase.ExpiresAt = purchase.PurchasedAt.AddDays(365);
+                    Console.WriteLine($"[StripeController] VerifyPayment - Set unlimited expiration to {purchase.ExpiresAt} (1 year from purchase date: {purchase.PurchasedAt})");
+                }
                 
                 // CRITICAL FIX: Fetch customer email/name from Stripe session
                 string? customerEmail = null;
