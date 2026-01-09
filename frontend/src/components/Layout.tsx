@@ -35,11 +35,32 @@ function Layout({ children }: LayoutProps) {
 
   return (
     <div className="layout">
-      <header className="header" role="banner">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="header-hero">
+      {/* Sticky Header Bar */}
+      <header className="header-bar" role="banner">
+        <div className="header-bar-container">
+          {/* Left: Logo + Site Name */}
+          <div className="header-brand">
+            <span className="header-logo" aria-hidden="true">💪</span>
+            <span className="header-site-name">AIWorkoutNow</span>
+          </div>
+          
+          {/* Right: Primary CTA Button */}
+          <a 
+            href="#workout-generator" 
+            className="header-cta-button"
+            aria-label="Scroll to workout generator"
+          >
+            Generate Workout
+          </a>
+        </div>
+      </header>
+
+      {/* Hero Section (moved below header) */}
+      <section className="hero-section">
+        <div className="hero-container">
+          <div className="hero-content">
             {/* Main Title */}
-            <div className="header-title-section">
+            <div className="hero-title-section">
               <div className="flex items-center justify-center gap-3 mb-3">
                 <span className="text-4xl md:text-5xl animate-pulse">💪</span>
                 <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white">
@@ -112,7 +133,8 @@ function Layout({ children }: LayoutProps) {
             )}
           </div>
         </div>
-      </header>
+      </section>
+
       <HeroContext.Provider value={{ heroContent, setHeroContent }}>
         {children}
       </HeroContext.Provider>
