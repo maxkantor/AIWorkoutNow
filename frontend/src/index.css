@@ -40,6 +40,46 @@ body {
   background-color: var(--bg-secondary);
   line-height: 1.6;
   font-size: 16px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Desktop side backgrounds - fitness themed (only on screens > 1200px) */
+@media (min-width: 1201px) {
+  body::before,
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 300px;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.15;
+    filter: blur(20px) saturate(0.3);
+  }
+  
+  body::before {
+    left: 0;
+    background-image: url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  
+  body::after {
+    right: 0;
+    background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+}
+
+/* Ensure main content is above side backgrounds */
+.layout {
+  position: relative;
+  z-index: 1;
 }
 
 code {
