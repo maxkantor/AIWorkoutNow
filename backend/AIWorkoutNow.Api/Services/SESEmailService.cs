@@ -62,10 +62,11 @@ public class SESEmailService : IEmailService
     public async Task SendContactNotificationAsync(ContactMessage message)
     {
         var adminEmail = await GetSSMParameter("/aiworkoutnow/ses-admin-email", "SES_ADMIN_EMAIL", "admin@aiworkoutnow.com");
-        var subject = $"New Contact Form Submission from {message.Email}";
+        var subject = $"New Contact Form Submission: {message.Subject}";
         var body = $@"New contact form submission:
 
 From: {message.Email}
+Subject: {message.Subject}
 Date: {message.CreatedAt:yyyy-MM-dd HH:mm:ss} UTC
 
 Message:

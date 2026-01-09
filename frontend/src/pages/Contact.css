@@ -66,6 +66,27 @@
   width: 100%;
 }
 
+.contact-form .input.error {
+  border-color: var(--error-color);
+  background-color: #fee2e2;
+}
+
+.contact-form .error-text {
+  display: block;
+  color: var(--error-color);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+.contact-form .char-count {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  text-align: right;
+}
+
 @media (max-width: 768px) {
   .content-card {
     padding: 2rem 1.5rem;

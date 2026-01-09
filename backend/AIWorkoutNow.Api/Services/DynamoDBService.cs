@@ -227,6 +227,7 @@ public class DynamoDBService : IDynamoDBService
         var document = new Document();
         document["MessageId"] = message.MessageId;
         document["Email"] = message.Email;
+        document["Subject"] = message.Subject ?? string.Empty;
         document["Message"] = message.Message;
         document["CreatedAt"] = message.CreatedAt.ToString("O");
 
@@ -297,10 +298,11 @@ public class DynamoDBService : IDynamoDBService
             var response = await _dynamoDB.ScanAsync(new ScanRequest
             {
                 TableName = _contactMessagesTable,
-                ProjectionExpression = "MessageId, #E, #M, CreatedAt",
+                ProjectionExpression = "MessageId, #E, #S, #M, CreatedAt",
                 ExpressionAttributeNames = new Dictionary<string, string>
                 {
                     { "#E", "Email" },
+                    { "#S", "Subject" },
                     { "#M", "Message" }
                 },
                 Limit = 1000 // Reasonable limit
@@ -315,6 +317,7 @@ public class DynamoDBService : IDynamoDBService
                     {
                         MessageId = item.ContainsKey("MessageId") ? item["MessageId"].S : Guid.NewGuid().ToString(),
                         Email = item.ContainsKey("Email") ? item["Email"].S : item.ContainsKey("#E") ? item["#E"].S : "",
+                        Subject = item.ContainsKey("Subject") ? item["Subject"].S : item.ContainsKey("#S") ? item["#S"].S : "",
                         Message = item.ContainsKey("Message") ? item["Message"].S : item.ContainsKey("#M") ? item["#M"].S : "",
                         CreatedAt = item.ContainsKey("CreatedAt") ? DateTime.Parse(item["CreatedAt"].S) : DateTime.UtcNow
                     });
@@ -360,6 +363,7 @@ public class DynamoDBService : IDynamoDBService
         {
             MessageId = response.Item["MessageId"].S,
             Email = response.Item["Email"].S,
+            Subject = response.Item.ContainsKey("Subject") ? response.Item["Subject"].S : string.Empty,
             Message = response.Item["Message"].S,
             CreatedAt = DateTime.Parse(response.Item["CreatedAt"].S)
         };

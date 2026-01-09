@@ -94,17 +94,25 @@ export async function checkTokenBalance(deviceId: string): Promise<number> {
   }
 }
 
-export async function submitContact(email: string, message: string): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/contact`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ email, message }),
-  });
+export async function submitContact(email: string, subject: string, message: string): Promise<void> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/contact`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, subject, message }),
+    });
 
-  if (!response.ok) {
-    throw new Error('Failed to submit contact form');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Failed to submit contact form' }));
+      throw new Error(errorData.message || 'Failed to submit contact form');
+    }
+  } catch (error: any) {
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error('Connection failed. Please check your internet connection and try again.');
+    }
+    throw error;
   }
 }
 

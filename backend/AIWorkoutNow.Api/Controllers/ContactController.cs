@@ -22,11 +22,43 @@ public class ContactController : ControllerBase
     {
         try
         {
+            // Validation
+            if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                return BadRequest(new { message = "Email is required" });
+            }
+
+            if (!System.Text.RegularExpressions.Regex.IsMatch(request.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            {
+                return BadRequest(new { message = "Invalid email format" });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Subject))
+            {
+                return BadRequest(new { message = "Subject is required" });
+            }
+
+            if (request.Subject.Length > 200)
+            {
+                return BadRequest(new { message = "Subject must be 200 characters or less" });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Message))
+            {
+                return BadRequest(new { message = "Message is required" });
+            }
+
+            if (request.Message.Length > 5000)
+            {
+                return BadRequest(new { message = "Message must be 5000 characters or less" });
+            }
+
             var message = new ContactMessage
             {
                 MessageId = Guid.NewGuid().ToString(),
-                Email = request.Email,
-                Message = request.Message,
+                Email = request.Email.Trim(),
+                Subject = request.Subject.Trim(),
+                Message = request.Message.Trim(),
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -54,8 +86,18 @@ public class ContactController : ControllerBase
                 // Don't fail the request if activity tracking fails
             }
 
-            // Send email notification
-            await _emailService.SendContactNotificationAsync(message);
+            // Send email notification (non-blocking - don't fail request if email fails)
+            try
+            {
+                await _emailService.SendContactNotificationAsync(message);
+                Console.WriteLine($"[ContactController] Email notification sent successfully for message {message.MessageId}");
+            }
+            catch (Exception emailEx)
+            {
+                Console.WriteLine($"[ContactController] Failed to send email notification: {emailEx.Message}");
+                Console.WriteLine($"[ContactController] Stack trace: {emailEx.StackTrace}");
+                // Don't fail the request if email fails - message is already saved
+            }
 
             return Ok(new { message = "Contact form submitted successfully" });
         }
