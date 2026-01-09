@@ -165,12 +165,23 @@ function AdminCustomerDetail() {
               <Link to="/admin/customers" className="back-link">← Back to Customers</Link>
               <h1>Customer Details</h1>
             </div>
-            <button
-              onClick={() => setShowResetModal(true)}
-              className="btn btn-warning"
-            >
-              Reset Workouts
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={() => setShowResetModal(true)}
+                className="btn btn-warning"
+              >
+                Reset This Device
+              </button>
+              {customer.email && (
+                <button
+                  onClick={() => setShowResetByEmailModal(true)}
+                  className="btn btn-warning"
+                  style={{ backgroundColor: '#dc2626' }}
+                >
+                  Reset All Devices (by Email)
+                </button>
+              )}
+            </div>
           </div>
 
           {error && <div className="error-message">{error}</div>}
@@ -186,6 +197,12 @@ function AdminCustomerDetail() {
                 <span className="label">Email:</span>
                 <span className="value">{customer.email || 'Not provided'}</span>
               </div>
+              {customer.email && linkedDevices.length > 1 && (
+                <div className="info-row">
+                  <span className="label">Linked Devices:</span>
+                  <span className="value">{linkedDevices.length} device(s)</span>
+                </div>
+              )}
               <div className="info-row">
                 <span className="label">Name:</span>
                 <span className="value">{customer.name || 'Not provided'}</span>
@@ -274,7 +291,7 @@ function AdminCustomerDetail() {
       {showResetModal && (
         <div className="modal-overlay" onClick={() => setShowResetModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Reset User Workouts</h2>
+            <h2>Reset Workouts (This Device Only)</h2>
             <div className="form-group">
               <label>Current 💪Remaining Workouts: {customer.tokensRemaining}</label>
             </div>
@@ -311,7 +328,73 @@ function AdminCustomerDetail() {
                 className="btn btn-warning"
                 disabled={resetting}
               >
-                {resetting ? 'Resetting...' : 'Reset Tokens'}
+                {resetting ? 'Resetting...' : 'Reset This Device'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showResetByEmailModal && customer.email && (
+        <div className="modal-overlay" onClick={() => setShowResetByEmailModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Reset Workouts on All Devices</h2>
+            <p style={{ color: '#dc2626', fontWeight: 'bold', marginBottom: '1rem' }}>
+              ⚠️ This will reset workouts on ALL devices linked to: {customer.email}
+            </p>
+            {loadingLinkedDevices ? (
+              <div>Loading linked devices...</div>
+            ) : linkedDevices.length > 0 ? (
+              <div style={{ marginBottom: '1rem' }}>
+                <strong>Linked Devices ({linkedDevices.length}):</strong>
+                <ul style={{ marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
+                  {linkedDevices.map((device: any) => (
+                    <li key={device.deviceId}>
+                      {device.deviceId.substring(0, 12)}... - {device.tokensRemaining} workouts
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <div style={{ marginBottom: '1rem', color: '#6b7280' }}>
+                No other devices found for this email
+              </div>
+            )}
+            <div className="form-group">
+              <label>New Workout Count (for all devices):</label>
+              <input
+                type="number"
+                value={newTokenCount}
+                onChange={(e) => setNewTokenCount(parseInt(e.target.value) || 0)}
+                min="0"
+                className="input"
+              />
+            </div>
+            <div className="form-group">
+              <label>Reason (optional):</label>
+              <textarea
+                value={resetReason}
+                onChange={(e) => setResetReason(e.target.value)}
+                placeholder="Reason for resetting workouts on all devices..."
+                className="input"
+                rows={3}
+              />
+            </div>
+            <div className="modal-actions">
+              <button
+                onClick={() => setShowResetByEmailModal(false)}
+                className="btn btn-secondary"
+                disabled={resetting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleResetByEmail}
+                className="btn btn-warning"
+                disabled={resetting}
+                style={{ backgroundColor: '#dc2626' }}
+              >
+                {resetting ? 'Resetting...' : `Reset All ${linkedDevices.length} Device(s)`}
               </button>
             </div>
           </div>
