@@ -3,7 +3,6 @@ import { Helmet } from 'react-helmet-async';
 import WorkoutGenerator from '../components/WorkoutGenerator';
 import PricingPlans from '../components/PricingPlans';
 import PaywallModal from '../components/PaywallModal';
-import AffiliateProducts from '../components/AffiliateProducts';
 import { getDeviceId, getTokenBalance, setTokenBalance as updateTokenStorage } from '../utils/storage';
 import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus } from '../services/api';
 import { useHeroContext } from '../components/Layout';
@@ -263,11 +262,6 @@ function Home() {
                 />
               </div>
 
-              {workout && (
-                <div className="mt-6">
-                  <AffiliateProducts workoutType={workout.type || 'general'} />
-                </div>
-              )}
 
               {/* Trust Badges - Under Workout Section */}
               <section className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
