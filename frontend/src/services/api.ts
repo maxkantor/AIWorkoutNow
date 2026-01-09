@@ -94,14 +94,14 @@ export async function checkTokenBalance(deviceId: string): Promise<number> {
   }
 }
 
-export async function submitContact(email: string, subject: string, message: string): Promise<void> {
+export async function submitContact(name: string, email: string, subject: string, message: string): Promise<void> {
   try {
     const response = await fetch(`${API_BASE_URL}/contact`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email, subject, message }),
+      body: JSON.stringify({ name, email, subject, message }),
     });
 
     if (!response.ok) {

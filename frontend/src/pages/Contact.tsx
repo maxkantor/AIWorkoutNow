@@ -4,6 +4,7 @@ import { submitContact } from '../services/api';
 import './Contact.css';
 
 function Contact() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
@@ -11,6 +12,7 @@ function Contact() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<{
+    name?: string;
     email?: string;
     subject?: string;
     message?: string;
@@ -22,7 +24,13 @@ function Contact() {
   };
 
   const validateForm = (): boolean => {
-    const errors: { email?: string; subject?: string; message?: string } = {};
+    const errors: { name?: string; email?: string; subject?: string; message?: string } = {};
+
+    if (!name.trim()) {
+      errors.name = 'Name is required';
+    } else if (name.length > 100) {
+      errors.name = 'Name must be 100 characters or less';
+    }
 
     if (!email.trim()) {
       errors.email = 'Email is required';
@@ -58,8 +66,9 @@ function Contact() {
     setLoading(true);
 
     try {
-      await submitContact(email.trim(), subject.trim(), message.trim());
+      await submitContact(name.trim(), email.trim(), subject.trim(), message.trim());
       setSuccess(true);
+      setName('');
       setEmail('');
       setSubject('');
       setMessage('');
@@ -99,6 +108,28 @@ function Contact() {
             )}
 
             <form onSubmit={handleSubmit} className="contact-form">
+              <div className="form-group">
+                <label htmlFor="name">Your Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    if (validationErrors.name) {
+                      setValidationErrors({ ...validationErrors, name: undefined });
+                    }
+                  }}
+                  className={`input ${validationErrors.name ? 'error' : ''}`}
+                  required
+                  maxLength={100}
+                  placeholder="John Doe"
+                />
+                {validationErrors.name && (
+                  <span className="error-text">{validationErrors.name}</span>
+                )}
+              </div>
+
               <div className="form-group">
                 <label htmlFor="email">Your Email</label>
                 <input

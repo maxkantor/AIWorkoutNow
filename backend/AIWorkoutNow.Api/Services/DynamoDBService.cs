@@ -226,6 +226,7 @@ public class DynamoDBService : IDynamoDBService
     {
         var document = new Document();
         document["MessageId"] = message.MessageId;
+        document["Name"] = message.Name ?? string.Empty;
         document["Email"] = message.Email;
         document["Subject"] = message.Subject ?? string.Empty;
         document["Message"] = message.Message;
@@ -298,9 +299,10 @@ public class DynamoDBService : IDynamoDBService
             var response = await _dynamoDB.ScanAsync(new ScanRequest
             {
                 TableName = _contactMessagesTable,
-                ProjectionExpression = "MessageId, #E, #S, #M, CreatedAt",
+                ProjectionExpression = "MessageId, #N, #E, #S, #M, CreatedAt",
                 ExpressionAttributeNames = new Dictionary<string, string>
                 {
+                    { "#N", "Name" },
                     { "#E", "Email" },
                     { "#S", "Subject" },
                     { "#M", "Message" }
@@ -316,6 +318,7 @@ public class DynamoDBService : IDynamoDBService
                     messages.Add(new ContactMessage
                     {
                         MessageId = item.ContainsKey("MessageId") ? item["MessageId"].S : Guid.NewGuid().ToString(),
+                        Name = item.ContainsKey("Name") ? item["Name"].S : item.ContainsKey("#N") ? item["#N"].S : "",
                         Email = item.ContainsKey("Email") ? item["Email"].S : item.ContainsKey("#E") ? item["#E"].S : "",
                         Subject = item.ContainsKey("Subject") ? item["Subject"].S : item.ContainsKey("#S") ? item["#S"].S : "",
                         Message = item.ContainsKey("Message") ? item["Message"].S : item.ContainsKey("#M") ? item["#M"].S : "",
@@ -362,6 +365,7 @@ public class DynamoDBService : IDynamoDBService
         return new ContactMessage
         {
             MessageId = response.Item["MessageId"].S,
+            Name = response.Item.ContainsKey("Name") ? response.Item["Name"].S : string.Empty,
             Email = response.Item["Email"].S,
             Subject = response.Item.ContainsKey("Subject") ? response.Item["Subject"].S : string.Empty,
             Message = response.Item["Message"].S,

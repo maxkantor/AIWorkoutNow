@@ -77,6 +77,10 @@ function PaywallModal({ isOpen, onClose, onPurchaseComplete: _onPurchaseComplete
       <div className="paywall-modal" onClick={(e) => e.stopPropagation()}>
         <button className="paywall-close" onClick={onClose}>×</button>
         
+        <button className="paywall-back" onClick={onClose}>
+          ← Back
+        </button>
+        
         <div className="paywall-header">
           <h2>You've Used Your 3 Free Workouts 💪</h2>
           <p className="paywall-subheadline">

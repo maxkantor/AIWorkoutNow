@@ -22,7 +22,17 @@ public class ContactController : ControllerBase
     {
         try
         {
-            // Validation
+            // Validation - All fields are required
+            if (string.IsNullOrWhiteSpace(request.Name))
+            {
+                return BadRequest(new { message = "Name is required" });
+            }
+
+            if (request.Name.Length > 100)
+            {
+                return BadRequest(new { message = "Name must be 100 characters or less" });
+            }
+
             if (string.IsNullOrWhiteSpace(request.Email))
             {
                 return BadRequest(new { message = "Email is required" });
@@ -56,6 +66,7 @@ public class ContactController : ControllerBase
             var message = new ContactMessage
             {
                 MessageId = Guid.NewGuid().ToString(),
+                Name = request.Name.Trim(),
                 Email = request.Email.Trim(),
                 Subject = request.Subject.Trim(),
                 Message = request.Message.Trim(),
