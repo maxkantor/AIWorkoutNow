@@ -352,8 +352,13 @@ function AdminCustomerDetail() {
           setError(null);
         }}>
           <div className="modal-content" onClick={(e) => {
-            console.log('[Reset] Modal content clicked, stopping propagation');
-            e.stopPropagation();
+            // Only stop propagation if clicking directly on modal-content background, not on child elements
+            if (e.target === e.currentTarget) {
+              console.log('[Reset] Modal content background clicked, stopping propagation');
+              e.stopPropagation();
+            } else {
+              console.log('[Reset] Modal content child clicked, allowing event to bubble');
+            }
           }}>
             <h2>Reset Workouts (This Device Only)</h2>
             {error && (
@@ -396,39 +401,32 @@ function AdminCustomerDetail() {
                 Cancel
               </button>
               <button
-                onMouseDown={() => {
-                  console.log('[Reset] Button mouse down event!');
+                onMouseDown={(e) => {
+                  console.log('[Reset] Button mouse down event!', e);
+                  e.stopPropagation();
                 }}
-                onClick={async (e) => {
-                  try {
-                    console.log('[Reset] Button onClick event fired!');
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('[Reset] Modal button clicked!');
-                    console.log('[Reset] newTokenCount:', newTokenCount);
-                    console.log('[Reset] deviceId:', deviceId);
-                    console.log('[Reset] customer:', customer);
-                    console.log('[Reset] resetting state:', resetting);
-                    console.log('[Reset] Button disabled?', resetting);
-                    
-                    if (resetting) {
-                      console.warn('[Reset] Button is disabled, ignoring click');
-                      return;
-                    }
-                    
-                    console.log('[Reset] Calling handleResetTokens...');
-                    await handleResetTokens();
-                    console.log('[Reset] handleResetTokens completed');
-                  } catch (error) {
-                    console.error('[Reset] Error in button click handler:', error);
-                    console.error('[Reset] Error stack:', error instanceof Error ? error.stack : 'No stack');
+                onMouseUp={(e) => {
+                  console.log('[Reset] Button mouse up event!', e);
+                  e.stopPropagation();
+                }}
+                onClick={(e) => {
+                  console.log('[Reset] ===== BUTTON CLICK EVENT FIRED =====');
+                  console.log('[Reset] Event:', e);
+                  console.log('[Reset] Event target:', e.target);
+                  console.log('[Reset] Event currentTarget:', e.currentTarget);
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  // Call handler directly without async wrapper to avoid any issues
+                  handleResetTokens().catch((error) => {
+                    console.error('[Reset] Error in handleResetTokens:', error);
                     setError(`Unexpected error: ${error instanceof Error ? error.message : String(error)}`);
-                  }
+                  });
                 }}
                 className="btn btn-warning"
                 disabled={resetting}
                 type="button"
-                style={{ cursor: resetting ? 'not-allowed' : 'pointer' }}
+                style={{ cursor: resetting ? 'not-allowed' : 'pointer', position: 'relative', zIndex: 1001 }}
               >
                 {resetting ? 'Resetting...' : 'Reset This Device'}
               </button>
