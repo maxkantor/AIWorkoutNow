@@ -1667,6 +1667,8 @@ public class DynamoDBService : IDynamoDBService
         targetTokens.TokensRemaining = totalTokens;
         targetTokens.ExpiresAt = latestExpiration;
         await SaveUserTokensAsync(targetTokens);
+        
+        Console.WriteLine($"[DynamoDBService] Merged credits complete - Target device now has {totalTokens} tokens, expires: {latestExpiration}");
     }
 
     public async Task ResetFreeWorkoutCountAsync(string deviceId)
@@ -1707,8 +1709,6 @@ public class DynamoDBService : IDynamoDBService
             Console.WriteLine($"[DynamoDBService] Error resetting free workout count: {ex.Message}");
             // Don't throw - this is a non-critical operation
         }
-        
-        Console.WriteLine($"[DynamoDBService] Merged credits complete - Target device now has {totalTokens} tokens, expires: {latestExpiration}");
     }
 
     private List<PricingPlan> GetDefaultPricingPlans()
