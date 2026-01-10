@@ -831,7 +831,13 @@ public class DynamoDBService : IDynamoDBService
         if (tokens != null)
         {
             summary.IsPaidUser = true;
+            // CRITICAL: Use the exact same logic as GetUserAccessStatus
+            // If tokens are >= 999999, they represent unlimited, but we still show the count
+            // The frontend will handle displaying "Unlimited" vs the actual number
             summary.TokensRemaining = tokens.TokensRemaining;
+            
+            // Log for debugging token count discrepancies
+            Console.WriteLine($"[DynamoDBService] GetCustomerSummaryAsync - DeviceId: {deviceId}, TokensRemaining: {tokens.TokensRemaining}");
         }
 
         // AGGRESSIVE FIX: Get purchases from UserPurchases table and calculate totals

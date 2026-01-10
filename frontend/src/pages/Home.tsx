@@ -189,45 +189,6 @@ function Home() {
           }
         })}
         </script>
-      </Helmet>
-        <title>AI Workout Generator – 3 Free Workouts | AIWorkoutNow</title>
-        <meta 
-          name="description" 
-          content="Get 3 free AI workouts. No signup, no subscription. Pay once and train instantly with AIWorkoutNow." 
-        />
-        <meta name="keywords" content="AI workout generator, free workouts, personalized fitness, home workouts, no signup, AI fitness, workout planner, fitness AI" />
-        <meta name="author" content="AIWorkoutNow" />
-        <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://aiworkoutnow.com" />
-        
-        <meta property="og:title" content="AI Workout Generator – 3 Free Workouts | AIWorkoutNow" />
-        <meta property="og:description" content="Get 3 free AI workouts. No signup, no subscription. Pay once and train instantly." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://aiworkoutnow.com" />
-        <meta property="og:image" content="https://aiworkoutnow.com/og-image.png" />
-        <meta property="og:site_name" content="AIWorkoutNow" />
-        
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="AI Workout Generator – 3 Free Workouts" />
-        <meta name="twitter:description" content="Get 3 free AI workouts. No signup, no subscription. Pay once and train instantly." />
-        <meta name="twitter:image" content="https://aiworkoutnow.com/og-image.png" />
-        
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "WebPage",
-            "name": "AI Workout Generator – 3 Free Workouts",
-            "description": "Get 3 free AI workouts. No signup, no subscription. Pay once and train instantly with AIWorkoutNow.",
-            "url": "https://aiworkoutnow.com",
-            "inLanguage": "en-US",
-            "isPartOf": {
-              "@type": "WebSite",
-              "name": "AIWorkoutNow",
-              "url": "https://aiworkoutnow.com"
-            }
-          })}
-        </script>
-        
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
