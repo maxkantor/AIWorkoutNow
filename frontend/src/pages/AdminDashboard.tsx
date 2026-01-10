@@ -231,29 +231,77 @@ function AdminDashboard() {
             </div>
           </section>
 
-          {/* Analytics Placeholder */}
+          {/* Analytics Overview */}
           <section className="dashboard-section">
             <h2 className="section-title">Analytics Overview</h2>
             <div className="analytics-grid">
               <div className="analytics-card">
                 <h3 className="analytics-title">User Growth</h3>
-                <div className="analytics-placeholder">
-                  <p className="placeholder-text">📈 Chart visualization coming soon</p>
-                  <p className="placeholder-subtext">Track user acquisition trends over time</p>
+                <div className="analytics-content">
+                  {stats ? (
+                    <>
+                      <div className="analytics-stat">
+                        <div className="analytics-stat-value">{stats.totalUsers || stats.totalCustomers || 0}</div>
+                        <div className="analytics-stat-label">Total Users</div>
+                      </div>
+                      <div className="analytics-chart-placeholder">
+                        <div className="chart-icon">📈</div>
+                        <p className="placeholder-text">Chart visualization coming soon</p>
+                        <p className="placeholder-subtext">Track user acquisition trends over time</p>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="analytics-placeholder">
+                      <p className="placeholder-text">📈 Chart visualization coming soon</p>
+                      <p className="placeholder-subtext">Track user acquisition trends over time</p>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="analytics-card">
                 <h3 className="analytics-title">Revenue Trend</h3>
-                <div className="analytics-placeholder">
-                  <p className="placeholder-text">💰 Chart visualization coming soon</p>
-                  <p className="placeholder-subtext">Monitor revenue and purchase patterns</p>
+                <div className="analytics-content">
+                  {stats ? (
+                    <>
+                      <div className="analytics-stat">
+                        <div className="analytics-stat-value">${(stats.totalRevenue || 0).toFixed(2)}</div>
+                        <div className="analytics-stat-label">Total Revenue</div>
+                      </div>
+                      <div className="analytics-chart-placeholder">
+                        <div className="chart-icon">💰</div>
+                        <p className="placeholder-text">Chart visualization coming soon</p>
+                        <p className="placeholder-subtext">Monitor revenue and purchase patterns</p>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="analytics-placeholder">
+                      <p className="placeholder-text">💰 Chart visualization coming soon</p>
+                      <p className="placeholder-subtext">Monitor revenue and purchase patterns</p>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="analytics-card">
                 <h3 className="analytics-title">Workout Activity</h3>
-                <div className="analytics-placeholder">
-                  <p className="placeholder-text">💪 Chart visualization coming soon</p>
-                  <p className="placeholder-subtext">Analyze workout generation frequency</p>
+                <div className="analytics-content">
+                  {stats ? (
+                    <>
+                      <div className="analytics-stat">
+                        <div className="analytics-stat-value">{stats.totalWorkouts || 0}</div>
+                        <div className="analytics-stat-label">Total Workouts</div>
+                      </div>
+                      <div className="analytics-chart-placeholder">
+                        <div className="chart-icon">💪</div>
+                        <p className="placeholder-text">Chart visualization coming soon</p>
+                        <p className="placeholder-subtext">Analyze workout generation frequency</p>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="analytics-placeholder">
+                      <p className="placeholder-text">💪 Chart visualization coming soon</p>
+                      <p className="placeholder-subtext">Analyze workout generation frequency</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

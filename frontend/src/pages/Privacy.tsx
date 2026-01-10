@@ -8,8 +8,14 @@ function Privacy() {
   return (
     <>
       <Helmet>
-        <title>Privacy Policy - AIWorkoutNow</title>
-        <meta name="description" content="Read AIWorkoutNow's privacy policy to understand how we collect, use, and protect your data." />
+        <title>Privacy Policy - AIWorkoutNow | Data Protection & Privacy</title>
+        <meta name="description" content="Read AIWorkoutNow's privacy policy to understand how we collect, use, and protect your data. We respect your privacy and keep your information secure." />
+        <meta name="keywords" content="privacy policy, data protection, AIWorkoutNow privacy, fitness app privacy, user data security" />
+        <meta property="og:title" content="Privacy Policy - AIWorkoutNow" />
+        <meta property="og:description" content="Read AIWorkoutNow's privacy policy to understand how we collect, use, and protect your data." />
+        <meta property="og:url" content="https://aiworkoutnow.com/privacy" />
+        <link rel="canonical" href="https://aiworkoutnow.com/privacy" />
+        <meta name="robots" content="noindex, follow" />
       </Helmet>
       
       <div className="privacy-page">

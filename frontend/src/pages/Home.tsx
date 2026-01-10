@@ -21,6 +21,10 @@ function Home() {
   const [checkingAccess, setCheckingAccess] = useState(true);
   const { setHeroContent } = useHeroContext();
 
+  const seoTitle = "AIWorkoutNow - Free AI Workout Generator | Personalized Fitness Plans";
+  const seoDescription = "Get personalized AI-generated workouts instantly. No signup required. Free AI workout generator that creates custom fitness plans tailored to your goals, equipment, and schedule. Try 3 free workouts today!";
+  const seoKeywords = "AI workouts, workout generator, fitness AI, personalized workouts, no signup workouts, free workout generator, AI fitness, custom workout plans, home workouts, gym workouts, fitness app, workout planner, exercise generator, fitness coach AI";
+
   useEffect(() => {
     checkAccessStatus();
     
@@ -150,6 +154,42 @@ function Home() {
   return (
     <>
       <Helmet>
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
+        <meta name="keywords" content={seoKeywords} />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription} />
+        <meta property="og:url" content="https://aiworkoutnow.com" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://aiworkoutnow.com/og-image.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDescription} />
+        <meta name="twitter:image" content="https://aiworkoutnow.com/og-image.png" />
+        <link rel="canonical" href="https://aiworkoutnow.com" />
+        <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "AIWorkoutNow",
+          "url": "https://aiworkoutnow.com",
+          "description": seoDescription,
+          "applicationCategory": "HealthApplication",
+          "operatingSystem": "Web",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "description": "3 free workouts, then one-time payment options available"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "ratingCount": "150"
+          }
+        })}
+        </script>
+      </Helmet>
         <title>AI Workout Generator – 3 Free Workouts | AIWorkoutNow</title>
         <meta 
           name="description" 

@@ -84,8 +84,13 @@ function Contact() {
   return (
     <>
       <Helmet>
-        <title>Contact Us - AIWorkoutNow</title>
-        <meta name="description" content="Get in touch with AIWorkoutNow. We'd love to hear your feedback, questions, or suggestions." />
+        <title>Contact Us - AIWorkoutNow | Get Support & Help</title>
+        <meta name="description" content="Get in touch with AIWorkoutNow. We're here to help with your fitness journey. Contact our support team for questions, feedback, or assistance." />
+        <meta name="keywords" content="contact AIWorkoutNow, fitness support, workout help, customer service, AI fitness support" />
+        <meta property="og:title" content="Contact Us - AIWorkoutNow" />
+        <meta property="og:description" content="Get in touch with AIWorkoutNow. We're here to help with your fitness journey." />
+        <meta property="og:url" content="https://aiworkoutnow.com/contact" />
+        <link rel="canonical" href="https://aiworkoutnow.com/contact" />
       </Helmet>
       
       <div className="contact-page">

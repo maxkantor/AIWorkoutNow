@@ -8,8 +8,14 @@ function Disclaimer() {
   return (
     <>
       <Helmet>
-        <title>Disclaimer - AIWorkoutNow</title>
-        <meta name="description" content="Read AIWorkoutNow's disclaimer regarding fitness advice and workout recommendations." />
+        <title>Disclaimer - AIWorkoutNow | Fitness Advice & Safety</title>
+        <meta name="description" content="Read AIWorkoutNow's disclaimer regarding fitness advice and workout recommendations. Important safety information for users." />
+        <meta name="keywords" content="fitness disclaimer, workout safety, exercise disclaimer, fitness advice disclaimer" />
+        <meta property="og:title" content="Disclaimer - AIWorkoutNow" />
+        <meta property="og:description" content="Read AIWorkoutNow's disclaimer regarding fitness advice and workout recommendations." />
+        <meta property="og:url" content="https://aiworkoutnow.com/disclaimer" />
+        <link rel="canonical" href="https://aiworkoutnow.com/disclaimer" />
+        <meta name="robots" content="noindex, follow" />
       </Helmet>
       
       <div className="disclaimer-page">
