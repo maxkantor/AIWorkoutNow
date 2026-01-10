@@ -44,6 +44,14 @@ function AdminCustomerDetail() {
     }
   }, [customer?.email]);
 
+  // Set default token count when modal opens
+  useEffect(() => {
+    if (showResetModal && customer) {
+      console.log('[Reset] Modal opened, setting default token count to:', customer.tokensRemaining);
+      setNewTokenCount(customer.tokensRemaining);
+    }
+  }, [showResetModal, customer]);
+
   const loadCustomerData = async (token: string, id: string) => {
     try {
       const [customerData, activitiesData] = await Promise.all([
@@ -84,8 +92,8 @@ function AdminCustomerDetail() {
       return;
     }
 
-    if (newTokenCount <= 0) {
-      setError('Please enter a valid workout count (greater than 0)');
+    if (newTokenCount < 0 || isNaN(newTokenCount)) {
+      setError('Please enter a valid workout count (0 or greater)');
       return;
     }
 
@@ -201,6 +209,7 @@ function AdminCustomerDetail() {
                   console.log('[Reset] Button clicked, opening modal');
                   console.log('[Reset] DeviceId:', deviceId);
                   console.log('[Reset] Customer:', customer);
+                  setError(null);
                   setShowResetModal(true);
                 }}
                 className="btn btn-warning"
@@ -327,12 +336,18 @@ function AdminCustomerDetail() {
         <div className="modal-overlay" onClick={() => {
           console.log('[Reset] Modal overlay clicked, closing modal');
           setShowResetModal(false);
+          setError(null);
         }}>
           <div className="modal-content" onClick={(e) => {
             console.log('[Reset] Modal content clicked, stopping propagation');
             e.stopPropagation();
           }}>
             <h2>Reset Workouts (This Device Only)</h2>
+            {error && (
+              <div className="error-message" style={{ color: '#dc2626', marginBottom: '1rem', padding: '0.5rem', backgroundColor: '#fee2e2', borderRadius: '4px' }}>
+                {error}
+              </div>
+            )}
             <div className="form-group">
               <label>Current 💪Remaining Workouts: {customer.tokensRemaining}</label>
             </div>
@@ -358,7 +373,10 @@ function AdminCustomerDetail() {
             </div>
             <div className="modal-actions">
               <button
-                onClick={() => setShowResetModal(false)}
+                onClick={() => {
+                  setShowResetModal(false);
+                  setError(null);
+                }}
                 className="btn btn-secondary"
                 disabled={resetting}
               >
