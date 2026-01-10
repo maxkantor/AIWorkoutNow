@@ -271,16 +271,26 @@ public class AdminController : ControllerBase
     [HttpPost("admin/customers/{deviceId}/reset-tokens")]
     public async Task<IActionResult> ResetTokens(string deviceId, [FromBody] ResetTokensRequest request)
     {
+        // CRITICAL: Ensure CORS headers are set on response
+        Response.Headers["Access-Control-Allow-Origin"] = "*";
+        Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD";
+        Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, *";
+        
         try
         {
+            Console.WriteLine($"[AdminController] ResetTokens called for device: {deviceId}");
+            Console.WriteLine($"[AdminController] Request: NewTokenCount={request.NewTokenCount}, PreviousTokenCount={request.PreviousTokenCount}, Reason={request.Reason}");
+            
             // Get previous token count if not provided
             int previousCount = request.PreviousTokenCount;
             if (previousCount == 0)
             {
                 var tokens = await _dynamoService.GetUserTokensAsync(deviceId);
                 previousCount = tokens?.TokensRemaining ?? 0;
+                Console.WriteLine($"[AdminController] Retrieved previous count from DB: {previousCount}");
             }
             
+            Console.WriteLine($"[AdminController] Resetting tokens from {previousCount} to {request.NewTokenCount}");
             await _dynamoService.ResetUserTokensAsync(deviceId, request.NewTokenCount);
             
             // Log activity
@@ -297,10 +307,17 @@ public class AdminController : ControllerBase
                 }
             });
 
+            Console.WriteLine($"[AdminController] Reset successful for device: {deviceId}");
             return Ok(new { message = "Tokens reset successfully", newTokenCount = request.NewTokenCount });
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"[AdminController] ResetTokens error: {ex.Message}");
+            Console.WriteLine($"[AdminController] Stack trace: {ex.StackTrace}");
+            // CRITICAL: Set CORS headers even on error
+            Response.Headers["Access-Control-Allow-Origin"] = "*";
+            Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD";
+            Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, *";
             return StatusCode(500, new { message = "Failed to reset tokens", error = ex.Message });
         }
     }
