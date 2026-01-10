@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Net;
 using AIWorkoutNow.Api.Services;
 
 namespace AIWorkoutNow.Api;
@@ -86,12 +87,48 @@ public class Startup
         //     app.UseSwaggerUI();
         // }
 
+        // Handle OPTIONS requests explicitly for API Gateway HTTP API
+        app.Use(async (context, next) =>
+        {
+            // Add CORS headers to all responses BEFORE processing
+            context.Response.Headers["Access-Control-Allow-Origin"] = "*";
+            context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH";
+            context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With";
+            context.Response.Headers["Access-Control-Max-Age"] = "3600";
+            context.Response.Headers["Access-Control-Expose-Headers"] = "*";
+
+            // Handle OPTIONS preflight requests
+            if (context.Request.Method == "OPTIONS")
+            {
+                context.Response.StatusCode = 200;
+                return;
+            }
+
+            try
+            {
+                await next();
+            }
+            catch
+            {
+                // Ensure CORS headers are still set even on exception
+                if (!context.Response.HasStarted)
+                {
+                    context.Response.Headers["Access-Control-Allow-Origin"] = "*";
+                    context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH";
+                    context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With";
+                }
+                throw;
+            }
+        });
+
         // CORS must be before UseRouting for OPTIONS preflight requests
         // Enable CORS for all origins (required for API Gateway HTTP API)
         app.UseCors("AllowAll");
         app.UseRouting();
         app.UseAuthentication();
         app.UseAuthorization();
+        
+        
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();

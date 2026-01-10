@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Cors;
 using AIWorkoutNow.Api.Services;
 using AIWorkoutNow.Api.Models;
 
 namespace AIWorkoutNow.Api.Controllers;
 
 [ApiController]
+[EnableCors("AllowAll")]
 [Route("")]
 public class PricingController : ControllerBase
 {
@@ -35,8 +37,18 @@ public class PricingController : ControllerBase
     }
 
     [HttpGet("pricing-plans")]
+    [HttpOptions("pricing-plans")]
     public async Task<IActionResult> GetPricingPlans()
     {
+        // Handle OPTIONS preflight
+        if (Request.Method == "OPTIONS")
+        {
+            Response.Headers["Access-Control-Allow-Origin"] = "*";
+            Response.Headers["Access-Control-Allow-Methods"] = "GET, OPTIONS";
+            Response.Headers["Access-Control-Allow-Headers"] = "Content-Type";
+            return Ok();
+        }
+        
         var startTime = DateTime.UtcNow;
         try
         {

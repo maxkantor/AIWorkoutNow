@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Cors;
 using AIWorkoutNow.Api.Services;
 using AIWorkoutNow.Api.Models;
 
 namespace AIWorkoutNow.Api.Controllers;
 
 [ApiController]
+[EnableCors("AllowAll")]
 [Route("")]
 public class AdminController : ControllerBase
 {
