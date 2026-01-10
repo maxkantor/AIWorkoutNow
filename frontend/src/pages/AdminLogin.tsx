@@ -103,8 +103,7 @@ function AdminLogin() {
                   </>
                 ) : (
                   <>
-                    <span className="button-icon">🔒</span>
-                    <span className="button-text">Login</span>
+                    🔒 Login
                   </>
                 )}
               </button>

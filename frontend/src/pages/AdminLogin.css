@@ -218,11 +218,14 @@
   display: inline-block;
 }
 
-.button-text {
-  display: inline-block;
-  color: #ffffff !important;
-  font-weight: 600;
-  font-size: 1rem;
+/* Button text is now direct text, no span needed */
+.login-button {
+  text-align: center;
+}
+
+.login-button::before {
+  content: '';
+  display: none;
 }
 
 .login-button span:not(.button-icon):not(.spinner):not(.button-text) {
