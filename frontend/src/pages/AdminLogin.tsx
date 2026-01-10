@@ -104,7 +104,7 @@ function AdminLogin() {
                 ) : (
                   <>
                     <span className="button-icon">🔒</span>
-                    <span>Login</span>
+                    Login
                   </>
                 )}
               </button>

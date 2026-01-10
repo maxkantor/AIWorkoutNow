@@ -273,6 +273,14 @@ public class AdminController : ControllerBase
     {
         try
         {
+            // Get previous token count if not provided
+            int previousCount = request.PreviousTokenCount;
+            if (previousCount == 0)
+            {
+                var tokens = await _dynamoService.GetUserTokensAsync(deviceId);
+                previousCount = tokens?.TokensRemaining ?? 0;
+            }
+            
             await _dynamoService.ResetUserTokensAsync(deviceId, request.NewTokenCount);
             
             // Log activity
@@ -283,7 +291,7 @@ public class AdminController : ControllerBase
                 Description = $"Tokens reset to {request.NewTokenCount} by admin",
                 Details = new Dictionary<string, object>
                 {
-                    { "previousCount", request.PreviousTokenCount },
+                    { "previousCount", previousCount },
                     { "newCount", request.NewTokenCount },
                     { "reason", request.Reason ?? "Admin reset" }
                 }
@@ -303,6 +311,14 @@ public class AdminController : ControllerBase
     {
         try
         {
+            // CRITICAL: Ensure CORS headers are set on response
+            Response.Headers["Access-Control-Allow-Origin"] = "*";
+            Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD";
+            Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, *";
+            
+            // URL decode email in case it's encoded
+            email = Uri.UnescapeDataString(email);
+            
             var visitorIds = await _dynamoService.GetVisitorIdsByEmailAsync(email);
             if (!visitorIds.Any())
             {
@@ -334,6 +350,10 @@ public class AdminController : ControllerBase
         }
         catch (Exception ex)
         {
+            // CRITICAL: Set CORS headers even on error
+            Response.Headers["Access-Control-Allow-Origin"] = "*";
+            Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD";
+            Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, *";
             return StatusCode(500, new { message = "Failed to get customers by email", error = ex.Message });
         }
     }
@@ -342,6 +362,14 @@ public class AdminController : ControllerBase
     [HttpPost("admin/customers/by-email/{email}/reset-tokens")]
     public async Task<IActionResult> ResetTokensByEmail(string email, [FromBody] ResetTokensRequest request)
     {
+        // CRITICAL: Ensure CORS headers are set on response
+        Response.Headers["Access-Control-Allow-Origin"] = "*";
+        Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD";
+        Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, *";
+        
+        // URL decode email in case it's encoded
+        email = Uri.UnescapeDataString(email);
+        
         try
         {
             var visitorIds = await _dynamoService.GetVisitorIdsByEmailAsync(email);

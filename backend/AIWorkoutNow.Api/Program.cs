@@ -75,19 +75,25 @@ var app = builder.Build();
 //     app.UseSwaggerUI();
 // }
 
-// Handle OPTIONS preflight - return early with CORS headers
+// CRITICAL: Add CORS headers to ALL responses BEFORE any processing
+// This must happen first in the pipeline to ensure headers are always set
 app.Use(async (context, next) =>
 {
+    // CRITICAL: Set CORS headers BEFORE calling next() to ensure they're on all responses
+    context.Response.Headers["Access-Control-Allow-Origin"] = "*";
+    context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD";
+    context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, *";
+    context.Response.Headers["Access-Control-Expose-Headers"] = "*";
+    
+    // Handle OPTIONS preflight - return early
     if (string.Equals(context.Request.Method, "OPTIONS", StringComparison.OrdinalIgnoreCase))
     {
-        context.Response.Headers["Access-Control-Allow-Origin"] = "*";
-        context.Response.Headers["Access-Control-Allow-Methods"] = "*";
-        context.Response.Headers["Access-Control-Allow-Headers"] = "*";
         context.Response.Headers["Access-Control-Max-Age"] = "3600";
         context.Response.StatusCode = 200;
         await context.Response.WriteAsync("");
         return;
     }
+    
     await next();
 });
 

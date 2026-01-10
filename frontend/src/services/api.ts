@@ -485,18 +485,23 @@ export async function getCustomerActivities(token: string, deviceId: string, lim
   return response.json();
 }
 
-export async function resetUserTokens(token: string, deviceId: string, newTokenCount: number, _oldTokenCount?: number, reason?: string): Promise<void> {
+export async function resetUserTokens(token: string, deviceId: string, newTokenCount: number, previousTokenCount?: number, reason?: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/admin/customers/${deviceId}/reset-tokens`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({ newTokenCount, reason }),
+    body: JSON.stringify({ 
+      newTokenCount, 
+      previousTokenCount: previousTokenCount ?? 0,
+      reason 
+    }),
   });
 
   if (!response.ok) {
-    throw new Error('Failed to reset user tokens');
+    const errorText = await response.text();
+    throw new Error(errorText || 'Failed to reset user tokens');
   }
 }
 
@@ -523,11 +528,16 @@ export async function resetTokensByEmail(token: string, email: string, newTokenC
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({ newTokenCount, reason }),
+    body: JSON.stringify({ 
+      newTokenCount, 
+      previousTokenCount: 0, // Will be calculated on backend
+      reason 
+    }),
   });
 
   if (!response.ok) {
-    throw new Error('Failed to reset tokens by email');
+    const errorText = await response.text();
+    throw new Error(errorText || 'Failed to reset tokens by email');
   }
 
   return response.json();
