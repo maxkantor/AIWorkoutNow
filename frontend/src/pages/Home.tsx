@@ -231,13 +231,16 @@ function Home() {
         </script>
       </Helmet>
       
-      <main className="min-h-screen py-6" style={{
+      <main className="min-h-screen py-6 relative" style={{
         backgroundImage: "url('/images/main-bg.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
         backgroundAttachment: "fixed"
       }}>
+        {/* Semi-transparent overlay to ensure content readability */}
+        <div className="absolute inset-0 bg-white/30 pointer-events-none z-0"></div>
+        <div className="relative z-10">
         <div className="max-w-7xl mx-auto px-4">
           {/* 3-Column Grid Layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-8">
@@ -373,6 +376,7 @@ function Home() {
             <h2>Best AI Fitness App for Busy People</h2>
             <p>No time for long signup processes? AIWorkoutNow gives you instant access to professional-quality workout plans. Get started in seconds, not minutes.</p>
           </section>
+        </div>
         </div>
       </main>
 
