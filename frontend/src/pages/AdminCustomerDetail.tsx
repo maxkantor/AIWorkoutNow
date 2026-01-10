@@ -396,7 +396,7 @@ function AdminCustomerDetail() {
                 Cancel
               </button>
               <button
-                onMouseDown={(e) => {
+                onMouseDown={() => {
                   console.log('[Reset] Button mouse down event!');
                 }}
                 onClick={async (e) => {
