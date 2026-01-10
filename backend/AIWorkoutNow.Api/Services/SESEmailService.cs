@@ -9,12 +9,15 @@ namespace AIWorkoutNow.Api.Services;
 public class SESEmailService : IEmailService
 {
     private readonly IAmazonSimpleEmailService _sesClient;
-    private readonly string _fromEmail;
 
     public SESEmailService()
     {
         _sesClient = new AmazonSimpleEmailServiceClient();
-        _fromEmail = GetSSMParameter("/aiworkoutnow/ses-from-email", "SES_FROM_EMAIL", "noreply@aiworkoutnow.com").Result;
+    }
+    
+    private async Task<string> GetFromEmailAsync()
+    {
+        return await GetSSMParameter("/aiworkoutnow/ses-from-email", "SES_FROM_EMAIL", "noreply@aiworkoutnow.com");
     }
 
     private async Task<string> GetSSMParameter(string parameterName, string fallbackEnvVar, string defaultValue)
@@ -38,9 +41,10 @@ public class SESEmailService : IEmailService
 
     public async Task SendEmailAsync(string to, string subject, string body)
     {
+        var fromEmail = await GetFromEmailAsync();
         var request = new Amazon.SimpleEmail.Model.SendEmailRequest
         {
-            Source = _fromEmail,
+            Source = fromEmail,
             Destination = new Amazon.SimpleEmail.Model.Destination
             {
                 ToAddresses = new List<string> { to }
