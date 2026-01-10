@@ -15,9 +15,10 @@
   position: relative;
   background-image: url('/images/hero-bg.png');
   background-size: cover;
-  background-position: center center;
+  background-position: center 40%;
   background-repeat: no-repeat;
-  min-height: 480px;
+  min-height: 380px;
+  max-height: 420px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,7 +74,7 @@
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 3rem 1.5rem;
+  padding: 2rem 1.5rem;
 }
 
 .hero-content {
@@ -255,34 +256,27 @@
 /* Desktop (1024px - 1279px) */
 @media (min-width: 1024px) and (max-width: 1279px) {
   .hero-section {
-    min-height: 480px;
-    background-position: center 35%;
+    min-height: 380px;
+    max-height: 420px;
+    background-position: center 40%;
   }
 
   .hero-container {
-    padding: 3rem 2rem;
+    padding: 2.5rem 1.5rem;
   }
 }
 
-/* MacBook Air and similar laptop screens (1280px - 1440px) - OPTIMIZED FOR FULL IMAGE VISIBILITY */
+/* MacBook Air and similar laptop screens (1280px - 1440px) - COMPACT HEIGHT */
 @media (min-width: 1280px) and (max-width: 1440px) {
   .hero-section {
-    min-height: 600px;
-    max-height: 650px;
+    min-height: 360px;
+    max-height: 400px;
     background-size: cover;
-    background-position: center 30%;
+    background-position: center 45%;
   }
 
   .hero-container {
-    padding: 3rem 2rem;
-  }
-}
-
-/* MacBook Air specific optimization - taller viewport for more image visibility */
-@media (min-width: 1280px) and (max-width: 1440px) and (min-height: 800px) {
-  .hero-section {
-    min-height: 620px;
-    background-position: center 25%;
+    padding: 2rem 1.5rem;
   }
 }
 
