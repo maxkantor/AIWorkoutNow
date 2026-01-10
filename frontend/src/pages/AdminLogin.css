@@ -188,19 +188,14 @@
   pointer-events: auto;
 }
 
-/* CRITICAL: Force ALL text and content inside button to be WHITE */
-.login-button,
-.login-button *,
-.login-button span,
-.login-button::before,
-.login-button::after {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+/* CRITICAL: Make Login text RED and visible */
+.login-button {
+  color: #dc2626 !important;
 }
 
-/* Override any inherited colors */
-.login-button * {
-  color: inherit !important;
+.login-button *,
+.login-button span {
+  color: #dc2626 !important;
 }
 
 .login-button:hover:not(:disabled) {
