@@ -1,4 +1,4 @@
-import { ReactNode, createContext, useContext, useState } from 'react';
+import { ReactNode, createContext, useContext, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Footer from './Footer';
 import './Layout.css';
