@@ -295,7 +295,7 @@ public class EmailVerificationController : ControllerBase
             // Get updated token status
             var tokens = await _dynamoService.GetUserTokensAsync(request.DeviceId);
             var tokensRemaining = tokens?.TokensRemaining ?? 0;
-            var hasUnlimited = tokensRemaining >= 999999;
+            var userHasUnlimited = tokensRemaining >= 999999;
             
             // Get updated free workout count (should be 0 after reset, so 3 remaining)
             var freeWorkoutsUsed = await _dynamoService.GetTotalFreeWorkoutsAsync(request.DeviceId);
@@ -305,7 +305,7 @@ public class EmailVerificationController : ControllerBase
             {
                 message = "Credits restored successfully",
                 tokensRemaining = tokensRemaining,
-                hasUnlimited = hasUnlimited,
+                hasUnlimited = userHasUnlimited,
                 expiresAt = tokens?.ExpiresAt?.ToString("O"),
                 freeWorkoutsRemaining = freeWorkoutsRemaining,
                 freeWorkoutsUsed = freeWorkoutsUsed
