@@ -2029,5 +2029,51 @@ public class DynamoDBService : IDynamoDBService
         var calendar = culture.Calendar;
         return calendar.GetWeekOfYear(date, culture.DateTimeFormat.CalendarWeekRule, culture.DateTimeFormat.FirstDayOfWeek);
     }
+
+    public async Task<List<UserPurchase>> GetPurchasesByEmailAsync(string email)
+    {
+        try
+        {
+            var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+            var purchasesTable = $"{tablePrefix}-UserPurchases";
+            
+            // Scan for purchases with matching CustomerEmail
+            var response = await _dynamoDB.ScanAsync(new ScanRequest
+            {
+                TableName = purchasesTable,
+                FilterExpression = "CustomerEmail = :email AND #status = :completed",
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    { "#status", "Status" }
+                },
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    { ":email", new AttributeValue { S = email.ToLowerInvariant() } },
+                    { ":completed", new AttributeValue { S = "completed" } }
+                }
+            });
+
+            return response.Items.Select(item => new UserPurchase
+            {
+                PurchaseId = item["PurchaseId"].S,
+                DeviceId = item["DeviceId"].S,
+                PlanId = item["PlanId"].S,
+                StripeSessionId = item["StripeSessionId"].S,
+                StripePaymentIntentId = item.ContainsKey("StripePaymentIntentId") ? item["StripePaymentIntentId"].S : "",
+                Status = item["Status"].S,
+                PurchasedAt = DateTime.Parse(item["PurchasedAt"].S),
+                ExpiresAt = item.ContainsKey("ExpiresAt") ? DateTime.Parse(item["ExpiresAt"].S) : null,
+                TokensGranted = item.ContainsKey("TokensGranted") ? int.Parse(item["TokensGranted"].N) : null,
+                IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL,
+                CustomerEmail = item.ContainsKey("CustomerEmail") ? item["CustomerEmail"].S : null,
+                CustomerName = item.ContainsKey("CustomerName") ? item["CustomerName"].S : null
+            }).OrderByDescending(p => p.PurchasedAt).ToList(); // Latest first
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error getting purchases by email {email}: {ex.Message}");
+            return new List<UserPurchase>();
+        }
+    }
 }
 

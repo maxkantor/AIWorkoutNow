@@ -160,12 +160,136 @@ public class EmailVerificationController : ControllerBase
             Console.WriteLine($"[EmailVerificationController] Resetting free workout count for device {request.DeviceId}");
             await _dynamoService.ResetFreeWorkoutCountAsync(request.DeviceId);
 
-            // Merge credits from all linked visitor IDs
+            // CRITICAL FIX: Get ALL purchases for this email (not just linked devices)
+            // This ensures we restore credits even if purchases are on different devices
+            var purchasesByEmail = await _dynamoService.GetPurchasesByEmailAsync(request.Email);
+            Console.WriteLine($"[EmailVerificationController] Found {purchasesByEmail.Count} completed purchases for {request.Email}");
+
+            // Merge credits from all linked visitor IDs (existing devices)
             var allVisitorIds = mapping.VisitorIds.Where(id => id != request.DeviceId).ToList();
             if (allVisitorIds.Any())
             {
-                Console.WriteLine($"[EmailVerificationController] Merging credits from {allVisitorIds.Count} devices for {request.Email}");
+                Console.WriteLine($"[EmailVerificationController] Merging credits from {allVisitorIds.Count} linked devices for {request.Email}");
                 await _dynamoService.MergeCreditsFromVisitorIdsAsync(request.DeviceId, allVisitorIds);
+            }
+
+            // CRITICAL FIX: Grant tokens from ALL purchases for this email
+            // If multiple purchases exist, use the latest expiration date, but sum all tokens
+            // If any purchase is unlimited, grant unlimited with latest expiration
+            if (purchasesByEmail.Any())
+            {
+                Console.WriteLine($"[EmailVerificationController] Processing {purchasesByEmail.Count} purchases for {request.Email}");
+
+                int totalTokensToGrant = 0;
+                DateTime? latestExpiration = null;
+                bool hasUnlimited = false;
+                var purchasesToCopy = new List<UserPurchase>();
+
+                // Process all purchases for this email
+                foreach (var purchase in purchasesByEmail)
+                {
+                    var plan = await _dynamoService.GetPricingPlanAsync(purchase.PlanId);
+                    if (plan == null)
+                    {
+                        Console.WriteLine($"[EmailVerificationController] Plan {purchase.PlanId} not found, skipping purchase {purchase.PurchaseId}");
+                        continue;
+                    }
+
+                    // Check if unlimited
+                    if (purchase.IsUnlimited || plan.IsUnlimited)
+                    {
+                        hasUnlimited = true;
+                        var purchaseExpiration = purchase.ExpiresAt ?? DateTime.UtcNow.AddDays(plan.UnlimitedDays ?? 365);
+                        if (!latestExpiration.HasValue || purchaseExpiration > latestExpiration.Value)
+                        {
+                            latestExpiration = purchaseExpiration;
+                        }
+                        Console.WriteLine($"[EmailVerificationController] Found unlimited purchase {purchase.PurchaseId} (expires: {purchaseExpiration})");
+                    }
+                    else
+                    {
+                        // Add tokens from this purchase
+                        int tokensFromPurchase = 0;
+                        if (purchase.TokensGranted.HasValue)
+                        {
+                            tokensFromPurchase = purchase.TokensGranted.Value;
+                        }
+                        else if (plan.TokenCount.HasValue)
+                        {
+                            tokensFromPurchase = plan.TokenCount.Value;
+                        }
+                        totalTokensToGrant += tokensFromPurchase;
+                        Console.WriteLine($"[EmailVerificationController] Adding {tokensFromPurchase} tokens from purchase {purchase.PurchaseId} (Plan: {plan.Name})");
+                    }
+
+                    purchasesToCopy.Add(purchase);
+                }
+
+                // Determine final tokens to grant
+                int finalTokensToGrant = hasUnlimited ? 999999 : totalTokensToGrant;
+                Console.WriteLine($"[EmailVerificationController] Total tokens to grant: {finalTokensToGrant} (Unlimited: {hasUnlimited}, Regular: {totalTokensToGrant})");
+
+                if (finalTokensToGrant > 0)
+                {
+                    // Get current tokens for this device
+                    var currentTokens = await _dynamoService.GetUserTokensAsync(request.DeviceId);
+                    if (currentTokens != null)
+                    {
+                        // Update tokens - if unlimited or if current is less, update
+                        if (finalTokensToGrant >= 999999 || currentTokens.TokensRemaining < finalTokensToGrant)
+                        {
+                            currentTokens.TokensRemaining = finalTokensToGrant;
+                            if (latestExpiration.HasValue || hasUnlimited)
+                            {
+                                currentTokens.ExpiresAt = latestExpiration;
+                            }
+                            await _dynamoService.SaveUserTokensAsync(currentTokens);
+                            Console.WriteLine($"[EmailVerificationController] Updated tokens to {finalTokensToGrant} for device {request.DeviceId} (expires: {latestExpiration})");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[EmailVerificationController] Current tokens ({currentTokens.TokensRemaining}) >= tokens to grant ({finalTokensToGrant}), keeping current");
+                        }
+                    }
+                    else
+                    {
+                        // Create new tokens
+                        var newTokens = new UserTokens
+                        {
+                            DeviceId = request.DeviceId,
+                            TokensRemaining = finalTokensToGrant,
+                            ExpiresAt = latestExpiration
+                        };
+                        await _dynamoService.SaveUserTokensAsync(newTokens);
+                        Console.WriteLine($"[EmailVerificationController] Created new tokens: {finalTokensToGrant} for device {request.DeviceId} (expires: {latestExpiration})");
+                    }
+
+                    // Copy all purchases to this device if they don't already exist
+                    var existingPurchases = await _dynamoService.GetUserPurchasesAsync(request.DeviceId);
+                    foreach (var purchase in purchasesToCopy)
+                    {
+                        if (!existingPurchases.Any(p => p.PurchaseId == purchase.PurchaseId))
+                        {
+                            var purchaseCopy = new UserPurchase
+                            {
+                                PurchaseId = purchase.PurchaseId,
+                                DeviceId = request.DeviceId,
+                                PlanId = purchase.PlanId,
+                                Status = purchase.Status,
+                                PurchasedAt = purchase.PurchasedAt,
+                                ExpiresAt = purchase.ExpiresAt,
+                                IsUnlimited = purchase.IsUnlimited,
+                                TokensGranted = purchase.TokensGranted,
+                                CustomerEmail = purchase.CustomerEmail,
+                                CustomerName = purchase.CustomerName,
+                                StripeSessionId = purchase.StripeSessionId,
+                                StripePaymentIntentId = purchase.StripePaymentIntentId
+                            };
+                            await _dynamoService.SaveUserPurchaseAsync(purchaseCopy);
+                            Console.WriteLine($"[EmailVerificationController] Copied purchase {purchase.PurchaseId} to device {request.DeviceId}");
+                        }
+                    }
+                }
             }
 
             // Get updated token status
