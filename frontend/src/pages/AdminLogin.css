@@ -171,7 +171,7 @@
   padding: 1rem 1.5rem;
   font-size: 1rem;
   font-weight: 600;
-  color: #ffffff;
+  color: #ffffff !important;
   background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
   border: none;
   border-radius: 10px;
@@ -186,6 +186,13 @@
   position: relative;
   z-index: 1;
   pointer-events: auto;
+}
+
+/* CRITICAL: Ensure all text inside button is white and visible */
+.login-button,
+.login-button *,
+.login-button span {
+  color: #ffffff !important;
 }
 
 .login-button:hover:not(:disabled) {
