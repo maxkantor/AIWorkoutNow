@@ -84,80 +84,28 @@ public class Startup
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
-        // AGGRESSIVE CORS FIX - Handle OPTIONS at the VERY FIRST middleware
-        // This must run before ANY other middleware
+        // ULTRA SIMPLE CORS FIX - Handle OPTIONS FIRST, then set headers for everything else
         app.Use(async (context, next) =>
         {
-            // AGGRESSIVE: Handle OPTIONS FIRST - before anything else
+            // Handle OPTIONS immediately - return 200 with CORS headers
             if (string.Equals(context.Request.Method, "OPTIONS", StringComparison.OrdinalIgnoreCase))
             {
-                // Set CORS headers
                 context.Response.Headers["Access-Control-Allow-Origin"] = "*";
                 context.Response.Headers["Access-Control-Allow-Methods"] = "*";
                 context.Response.Headers["Access-Control-Allow-Headers"] = "*";
-                context.Response.Headers["Access-Control-Allow-Credentials"] = "false";
                 context.Response.Headers["Access-Control-Max-Age"] = "3600";
-                context.Response.Headers["Access-Control-Expose-Headers"] = "*";
                 context.Response.StatusCode = 200;
-                context.Response.ContentType = "text/plain";
-                // Write minimal response body
-                await context.Response.WriteAsync("OK");
-                return; // STOP - don't call next()
+                await context.Response.WriteAsync("");
+                return;
             }
 
-            // AGGRESSIVE: Set CORS headers on EVERY response, no matter what
-            context.Response.OnStarting(() =>
-            {
-                // Ensure headers are set even if they were removed
-                context.Response.Headers["Access-Control-Allow-Origin"] = "*";
-                context.Response.Headers["Access-Control-Allow-Methods"] = "*";
-                context.Response.Headers["Access-Control-Allow-Headers"] = "*";
-                context.Response.Headers["Access-Control-Allow-Credentials"] = "false";
-                context.Response.Headers["Access-Control-Max-Age"] = "3600";
-                context.Response.Headers["Access-Control-Expose-Headers"] = "*";
-                return Task.CompletedTask;
-            });
-
-            // Set CORS headers immediately for non-OPTIONS requests
+            // For all other requests, set CORS headers and continue
             context.Response.Headers["Access-Control-Allow-Origin"] = "*";
             context.Response.Headers["Access-Control-Allow-Methods"] = "*";
             context.Response.Headers["Access-Control-Allow-Headers"] = "*";
-            context.Response.Headers["Access-Control-Allow-Credentials"] = "false";
             context.Response.Headers["Access-Control-Max-Age"] = "3600";
-            context.Response.Headers["Access-Control-Expose-Headers"] = "*";
 
-            try
-            {
-                await next();
-                
-                // AGGRESSIVE: Re-apply CORS headers after next() in case they were removed
-                if (!context.Response.HasStarted)
-                {
-                    context.Response.Headers["Access-Control-Allow-Origin"] = "*";
-                    context.Response.Headers["Access-Control-Allow-Methods"] = "*";
-                    context.Response.Headers["Access-Control-Allow-Headers"] = "*";
-                    context.Response.Headers["Access-Control-Expose-Headers"] = "*";
-                }
-            }
-            catch (Exception ex)
-            {
-                // AGGRESSIVE: Ensure CORS headers are ALWAYS set, even on errors
-                if (!context.Response.HasStarted)
-                {
-                    context.Response.StatusCode = 500;
-                    context.Response.Headers["Access-Control-Allow-Origin"] = "*";
-                    context.Response.Headers["Access-Control-Allow-Methods"] = "*";
-                    context.Response.Headers["Access-Control-Allow-Headers"] = "*";
-                    context.Response.Headers["Access-Control-Expose-Headers"] = "*";
-                    context.Response.ContentType = "application/json";
-                    var errorResponse = System.Text.Json.JsonSerializer.Serialize(new { 
-                        error = "Internal server error",
-                        message = ex.Message
-                    });
-                    await context.Response.WriteAsync(errorResponse);
-                }
-                // Don't rethrow - we've already handled the error response with CORS headers
-            }
+            await next();
         });
 
         // CORS must be before UseRouting for OPTIONS preflight requests
