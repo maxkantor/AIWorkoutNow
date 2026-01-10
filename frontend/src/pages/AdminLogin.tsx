@@ -33,22 +33,29 @@ function AdminLogin() {
         <title>Admin Login - AIWorkoutNow</title>
       </Helmet>
       
-      <div className="admin-login">
-        <div className="container">
-          <div className="login-card">
-            <h1>Admin Login</h1>
-            <form onSubmit={handleSubmit}>
+      <div className="admin-login-container">
+        <div className="admin-login-wrapper">
+          <div className="admin-login-card">
+            <div className="admin-login-header">
+              <h1>Admin Login</h1>
+              <p>Sign in to access the admin dashboard</p>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="admin-login-form">
               <div className="form-group">
-                <label htmlFor="email">Email</label>
+                <label htmlFor="email">Email Address</label>
                 <input
                   type="email"
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="input"
+                  className="form-input"
+                  placeholder="admin@aiworkoutnow.com"
                   required
+                  autoComplete="email"
                 />
               </div>
+              
               <div className="form-group">
                 <label htmlFor="password">Password</label>
                 <input
@@ -56,13 +63,33 @@ function AdminLogin() {
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input"
+                  className="form-input"
+                  placeholder="Enter your password"
                   required
+                  autoComplete="current-password"
                 />
               </div>
-              {error && <div className="error-message">{error}</div>}
-              <button type="submit" className="btn" disabled={loading}>
-                {loading ? 'Logging in...' : 'Login'}
+              
+              {error && (
+                <div className="error-message">
+                  <span className="error-icon">⚠️</span>
+                  <span>{error}</span>
+                </div>
+              )}
+              
+              <button 
+                type="submit" 
+                className="login-button" 
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <span className="spinner"></span>
+                    <span>Logging in...</span>
+                  </>
+                ) : (
+                  'Sign In'
+                )}
               </button>
             </form>
           </div>
