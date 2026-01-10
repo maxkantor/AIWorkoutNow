@@ -32,7 +32,6 @@ interface LayoutProps {
 
 function Layout({ children }: LayoutProps) {
   const [heroContent, setHeroContent] = useState<HeroContent | null>(null);
-  const [showRestoreCredits, setShowRestoreCredits] = useState(false);
   const { freeWorkoutsRemaining, accessStatus, tokenBalance, checkingAccess } = heroContent || {};
 
   return (
@@ -109,37 +108,7 @@ function Layout({ children }: LayoutProps) {
                       Free workouts exhausted
                     </div>
                   ) : null}
-                  
-                  {/* Restore Credits Button - Matches Trust Signals Style */}
-                  <button
-                    onClick={() => setShowRestoreCredits(true)}
-                    className="px-3 py-1.5 bg-blue-50 text-slate-700 rounded-full text-xs md:text-sm font-medium shadow-sm hover:bg-blue-100 hover:shadow-md transition-all cursor-pointer"
-                    title="Restore credits from another device"
-                  >
-                    📱 Restore Credits
-                  </button>
                 </div>
-                
-                {/* Restore Credits Form (shown when button clicked) */}
-                {showRestoreCredits && (
-                  <div className="restore-credits-hero-container">
-                    <button
-                      onClick={() => setShowRestoreCredits(false)}
-                      className="restore-close-btn"
-                      aria-label="Close restore credits"
-                    >
-                      ×
-                    </button>
-                    <RestoreCredits
-                      onCreditsRestored={() => {
-                        setShowRestoreCredits(false);
-                        // Trigger refresh of access status
-                        const event = new CustomEvent('refreshAccessStatus');
-                        window.dispatchEvent(event);
-                      }}
-                    />
-                  </div>
-                )}
               </div>
             )}
           </div>

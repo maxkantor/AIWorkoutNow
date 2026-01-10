@@ -231,7 +231,13 @@ function Home() {
         </script>
       </Helmet>
       
-      <main className="min-h-screen bg-slate-50 py-6">
+      <main className="min-h-screen py-6" style={{
+        backgroundImage: "url('/images/main-bg.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        backgroundAttachment: "fixed"
+      }}>
         <div className="max-w-7xl mx-auto px-4">
           {/* 3-Column Grid Layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-8">

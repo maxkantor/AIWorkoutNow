@@ -57,8 +57,8 @@ body {
     width: 300px;
     z-index: 0;
     pointer-events: none;
-    opacity: 0.15;
-    filter: blur(20px) saturate(0.3);
+    opacity: 0.4;
+    filter: blur(8px) saturate(0.6);
   }
   
   body::before {
