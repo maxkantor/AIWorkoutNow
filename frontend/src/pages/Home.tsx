@@ -377,7 +377,7 @@ function Home() {
             <p>No time for long signup processes? AIWorkoutNow gives you instant access to professional-quality workout plans. Get started in seconds, not minutes.</p>
           </section>
         </div>
-        </div>
+      </div>
       </main>
 
       <PaywallModal
