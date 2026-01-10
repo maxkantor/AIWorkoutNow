@@ -211,7 +211,14 @@
   display: inline-block;
 }
 
-.login-button span:not(.button-icon):not(.spinner) {
+.button-text {
+  display: inline-block;
+  color: #ffffff !important;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.login-button span:not(.button-icon):not(.spinner):not(.button-text) {
   display: inline-block;
   color: #ffffff;
   font-weight: 600;
