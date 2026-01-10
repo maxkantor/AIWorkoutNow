@@ -1,6 +1,5 @@
 import { ReactNode, createContext, useContext, useState } from 'react';
 import Footer from './Footer';
-import RestoreCredits from './RestoreCredits';
 import './Layout.css';
 
 interface HeroContent {
