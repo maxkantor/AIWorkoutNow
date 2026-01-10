@@ -122,6 +122,15 @@ public class Startup
             try
             {
                 await next();
+                
+                // AGGRESSIVE: Re-apply CORS headers after next() in case they were removed
+                if (!context.Response.HasStarted)
+                {
+                    context.Response.Headers["Access-Control-Allow-Origin"] = "*";
+                    context.Response.Headers["Access-Control-Allow-Methods"] = "*";
+                    context.Response.Headers["Access-Control-Allow-Headers"] = "*";
+                    context.Response.Headers["Access-Control-Expose-Headers"] = "*";
+                }
             }
             catch (Exception ex)
             {
@@ -132,14 +141,15 @@ public class Startup
                     context.Response.Headers["Access-Control-Allow-Origin"] = "*";
                     context.Response.Headers["Access-Control-Allow-Methods"] = "*";
                     context.Response.Headers["Access-Control-Allow-Headers"] = "*";
+                    context.Response.Headers["Access-Control-Expose-Headers"] = "*";
                     context.Response.ContentType = "application/json";
                     var errorResponse = System.Text.Json.JsonSerializer.Serialize(new { 
-                        error = ex.Message,
-                        message = "An error occurred"
+                        error = "Internal server error",
+                        message = ex.Message
                     });
                     await context.Response.WriteAsync(errorResponse);
                 }
-                // Don't rethrow - we've already handled the error response
+                // Don't rethrow - we've already handled the error response with CORS headers
             }
         });
 
