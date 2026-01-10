@@ -72,7 +72,7 @@
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 1280px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 2rem 1.5rem;
 }
@@ -266,7 +266,7 @@
   }
 }
 
-/* MacBook Air and similar laptop screens (1280px - 1440px) - COMPACT HEIGHT */
+/* MacBook Air and similar laptop screens (1280px - 1440px) - NARROWER WIDTH */
 @media (min-width: 1280px) and (max-width: 1440px) {
   .hero-section {
     min-height: 300px;
@@ -276,6 +276,7 @@
   }
 
   .hero-container {
+    max-width: 800px;
     padding: 1.5rem 1.5rem;
   }
 }
