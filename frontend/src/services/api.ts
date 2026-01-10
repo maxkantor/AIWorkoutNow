@@ -656,6 +656,71 @@ export async function verifyAndRestoreCredits(email: string, code: string, devic
   return response.json();
 }
 
+export interface AnalyticsData {
+  startDate: string;
+  endDate: string;
+  period: string;
+  timeSeries: Array<{
+    date: string;
+    workoutsGenerated: number;
+    tokenPurchases: number;
+    contactSubmissions: number;
+    uniqueUsers: number;
+    revenue: number;
+  }>;
+  events: {
+    totalWorkoutsGenerated: number;
+    totalTokenPurchases: number;
+    totalContactSubmissions: number;
+    totalTokenResets: number;
+    eventsByType: Record<string, number>;
+  };
+  users: {
+    totalUsers: number;
+    newUsers: number;
+    returningUsers: number;
+    freeUsers: number;
+    paidUsers: number;
+    averageWorkoutsPerUser: number;
+    averageRevenuePerUser: number;
+  };
+  revenue: {
+    totalRevenue: number;
+    averageOrderValue: number;
+    totalTransactions: number;
+    revenueByPlan: Record<string, number>;
+  };
+  conversion: {
+    freeToPaidConversionRate: number;
+    freeUsersConverted: number;
+    freeUsersNotConverted: number;
+    averageTimeToConvert: number;
+  };
+}
+
+export async function getAnalytics(token: string, startDate: Date, endDate: Date, period: string): Promise<AnalyticsData> {
+  const params = new URLSearchParams({
+    startDate: startDate.toISOString(),
+    endDate: endDate.toISOString(),
+    period: period
+  });
+
+  const response = await fetch(`${API_BASE_URL}/admin/analytics?${params}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Failed to fetch analytics' }));
+    throw new Error(error.message || 'Failed to fetch analytics');
+  }
+
+  return response.json();
+}
+
 export async function checkEmailLinked(email: string): Promise<{ hasLinkedDevices: boolean; linkedDeviceCount: number }> {
   const response = await fetch(`${API_BASE_URL}/api/email-verification/check-email?email=${encodeURIComponent(email)}`, {
     method: 'GET',

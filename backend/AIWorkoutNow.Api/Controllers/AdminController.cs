@@ -85,6 +85,30 @@ public class AdminController : ControllerBase
     }
 
     [Authorize]
+    [HttpGet("admin/analytics")]
+    public async Task<IActionResult> GetAnalytics([FromQuery] DateTime? startDate = null, [FromQuery] DateTime? endDate = null, [FromQuery] string period = "day")
+    {
+        try
+        {
+            var start = startDate ?? DateTime.UtcNow.AddDays(-30);
+            var end = endDate ?? DateTime.UtcNow;
+            
+            // Validate period
+            if (!new[] { "hour", "day", "week", "month" }.Contains(period))
+            {
+                period = "day";
+            }
+
+            var analytics = await _dynamoService.GetAnalyticsDataAsync(start, end, period);
+            return Ok(analytics);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to get analytics", error = ex.Message });
+        }
+    }
+
+    [Authorize]
     [HttpPost("admin/send-email")]
     public async Task<IActionResult> SendEmail([FromBody] Models.SendEmailRequest request)
     {

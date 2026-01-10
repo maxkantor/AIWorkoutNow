@@ -1,0 +1,281 @@
+.admin-analytics {
+  min-height: calc(100vh - 200px);
+  padding: 2rem 0;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.page-header h1 {
+  color: var(--text-primary);
+}
+
+.analytics-controls {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: var(--bg-primary);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow);
+  flex-wrap: wrap;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.control-group label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.control-select {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.control-select:hover {
+  border-color: var(--primary-color);
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.metric-card {
+  background-color: var(--bg-primary);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow);
+}
+
+.metric-card h3 {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 0.5rem 0;
+}
+
+.metric-breakdown {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+}
+
+.events-section {
+  background-color: var(--bg-primary);
+  padding: 2rem;
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow);
+  margin-bottom: 2rem;
+}
+
+.events-section h2 {
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.event-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--bg-secondary);
+  border-radius: 0.5rem;
+}
+
+.event-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.event-info h3 {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.25rem 0;
+  font-weight: 600;
+}
+
+.event-count {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.charts-section {
+  background-color: var(--bg-primary);
+  padding: 2rem;
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow);
+  margin-bottom: 2rem;
+}
+
+.charts-section h2 {
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+.chart-container {
+  margin-bottom: 3rem;
+}
+
+.chart-container h3 {
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+  font-size: 1.125rem;
+}
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  height: 300px;
+  padding: 1rem;
+  background-color: var(--bg-secondary);
+  border-radius: 0.5rem;
+  overflow-x: auto;
+}
+
+.chart-bar-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+  height: 100%;
+}
+
+.chart-bar {
+  width: 100%;
+  min-height: 4px;
+  border-radius: 0.25rem 0.25rem 0 0;
+  transition: opacity 0.2s;
+  cursor: pointer;
+}
+
+.chart-bar:hover {
+  opacity: 0.8;
+}
+
+.chart-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+  transform: rotate(-45deg);
+  transform-origin: top left;
+  white-space: nowrap;
+  max-width: 100px;
+}
+
+.revenue-by-plan {
+  background-color: var(--bg-primary);
+  padding: 2rem;
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow);
+}
+
+.revenue-by-plan h2 {
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+.plan-revenue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.plan-revenue-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: var(--bg-secondary);
+  border-radius: 0.5rem;
+}
+
+.plan-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.plan-revenue {
+  font-weight: 700;
+  color: var(--primary-color);
+  font-size: 1.125rem;
+}
+
+.loading,
+.error-message {
+  text-align: center;
+  padding: 2rem;
+  background-color: var(--bg-primary);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow);
+}
+
+.error-message {
+  color: var(--error-color);
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .analytics-controls {
+    flex-direction: column;
+  }
+
+  .metrics-grid,
+  .events-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart {
+    height: 200px;
+  }
+
+  .chart-label {
+    font-size: 0.625rem;
+    max-width: 50px;
+  }
+}
+

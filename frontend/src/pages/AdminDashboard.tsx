@@ -126,6 +126,11 @@ function AdminDashboard() {
               <h3>Contacts</h3>
               <p>View contact form messages</p>
             </Link>
+            <Link to="/admin/analytics" className="nav-card">
+              <div className="nav-icon">📊</div>
+              <h3>Analytics</h3>
+              <p>GA4-like analytics dashboard</p>
+            </Link>
           </div>
 
           {/* Recent Activity */}

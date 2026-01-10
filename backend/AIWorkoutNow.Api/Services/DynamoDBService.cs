@@ -1822,5 +1822,212 @@ public class DynamoDBService : IDynamoDBService
             Console.WriteLine($"[DynamoDBService] Error creating default pricing plans: {ex.Message}");
         }
     }
+
+    public async Task<AnalyticsData> GetAnalyticsDataAsync(DateTime startDate, DateTime endDate, string period)
+    {
+        var analytics = new AnalyticsData
+        {
+            StartDate = startDate,
+            EndDate = endDate,
+            Period = period
+        };
+
+        try
+        {
+            // Get all activities and purchases using existing methods
+            var allActivities = await GetAllActivitiesAsync(10000);
+            var allPurchases = await GetAllUserPurchasesAsync();
+            
+            // Filter by date range
+            var filteredActivities = allActivities
+                .Where(a => a.Timestamp >= startDate && a.Timestamp <= endDate)
+                .ToList();
+            
+            var filteredPurchases = allPurchases
+                .Where(p => p.PurchasedAt >= startDate && p.PurchasedAt <= endDate && p.Status == "completed")
+                .ToList();
+
+            // Group by time period
+            var timeSeriesMap = new Dictionary<string, TimeSeriesPoint>();
+            var uniqueUsersPerPeriod = new Dictionary<string, HashSet<string>>();
+
+            foreach (var activity in filteredActivities)
+            {
+                var dateKey = GetDateKey(activity.Timestamp, period);
+                if (!timeSeriesMap.ContainsKey(dateKey))
+                {
+                    timeSeriesMap[dateKey] = new TimeSeriesPoint { Date = dateKey };
+                    uniqueUsersPerPeriod[dateKey] = new HashSet<string>();
+                }
+
+                var point = timeSeriesMap[dateKey];
+                uniqueUsersPerPeriod[dateKey].Add(activity.DeviceId);
+
+                switch (activity.ActivityType)
+                {
+                    case "workout_generated":
+                        point.WorkoutsGenerated++;
+                        break;
+                    case "contact_submitted":
+                        point.ContactSubmissions++;
+                        break;
+                }
+            }
+
+            // Process purchases and calculate revenue
+            foreach (var purchase in filteredPurchases)
+            {
+                var dateKey = GetDateKey(purchase.PurchasedAt, period);
+                if (!timeSeriesMap.ContainsKey(dateKey))
+                {
+                    timeSeriesMap[dateKey] = new TimeSeriesPoint { Date = dateKey };
+                    uniqueUsersPerPeriod[dateKey] = new HashSet<string>();
+                }
+
+                var point = timeSeriesMap[dateKey];
+                point.TokenPurchases++;
+                uniqueUsersPerPeriod[dateKey].Add(purchase.DeviceId);
+
+                // Get plan price
+                var plan = await GetPricingPlanAsync(purchase.PlanId);
+                if (plan != null)
+                {
+                    point.Revenue += plan.Price;
+                }
+            }
+
+            // Set unique users per period
+            foreach (var kvp in uniqueUsersPerPeriod)
+            {
+                if (timeSeriesMap.ContainsKey(kvp.Key))
+                {
+                    timeSeriesMap[kvp.Key].UniqueUsers = kvp.Value.Count;
+                }
+            }
+
+            analytics.TimeSeries = timeSeriesMap.Values.OrderBy(t => t.Date).ToList();
+
+            // Calculate aggregate metrics
+            analytics.Events = new EventMetrics
+            {
+                TotalWorkoutsGenerated = filteredActivities.Count(a => a.ActivityType == "workout_generated"),
+                TotalTokenPurchases = filteredPurchases.Count,
+                TotalContactSubmissions = filteredActivities.Count(a => a.ActivityType == "contact_submitted"),
+                TotalTokenResets = filteredActivities.Count(a => a.ActivityType == "tokens_reset"),
+                EventsByType = filteredActivities.GroupBy(a => a.ActivityType)
+                    .ToDictionary(g => g.Key, g => g.Count())
+            };
+
+            // User metrics
+            var allDeviceIds = filteredActivities.Select(a => a.DeviceId)
+                .Concat(filteredPurchases.Select(p => p.DeviceId))
+                .Distinct()
+                .ToList();
+            
+            var freeUsersSet = new HashSet<string>();
+            var paidUsersSet = new HashSet<string>();
+
+            // Check each device for paid/free status
+            foreach (var deviceId in allDeviceIds)
+            {
+                var tokens = await GetUserTokensAsync(deviceId);
+                if (tokens != null && tokens.TokensRemaining > 0)
+                {
+                    paidUsersSet.Add(deviceId);
+                }
+                else
+                {
+                    freeUsersSet.Add(deviceId);
+                }
+            }
+
+            var allCustomers = await GetAllCustomersAsync();
+            var newUsers = allCustomers.Count(c => 
+                c.FirstSeen.HasValue && 
+                c.FirstSeen.Value >= startDate && 
+                c.FirstSeen.Value <= endDate);
+
+            // Revenue metrics (calculate first)
+            decimal totalRevenue = 0;
+            var revenueByPlan = new Dictionary<string, decimal>();
+            
+            foreach (var purchase in filteredPurchases)
+            {
+                var plan = await GetPricingPlanAsync(purchase.PlanId);
+                if (plan != null)
+                {
+                    totalRevenue += plan.Price;
+                    if (!revenueByPlan.ContainsKey(purchase.PlanId))
+                        revenueByPlan[purchase.PlanId] = 0;
+                    revenueByPlan[purchase.PlanId] += plan.Price;
+                }
+            }
+
+            analytics.Revenue = new RevenueMetrics
+            {
+                TotalRevenue = totalRevenue,
+                AverageOrderValue = filteredPurchases.Count > 0 
+                    ? totalRevenue / filteredPurchases.Count 
+                    : 0,
+                TotalTransactions = filteredPurchases.Count,
+                RevenueByPlan = revenueByPlan
+            };
+
+            // User metrics (now we can use analytics.Revenue)
+            analytics.Users = new UserMetrics
+            {
+                TotalUsers = allDeviceIds.Count,
+                NewUsers = newUsers,
+                ReturningUsers = allDeviceIds.Count - newUsers,
+                FreeUsers = freeUsersSet.Count,
+                PaidUsers = paidUsersSet.Count,
+                AverageWorkoutsPerUser = allDeviceIds.Count > 0 
+                    ? (double)analytics.Events.TotalWorkoutsGenerated / allDeviceIds.Count 
+                    : 0,
+                AverageRevenuePerUser = paidUsersSet.Count > 0 
+                    ? (double)analytics.Revenue.TotalRevenue / paidUsersSet.Count 
+                    : 0
+            };
+
+            // Conversion metrics
+            var convertedFromFree = paidUsersSet.Intersect(freeUsersSet).Count();
+
+            analytics.Conversion = new ConversionMetrics
+            {
+                FreeToPaidConversionRate = freeUsersSet.Count > 0 
+                    ? (double)convertedFromFree / freeUsersSet.Count * 100 
+                    : 0,
+                FreeUsersConverted = convertedFromFree,
+                FreeUsersNotConverted = freeUsersSet.Count - convertedFromFree
+            };
+
+            return analytics;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error getting analytics data: {ex.Message}");
+            Console.WriteLine($"[DynamoDBService] Stack trace: {ex.StackTrace}");
+            return analytics;
+        }
+    }
+
+    private string GetDateKey(DateTime date, string period)
+    {
+        return period switch
+        {
+            "hour" => date.ToString("yyyy-MM-dd HH:00"),
+            "day" => date.ToString("yyyy-MM-dd"),
+            "week" => $"{date.Year}-W{GetWeekOfYear(date)}",
+            "month" => date.ToString("yyyy-MM"),
+            _ => date.ToString("yyyy-MM-dd")
+        };
+    }
+
+    private int GetWeekOfYear(DateTime date)
+    {
+        var culture = System.Globalization.CultureInfo.CurrentCulture;
+        var calendar = culture.Calendar;
+        return calendar.GetWeekOfYear(date, culture.DateTimeFormat.CalendarWeekRule, culture.DateTimeFormat.FirstDayOfWeek);
+    }
 }
 
