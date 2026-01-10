@@ -1,4 +1,5 @@
 import { ReactNode, createContext, useContext, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import Footer from './Footer';
 import './Layout.css';
 
@@ -32,10 +33,13 @@ interface LayoutProps {
 function Layout({ children }: LayoutProps) {
   const [heroContent, setHeroContent] = useState<HeroContent | null>(null);
   const { freeWorkoutsRemaining, accessStatus, tokenBalance, checkingAccess } = heroContent || {};
+  const location = useLocation();
+  const isAdminPage = location.pathname.startsWith('/admin');
 
   return (
     <div className="layout">
-      {/* Hero Section */}
+      {/* Hero Section - Hide on admin pages */}
+      {!isAdminPage && (
       <section className="hero-section">
         <div className="hero-container">
           <div className="hero-content">
@@ -113,11 +117,12 @@ function Layout({ children }: LayoutProps) {
           </div>
         </div>
       </section>
+      )}
 
       <HeroContext.Provider value={{ heroContent, setHeroContent }}>
         {children}
       </HeroContext.Provider>
-      <Footer />
+      {!isAdminPage && <Footer />}
     </div>
   );
 }
