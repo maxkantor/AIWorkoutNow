@@ -79,15 +79,22 @@ body {
   }
 }
 
-/* Admin pages - clean background */
+/* Admin pages - clean background - AGGRESSIVE FIX */
 body.admin-body {
-  background-color: var(--bg-secondary);
-  background-image: none;
+  background-color: #f9fafb !important;
+  background-image: none !important;
 }
 
 body.admin-body::before,
 body.admin-body::after {
-  display: none;
+  display: none !important;
+  content: none !important;
+  background-image: none !important;
+}
+
+/* Force admin pages to have no background images at all */
+body.admin-body * {
+  background-image: none !important;
 }
 
 /* Ensure main content is above side backgrounds */

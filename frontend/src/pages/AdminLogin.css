@@ -3,8 +3,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--bg-secondary);
+  background-color: #f9fafb !important;
+  background-image: none !important;
   padding: 2rem 1rem;
+  position: relative;
+  z-index: 10;
+}
+
+/* Force remove any background images on admin login */
+body.admin-body .admin-login,
+.admin-login {
+  background: #f9fafb !important;
+}
+
+body.admin-body::before,
+body.admin-body::after {
+  display: none !important;
+  content: none !important;
 }
 
 .login-card {
