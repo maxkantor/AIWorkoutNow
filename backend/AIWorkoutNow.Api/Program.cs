@@ -1,5 +1,5 @@
-// This file is for local development only
-// Lambda uses LambdaEntryPoint.cs
+// This file is for Lambda deployment
+// Lambda uses this as the entry point for dotnet8 runtime
 
 using Amazon.DynamoDBv2;
 using AIWorkoutNow.Api.Services;
