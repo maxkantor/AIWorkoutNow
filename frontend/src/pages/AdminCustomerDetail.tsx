@@ -86,13 +86,25 @@ function AdminCustomerDetail() {
   };
 
   const handleResetTokens = async () => {
+    console.log('[Reset] handleResetTokens called');
+    console.log('[Reset] deviceId:', deviceId);
+    console.log('[Reset] customer:', customer);
+    console.log('[Reset] newTokenCount:', newTokenCount);
+    console.log('[Reset] newTokenCount type:', typeof newTokenCount);
+    console.log('[Reset] newTokenCount isNaN:', isNaN(newTokenCount));
+    
     if (!deviceId || !customer) {
       console.error('[Reset] Missing deviceId or customer:', { deviceId, customer });
       setError('Missing device ID or customer data');
       return;
     }
 
-    if (newTokenCount < 0 || isNaN(newTokenCount)) {
+    // Convert to number if it's a string
+    const tokenCountNum = typeof newTokenCount === 'string' ? parseInt(newTokenCount, 10) : newTokenCount;
+    console.log('[Reset] tokenCountNum:', tokenCountNum);
+    
+    if (tokenCountNum < 0 || isNaN(tokenCountNum)) {
+      console.error('[Reset] Invalid token count:', tokenCountNum);
       setError('Please enter a valid workout count (0 or greater)');
       return;
     }
@@ -106,7 +118,7 @@ function AdminCustomerDetail() {
     }
 
     console.log('[Reset] Starting reset for device:', deviceId);
-    console.log('[Reset] New token count:', newTokenCount);
+    console.log('[Reset] New token count:', tokenCountNum);
     console.log('[Reset] Previous count:', customer.tokensRemaining);
     
     setResetting(true);
@@ -117,7 +129,7 @@ function AdminCustomerDetail() {
       await resetUserTokens(
         token,
         deviceId,
-        newTokenCount,
+        tokenCountNum,
         customer.tokensRemaining,
         resetReason
       );
@@ -131,9 +143,10 @@ function AdminCustomerDetail() {
       setNewTokenCount(0);
       
       // Show success message
-      alert(`Successfully reset workouts to ${newTokenCount} for this device.`);
+      alert(`Successfully reset workouts to ${tokenCountNum} for this device.`);
     } catch (err: any) {
       console.error('[Reset] Error:', err);
+      console.error('[Reset] Error stack:', err.stack);
       const errorMessage = err.message || 'Failed to reset workouts';
       setError(errorMessage);
       alert(`Error: ${errorMessage}`);
@@ -383,18 +396,39 @@ function AdminCustomerDetail() {
                 Cancel
               </button>
               <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('[Reset] Modal button clicked!');
-                  console.log('[Reset] newTokenCount:', newTokenCount);
-                  console.log('[Reset] deviceId:', deviceId);
-                  console.log('[Reset] customer:', customer);
-                  handleResetTokens();
+                onMouseDown={(e) => {
+                  console.log('[Reset] Button mouse down event!');
+                }}
+                onClick={async (e) => {
+                  try {
+                    console.log('[Reset] Button onClick event fired!');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('[Reset] Modal button clicked!');
+                    console.log('[Reset] newTokenCount:', newTokenCount);
+                    console.log('[Reset] deviceId:', deviceId);
+                    console.log('[Reset] customer:', customer);
+                    console.log('[Reset] resetting state:', resetting);
+                    console.log('[Reset] Button disabled?', resetting);
+                    
+                    if (resetting) {
+                      console.warn('[Reset] Button is disabled, ignoring click');
+                      return;
+                    }
+                    
+                    console.log('[Reset] Calling handleResetTokens...');
+                    await handleResetTokens();
+                    console.log('[Reset] handleResetTokens completed');
+                  } catch (error) {
+                    console.error('[Reset] Error in button click handler:', error);
+                    console.error('[Reset] Error stack:', error instanceof Error ? error.stack : 'No stack');
+                    setError(`Unexpected error: ${error instanceof Error ? error.message : String(error)}`);
+                  }
                 }}
                 className="btn btn-warning"
                 disabled={resetting}
                 type="button"
+                style={{ cursor: resetting ? 'not-allowed' : 'pointer' }}
               >
                 {resetting ? 'Resetting...' : 'Reset This Device'}
               </button>
