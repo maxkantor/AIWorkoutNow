@@ -17,7 +17,7 @@
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
-  min-height: 360px;
+  min-height: 480px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -27,6 +27,7 @@
   padding: 0;
   width: 100%;
 }
+
 
 @keyframes fadeIn {
   from {
@@ -201,32 +202,9 @@
   }
 }
 
-<<<<<<< Updated upstream
 /* ============================================
    RESPONSIVE DESIGN
    ============================================ */
-
-/* Desktop (1024px+) */
-@media (min-width: 1024px) {
-  .hero-section {
-    min-height: 400px;
-  }
-
-  .hero-container {
-    padding: 3rem 2rem;
-  }
-}
-
-/* Tablet (768px - 1023px) */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .hero-section {
-    min-height: 340px;
-  }
-
-  .hero-container {
-    padding: 2.5rem 1.5rem;
-  }
-}
 
 /* Mobile (max 767px) */
 @media (max-width: 767px) {
@@ -259,6 +237,52 @@
     font-size: 0.9375rem;
     margin-top: 0.5rem;
     padding: 0 0.5rem;
+  }
+}
+
+/* Tablet (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .hero-section {
+    min-height: 380px;
+    background-position: center 35%;
+  }
+
+  .hero-container {
+    padding: 2.5rem 1.5rem;
+  }
+}
+
+/* Desktop (1024px - 1279px) */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .hero-section {
+    min-height: 480px;
+    background-position: center 35%;
+  }
+
+  .hero-container {
+    padding: 3rem 2rem;
+  }
+}
+
+/* MacBook Air and similar laptop screens (1280px - 1440px) - OPTIMIZED FOR FULL IMAGE VISIBILITY */
+@media (min-width: 1280px) and (max-width: 1440px) {
+  .hero-section {
+    min-height: 600px;
+    max-height: 650px;
+    background-size: cover;
+    background-position: center 30%;
+  }
+
+  .hero-container {
+    padding: 3rem 2rem;
+  }
+}
+
+/* MacBook Air specific optimization - taller viewport for more image visibility */
+@media (min-width: 1280px) and (max-width: 1440px) and (min-height: 800px) {
+  .hero-section {
+    min-height: 620px;
+    background-position: center 25%;
   }
 }
 
@@ -438,6 +462,3 @@
   margin-left: 0.5rem;
   font-weight: 400;
 }
-=======
-
->>>>>>> Stashed changes
