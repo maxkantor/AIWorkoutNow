@@ -37,6 +37,13 @@ try {
         exit 1
     }
 
+    # CRITICAL: For provided.al2023 runtime, rename executable to 'bootstrap'
+    # This is required for Lambda to find the entry point
+    if (Test-Path "publish-lambda\AIWorkoutNow.Api") {
+        Write-Host "   Creating bootstrap executable for provided.al2023 runtime..." -ForegroundColor Yellow
+        Copy-Item "publish-lambda\AIWorkoutNow.Api" "publish-lambda\bootstrap" -Force
+    }
+
     # Create zip package
     Write-Host "📦 Creating deployment package..." -ForegroundColor Cyan
     Compress-Archive -Path "publish-lambda\*" -DestinationPath $zipFile -Force
