@@ -84,10 +84,9 @@ public class Startup
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
-        // ULTRA SIMPLE CORS FIX - Handle OPTIONS FIRST, then set headers for everything else
+        // Handle OPTIONS preflight - return early with CORS headers
         app.Use(async (context, next) =>
         {
-            // Handle OPTIONS immediately - return 200 with CORS headers
             if (string.Equals(context.Request.Method, "OPTIONS", StringComparison.OrdinalIgnoreCase))
             {
                 context.Response.Headers["Access-Control-Allow-Origin"] = "*";
@@ -98,23 +97,14 @@ public class Startup
                 await context.Response.WriteAsync("");
                 return;
             }
-
-            // For all other requests, set CORS headers and continue
-            context.Response.Headers["Access-Control-Allow-Origin"] = "*";
-            context.Response.Headers["Access-Control-Allow-Methods"] = "*";
-            context.Response.Headers["Access-Control-Allow-Headers"] = "*";
-            context.Response.Headers["Access-Control-Max-Age"] = "3600";
-
             await next();
         });
 
-        // CORS must be before UseRouting for OPTIONS preflight requests
-        // Enable CORS for all origins (required for API Gateway HTTP API)
-        app.UseCors("AllowAll");
+        // CRITICAL: CORS must be between UseRouting() and UseEndpoints()
         app.UseRouting();
+        app.UseCors("AllowAll");
         app.UseAuthentication();
         app.UseAuthorization();
-        
         
         app.UseEndpoints(endpoints =>
         {
