@@ -30,11 +30,18 @@ Write-Host "📦 Publishing .NET application..." -ForegroundColor Cyan
 Push-Location $projectDir
 
 try {
-    dotnet publish -c Release -r linux-x64 --self-contained false -o publish-lambda
+    dotnet publish -c Release -r linux-arm64 --self-contained true -o publish-lambda
 
     if (-not (Test-Path "publish-lambda")) {
         Write-Host "❌ Publish failed" -ForegroundColor Red
         exit 1
+    }
+
+    # CRITICAL: For provided.al2023 runtime, rename executable to 'bootstrap'
+    # This is required for Lambda to find the entry point
+    if (Test-Path "publish-lambda\AIWorkoutNow.Api") {
+        Write-Host "   Creating bootstrap executable for provided.al2023 runtime..." -ForegroundColor Yellow
+        Copy-Item "publish-lambda\AIWorkoutNow.Api" "publish-lambda\bootstrap" -Force
     }
 
     # CRITICAL: For provided.al2023 runtime, rename executable to 'bootstrap'

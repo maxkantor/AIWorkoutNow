@@ -34,9 +34,9 @@ if [ -f "$ZIP_PATH" ]; then
     rm -f "$ZIP_PATH"
 fi
 
-# Publish for Lambda (using x86_64 for compatibility)
+# Publish for Lambda (using arm64 for provided.al2023 runtime)
 echo "📦 Publishing .NET application..."
-dotnet publish -c Release -r linux-x64 --self-contained false -o publish-lambda
+dotnet publish -c Release -r linux-arm64 --self-contained true -o publish-lambda
 
 if [ ! -d "publish-lambda" ]; then
     echo "❌ Publish failed"
