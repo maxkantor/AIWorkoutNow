@@ -197,7 +197,12 @@ function AdminCustomerDetail() {
             </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
-                onClick={() => setShowResetModal(true)}
+                onClick={() => {
+                  console.log('[Reset] Button clicked, opening modal');
+                  console.log('[Reset] DeviceId:', deviceId);
+                  console.log('[Reset] Customer:', customer);
+                  setShowResetModal(true);
+                }}
                 className="btn btn-warning"
               >
                 Reset This Device
@@ -354,9 +359,18 @@ function AdminCustomerDetail() {
                 Cancel
               </button>
               <button
-                onClick={handleResetTokens}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('[Reset] Modal button clicked!');
+                  console.log('[Reset] newTokenCount:', newTokenCount);
+                  console.log('[Reset] deviceId:', deviceId);
+                  console.log('[Reset] customer:', customer);
+                  handleResetTokens();
+                }}
                 className="btn btn-warning"
                 disabled={resetting}
+                type="button"
               >
                 {resetting ? 'Resetting...' : 'Reset This Device'}
               </button>
