@@ -637,6 +637,8 @@ export async function verifyAndRestoreCredits(email: string, code: string, devic
   tokensRemaining: number;
   hasUnlimited: boolean;
   expiresAt?: string;
+  freeWorkoutsRemaining?: number;
+  freeWorkoutsUsed?: number;
 }> {
   const response = await fetch(`${API_BASE_URL}/api/email-verification/verify-and-restore`, {
     method: 'POST',

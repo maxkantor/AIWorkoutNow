@@ -13,7 +13,7 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<{ tokensRemaining: number; hasUnlimited: boolean; expiresAt?: string } | null>(null);
+  const [success, setSuccess] = useState<{ tokensRemaining: number; hasUnlimited: boolean; expiresAt?: string; freeWorkoutsRemaining?: number; freeWorkoutsUsed?: number } | null>(null);
   const [attemptsRemaining, setAttemptsRemaining] = useState<number | null>(null);
 
   const handleSendCode = async () => {
@@ -49,9 +49,12 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
       const result = await verifyAndRestoreCredits(email, code, deviceId);
       setSuccess(result);
       setStep('success');
+      // Call onCreditsRestored callback to refresh parent component state
       if (onCreditsRestored) {
         onCreditsRestored();
       }
+      // Also dispatch a global event to refresh access status across the app
+      window.dispatchEvent(new CustomEvent('refreshAccessStatus'));
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to verify code';
       if (errorMessage.includes('attempts')) {
@@ -180,13 +183,26 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
                   </div>
                 </div>
               ) : (
-                <div className="credits-item">
-                  <span className="credits-icon">💪</span>
-                  <div>
-                    <strong>{success.tokensRemaining} Workouts</strong>
-                    <p className="credits-detail">Available on this device</p>
-                  </div>
-                </div>
+                <>
+                  {success.tokensRemaining > 0 && (
+                    <div className="credits-item">
+                      <span className="credits-icon">💪</span>
+                      <div>
+                        <strong>{success.tokensRemaining} Paid Workouts</strong>
+                        <p className="credits-detail">Available on this device</p>
+                      </div>
+                    </div>
+                  )}
+                  {success.freeWorkoutsRemaining !== undefined && (
+                    <div className="credits-item">
+                      <span className="credits-icon">🎁</span>
+                      <div>
+                        <strong>{success.freeWorkoutsRemaining} Free Workouts</strong>
+                        <p className="credits-detail">Reset and available</p>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
             <button onClick={handleReset} className="cta-button">
