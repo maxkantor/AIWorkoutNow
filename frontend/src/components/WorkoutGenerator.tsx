@@ -7,9 +7,10 @@ interface WorkoutGeneratorProps {
   loading: boolean;
   error: string | null;
   workout: any;
+  disabled?: boolean;
 }
 
-function WorkoutGenerator({ onGenerate, loading, error, workout }: WorkoutGeneratorProps) {
+function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = false }: WorkoutGeneratorProps) {
   const [fitnessLevel, setFitnessLevel] = useState('beginner');
   const [workoutType, setWorkoutType] = useState('full-body');
   const [duration, setDuration] = useState('30');
@@ -40,6 +41,7 @@ function WorkoutGenerator({ onGenerate, loading, error, workout }: WorkoutGenera
               value={fitnessLevel}
               onChange={(e) => setFitnessLevel(e.target.value)}
               className="input"
+              disabled={disabled || loading}
             >
               <option value="beginner">Beginner</option>
               <option value="intermediate">Intermediate</option>
@@ -54,6 +56,7 @@ function WorkoutGenerator({ onGenerate, loading, error, workout }: WorkoutGenera
               value={workoutType}
               onChange={(e) => setWorkoutType(e.target.value)}
               className="input"
+              disabled={disabled || loading}
             >
               <option value="full-body">Full Body</option>
               <option value="upper-body">Upper Body</option>
@@ -72,6 +75,7 @@ function WorkoutGenerator({ onGenerate, loading, error, workout }: WorkoutGenera
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
               className="input"
+              disabled={disabled || loading}
             >
               <option value="15">15 min</option>
               <option value="30">30 min</option>
@@ -87,6 +91,7 @@ function WorkoutGenerator({ onGenerate, loading, error, workout }: WorkoutGenera
               value={equipment}
               onChange={(e) => setEquipment(e.target.value)}
               className="input"
+              disabled={disabled || loading}
             >
               <option value="minimal">Minimal (Bodyweight)</option>
               <option value="dumbbells">Dumbbells</option>
@@ -105,6 +110,7 @@ function WorkoutGenerator({ onGenerate, loading, error, workout }: WorkoutGenera
             onChange={(e) => setInjuries(e.target.value)}
             placeholder="e.g., knee injury, lower back pain"
             className="input"
+            disabled={disabled || loading}
           />
         </div>
 
@@ -117,6 +123,7 @@ function WorkoutGenerator({ onGenerate, loading, error, workout }: WorkoutGenera
             onChange={(e) => setGoals(e.target.value)}
             placeholder="e.g., weight loss, muscle gain, endurance"
             className="input"
+            disabled={disabled || loading}
           />
         </div>
 
@@ -126,7 +133,7 @@ function WorkoutGenerator({ onGenerate, loading, error, workout }: WorkoutGenera
           </div>
         )}
 
-        <button type="submit" className="btn" disabled={loading}>
+        <button type="submit" className="btn" disabled={disabled || loading}>
           {loading ? 'Generating Workout...' : 'Generate AI Workout'}
         </button>
       </form>
