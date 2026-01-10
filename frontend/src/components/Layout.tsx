@@ -1,5 +1,6 @@
 import { ReactNode, createContext, useContext, useState } from 'react';
 import Footer from './Footer';
+import RestoreCredits from './RestoreCredits';
 import './Layout.css';
 
 interface HeroContent {
@@ -31,6 +32,7 @@ interface LayoutProps {
 
 function Layout({ children }: LayoutProps) {
   const [heroContent, setHeroContent] = useState<HeroContent | null>(null);
+  const [showRestoreCredits, setShowRestoreCredits] = useState(false);
   const { freeWorkoutsRemaining, accessStatus, tokenBalance, checkingAccess } = heroContent || {};
 
   return (
@@ -76,36 +78,69 @@ function Layout({ children }: LayoutProps) {
               <span className="px-3 py-1.5 bg-blue-50 text-slate-700 rounded-full text-xs md:text-sm font-medium shadow-sm">⚡ Instant Access</span>
             </div>
 
-            {/* Access Status */}
+            {/* Access Status with Restore Credits Button */}
             {!checkingAccess && (
-              <div className="flex justify-center mb-2">
-                {/* CRITICAL FIX: Backend returns hasUnlimitedAccess=false when tokens are reset to 7 */}
-                {/* ALWAYS respect hasUnlimitedAccess flag from API - it takes absolute precedence */}
-                {accessStatus?.hasUnlimitedAccess === true && 
-                 accessStatus?.tokensRemaining !== undefined && 
-                 accessStatus.tokensRemaining >= 999999 ? (
-                  <div className="inline-block px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold text-xs md:text-sm shadow-md">
-                    ∞ Unlimited Access
-                    {accessStatus?.unlimitedExpiresAt && (
-                      <span className="text-xs opacity-90 ml-2">
-                        (expires {new Date(accessStatus.unlimitedExpiresAt).toLocaleDateString()})
-                      </span>
-                    )}
+              <div className="flex flex-col items-center gap-2 mb-2">
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  {/* CRITICAL FIX: Backend returns hasUnlimitedAccess=false when tokens are reset to 7 */}
+                  {/* ALWAYS respect hasUnlimitedAccess flag from API - it takes absolute precedence */}
+                  {accessStatus?.hasUnlimitedAccess === true && 
+                   accessStatus?.tokensRemaining !== undefined && 
+                   accessStatus.tokensRemaining >= 999999 ? (
+                    <div className="inline-block px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold text-xs md:text-sm shadow-md">
+                      ∞ Unlimited Access
+                      {accessStatus?.unlimitedExpiresAt && (
+                        <span className="text-xs opacity-90 ml-2">
+                          (expires {new Date(accessStatus.unlimitedExpiresAt).toLocaleDateString()})
+                        </span>
+                      )}
+                    </div>
+                  ) : (accessStatus?.tokensRemaining !== undefined && accessStatus.tokensRemaining > 0 && accessStatus.tokensRemaining < 999999) ||
+                      (tokenBalance !== null && tokenBalance !== undefined && tokenBalance > 0 && tokenBalance < 999999) ? (
+                    <div className="inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-semibold text-xs md:text-sm shadow-sm">
+                      💪Remaining Workouts: {accessStatus?.tokensRemaining ?? tokenBalance ?? 0}
+                    </div>
+                  ) : freeWorkoutsRemaining !== undefined && freeWorkoutsRemaining > 0 ? (
+                    <div className="inline-block px-4 py-2 bg-green-100 text-green-800 rounded-lg font-semibold text-xs md:text-sm shadow-sm">
+                      Free workouts remaining: {freeWorkoutsRemaining} / 3
+                    </div>
+                  ) : freeWorkoutsRemaining !== undefined && freeWorkoutsRemaining === 0 ? (
+                    <div className="inline-block px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg font-semibold text-xs md:text-sm shadow-sm">
+                      Free workouts exhausted
+                    </div>
+                  ) : null}
+                  
+                  {/* Restore Credits Button */}
+                  <button
+                    onClick={() => setShowRestoreCredits(true)}
+                    className="restore-credits-hero-btn"
+                    title="Restore credits from another device"
+                  >
+                    <span className="restore-icon">📱</span>
+                    <span className="restore-text">Restore Credits</span>
+                  </button>
+                </div>
+                
+                {/* Restore Credits Form (shown when button clicked) */}
+                {showRestoreCredits && (
+                  <div className="restore-credits-hero-container">
+                    <button
+                      onClick={() => setShowRestoreCredits(false)}
+                      className="restore-close-btn"
+                      aria-label="Close restore credits"
+                    >
+                      ×
+                    </button>
+                    <RestoreCredits
+                      onCreditsRestored={() => {
+                        setShowRestoreCredits(false);
+                        // Trigger refresh of access status
+                        const event = new CustomEvent('refreshAccessStatus');
+                        window.dispatchEvent(event);
+                      }}
+                    />
                   </div>
-                ) : (accessStatus?.tokensRemaining !== undefined && accessStatus.tokensRemaining > 0 && accessStatus.tokensRemaining < 999999) ||
-                    (tokenBalance !== null && tokenBalance !== undefined && tokenBalance > 0 && tokenBalance < 999999) ? (
-                  <div className="inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-semibold text-xs md:text-sm shadow-sm">
-                    💪Remaining Workouts: {accessStatus?.tokensRemaining ?? tokenBalance ?? 0}
-                  </div>
-                ) : freeWorkoutsRemaining !== undefined && freeWorkoutsRemaining > 0 ? (
-                  <div className="inline-block px-4 py-2 bg-green-100 text-green-800 rounded-lg font-semibold text-xs md:text-sm shadow-sm">
-                    Free workouts remaining: {freeWorkoutsRemaining} / 3
-                  </div>
-                ) : freeWorkoutsRemaining !== undefined && freeWorkoutsRemaining === 0 ? (
-                  <div className="inline-block px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg font-semibold text-xs md:text-sm shadow-sm">
-                    Free workouts exhausted
-                  </div>
-                ) : null}
+                )}
               </div>
             )}
           </div>

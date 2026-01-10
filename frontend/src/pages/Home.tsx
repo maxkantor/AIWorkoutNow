@@ -35,8 +35,17 @@ function Home() {
       }, 100);
     };
     
+    // Listen for refresh access status event
+    const handleRefreshAccessStatus = () => {
+      checkAccessStatus();
+    };
+    
     window.addEventListener('openRestoreCredits', handleOpenRestoreCredits);
-    return () => window.removeEventListener('openRestoreCredits', handleOpenRestoreCredits);
+    window.addEventListener('refreshAccessStatus', handleRefreshAccessStatus);
+    return () => {
+      window.removeEventListener('openRestoreCredits', handleOpenRestoreCredits);
+      window.removeEventListener('refreshAccessStatus', handleRefreshAccessStatus);
+    };
   }, []);
 
   useEffect(() => {
