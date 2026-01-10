@@ -122,6 +122,54 @@ aws apigatewayv2 create-route \
     --region $REGION > /dev/null 2>&1 || echo "Route POST /admin/send-email already exists or failed"
 echo "✅ Route: POST /admin/send-email"
 
+# GET /pricing-plans
+aws apigatewayv2 create-route \
+    --api-id "$API_ID" \
+    --route-key "GET /pricing-plans" \
+    --target "integrations/$INTEGRATION_ID" \
+    --region $REGION > /dev/null 2>&1 || echo "Route GET /pricing-plans already exists or failed"
+echo "✅ Route: GET /pricing-plans"
+
+# GET /free-workouts-remaining
+aws apigatewayv2 create-route \
+    --api-id "$API_ID" \
+    --route-key "GET /free-workouts-remaining" \
+    --target "integrations/$INTEGRATION_ID" \
+    --region $REGION > /dev/null 2>&1 || echo "Route GET /free-workouts-remaining already exists or failed"
+echo "✅ Route: GET /free-workouts-remaining"
+
+# GET /user-access-status
+aws apigatewayv2 create-route \
+    --api-id "$API_ID" \
+    --route-key "GET /user-access-status" \
+    --target "integrations/$INTEGRATION_ID" \
+    --region $REGION > /dev/null 2>&1 || echo "Route GET /user-access-status already exists or failed"
+echo "✅ Route: GET /user-access-status"
+
+# POST /api/email-verification/send-code
+aws apigatewayv2 create-route \
+    --api-id "$API_ID" \
+    --route-key "POST /api/email-verification/send-code" \
+    --target "integrations/$INTEGRATION_ID" \
+    --region $REGION > /dev/null 2>&1 || echo "Route POST /api/email-verification/send-code already exists or failed"
+echo "✅ Route: POST /api/email-verification/send-code"
+
+# POST /api/email-verification/verify-and-restore
+aws apigatewayv2 create-route \
+    --api-id "$API_ID" \
+    --route-key "POST /api/email-verification/verify-and-restore" \
+    --target "integrations/$INTEGRATION_ID" \
+    --region $REGION > /dev/null 2>&1 || echo "Route POST /api/email-verification/verify-and-restore already exists or failed"
+echo "✅ Route: POST /api/email-verification/verify-and-restore"
+
+# GET /api/email-verification/check-email
+aws apigatewayv2 create-route \
+    --api-id "$API_ID" \
+    --route-key "GET /api/email-verification/check-email" \
+    --target "integrations/$INTEGRATION_ID" \
+    --region $REGION > /dev/null 2>&1 || echo "Route GET /api/email-verification/check-email already exists or failed"
+echo "✅ Route: GET /api/email-verification/check-email"
+
 # Catch-all route for OPTIONS (CORS preflight)
 aws apigatewayv2 create-route \
     --api-id "$API_ID" \
