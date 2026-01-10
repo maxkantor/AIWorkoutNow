@@ -37,37 +37,51 @@ function AdminLogin() {
         <div className="admin-login-wrapper">
           <div className="admin-login-card">
             <div className="admin-login-header">
+              <div className="header-icons">
+                <div className="icon-person">👤</div>
+                <div className="icon-shield">🛡️</div>
+              </div>
               <h1>Admin Login</h1>
-              <p>Sign in to access the admin dashboard</p>
+              <p>Enter your credentials to access the admin dashboard</p>
             </div>
             
             <form onSubmit={handleSubmit} className="admin-login-form">
               <div className="form-group">
-                <label htmlFor="email">Email Address</label>
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="form-input"
-                  placeholder="admin@aiworkoutnow.com"
-                  required
-                  autoComplete="email"
-                />
+                <label htmlFor="username">
+                  <span className="label-icon">👤</span>
+                  Username
+                </label>
+                <div className="input-wrapper">
+                  <input
+                    type="email"
+                    id="username"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="form-input"
+                    placeholder="admin"
+                    required
+                    autoComplete="username"
+                  />
+                </div>
               </div>
               
               <div className="form-group">
-                <label htmlFor="password">Password</label>
-                <input
-                  type="password"
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="form-input"
-                  placeholder="Enter your password"
-                  required
-                  autoComplete="current-password"
-                />
+                <label htmlFor="password">
+                  <span className="label-icon lock-icon">🔒</span>
+                  Password
+                </label>
+                <div className="input-wrapper">
+                  <input
+                    type="password"
+                    id="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="form-input"
+                    placeholder="Enter password"
+                    required
+                    autoComplete="current-password"
+                  />
+                </div>
               </div>
               
               {error && (
@@ -88,7 +102,10 @@ function AdminLogin() {
                     <span>Logging in...</span>
                   </>
                 ) : (
-                  'Sign In'
+                  <>
+                    <span className="button-icon">🔒</span>
+                    <span>Login</span>
+                  </>
                 )}
               </button>
             </form>

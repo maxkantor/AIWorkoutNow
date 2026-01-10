@@ -1,12 +1,18 @@
-// This file is for Lambda deployment
-// Lambda uses this as the entry point for dotnet8 runtime
+// This file is for Lambda deployment with provided.al2023 runtime
+// Uses Amazon.Lambda.AspNetCoreServer.Hosting for Lambda Runtime Interface Client
 
 using Amazon.DynamoDBv2;
 using AIWorkoutNow.Api.Services;
+using Amazon.Lambda.AspNetCoreServer.Hosting;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// CRITICAL: Use Lambda hosting for provided.al2023 runtime
+// This integrates with Lambda Runtime Interface Client
+builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
 
 // Add services
 builder.Services.AddControllers();
@@ -21,7 +27,8 @@ builder.Services.AddCors(options =>
     {
         policy.AllowAnyOrigin()
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .WithExposedHeaders("*");
     });
 });
 
@@ -68,9 +75,27 @@ var app = builder.Build();
 //     app.UseSwaggerUI();
 // }
 
+// Handle OPTIONS preflight - return early with CORS headers
+app.Use(async (context, next) =>
+{
+    if (string.Equals(context.Request.Method, "OPTIONS", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Response.Headers["Access-Control-Allow-Origin"] = "*";
+        context.Response.Headers["Access-Control-Allow-Methods"] = "*";
+        context.Response.Headers["Access-Control-Allow-Headers"] = "*";
+        context.Response.Headers["Access-Control-Max-Age"] = "3600";
+        context.Response.StatusCode = 200;
+        await context.Response.WriteAsync("");
+        return;
+    }
+    await next();
+});
+
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-app.Run();
+// CRITICAL: For Lambda, use RunAsync() instead of Run()
+// This allows Lambda Runtime Interface Client to manage the lifecycle
+await app.RunAsync();
