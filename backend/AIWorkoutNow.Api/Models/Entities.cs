@@ -75,7 +75,6 @@ public class ContactMessage
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
-<<<<<<< Updated upstream
 public class EmailVerificationCode
 {
     public string Email { get; set; } = string.Empty;
@@ -91,6 +90,3 @@ public class EmailVisitorMapping
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
-=======
-
->>>>>>> Stashed changes

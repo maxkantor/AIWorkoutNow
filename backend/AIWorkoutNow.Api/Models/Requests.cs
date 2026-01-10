@@ -33,7 +33,6 @@ public class SendEmailRequest
     public string Body { get; set; } = string.Empty;
 }
 
-<<<<<<< Updated upstream
 public class AffiliateClickRequest
 {
     public string DeviceId { get; set; } = string.Empty;
@@ -53,6 +52,3 @@ public class ResetTokensRequest
     public int PreviousTokenCount { get; set; }
     public string? Reason { get; set; }
 }
-=======
-
->>>>>>> Stashed changes
