@@ -55,12 +55,16 @@ if [ -f "AIWorkoutNow.Api" ] && [ ! -f "bootstrap" ]; then
     chmod +x bootstrap
 fi
 
+# CRITICAL: Zip contents must be in ROOT of zip, not in publish-lambda/ subdirectory
 # Use PowerShell on Windows if available, otherwise use zip command
 if [ "$MACHINE" = "Windows" ] && command -v powershell &> /dev/null; then
     # Use PowerShell Compress-Archive (creates zip files compatible with Lambda)
-    powershell -Command "Compress-Archive -Path * -DestinationPath '$ZIP_PATH' -Force"
+    # Note: PowerShell Compress-Archive might create subdirectory, so we zip from parent
+    cd "$SCRIPT_DIR/AIWorkoutNow.Api" || exit 1
+    powershell -Command "Compress-Archive -Path publish-lambda\* -DestinationPath '$ZIP_PATH' -Force"
 elif command -v zip &> /dev/null; then
-    # Use zip command (available on macOS, Linux, and Git Bash on Windows)
+    # Use zip command - zip files directly, not the directory
+    # This ensures files are in ROOT of zip (not in publish-lambda/ subdirectory)
     zip -r "$ZIP_PATH" . > /dev/null 2>&1
 elif command -v 7z &> /dev/null; then
     # Fallback to 7zip if available
