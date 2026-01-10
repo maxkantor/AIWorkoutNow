@@ -75,17 +75,28 @@ var app = builder.Build();
 //     app.UseSwaggerUI();
 // }
 
-// CRITICAL: Add CORS headers to ALL responses BEFORE any processing
-// This must happen first in the pipeline to ensure headers are always set
+// AGGRESSIVE CORS FIX: Add CORS headers to ALL responses BEFORE any processing
+// This must happen FIRST in the pipeline to ensure headers are ALWAYS set
 app.Use(async (context, next) =>
 {
-    // CRITICAL: Set CORS headers BEFORE calling next() to ensure they're on all responses
+    // CRITICAL: Set CORS headers IMMEDIATELY on response object
+    // This ensures headers are set even if an error occurs
+    context.Response.OnStarting(() =>
+    {
+        context.Response.Headers["Access-Control-Allow-Origin"] = "*";
+        context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD";
+        context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, *";
+        context.Response.Headers["Access-Control-Expose-Headers"] = "*";
+        return Task.CompletedTask;
+    });
+    
+    // Also set headers directly (backup)
     context.Response.Headers["Access-Control-Allow-Origin"] = "*";
     context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD";
     context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, *";
     context.Response.Headers["Access-Control-Expose-Headers"] = "*";
     
-    // Handle OPTIONS preflight - return early
+    // Handle OPTIONS preflight - return early with all headers
     if (string.Equals(context.Request.Method, "OPTIONS", StringComparison.OrdinalIgnoreCase))
     {
         context.Response.Headers["Access-Control-Max-Age"] = "3600";
@@ -95,6 +106,12 @@ app.Use(async (context, next) =>
     }
     
     await next();
+    
+    // CRITICAL: Set headers again AFTER next() to ensure they're on error responses too
+    context.Response.Headers["Access-Control-Allow-Origin"] = "*";
+    context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD";
+    context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, *";
+    context.Response.Headers["Access-Control-Expose-Headers"] = "*";
 });
 
 app.UseCors("AllowAll");
