@@ -5,7 +5,7 @@ import { adminLogin } from '../services/api';
 import './AdminLogin.css';
 
 function AdminLogin() {
-  const [email] = useState('admin@aiworkoutnow.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -33,78 +33,38 @@ function AdminLogin() {
         <title>Admin Login - AIWorkoutNow</title>
       </Helmet>
       
-      <div className="admin-login-modern">
-        <div className="login-container">
-          <div className="login-card-modern">
-            <div className="login-header">
-              <div className="login-logo">
-                <span className="logo-icon">💪</span>
+      <div className="admin-login">
+        <div className="container">
+          <div className="login-card">
+            <h1>Admin Login</h1>
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label htmlFor="email">Email</label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input"
+                  required
+                />
               </div>
-              <h1>Admin Portal</h1>
-              <p className="login-subtitle">AIWorkoutNow Management Dashboard</p>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="login-form">
-              <div className="form-group-modern">
-                <label htmlFor="email" className="form-label">Email</label>
-                <div className="input-wrapper">
-                  <input
-                    type="email"
-                    id="email"
-                    value={email}
-                    readOnly
-                    className="input-modern input-readonly"
-                    tabIndex={-1}
-                  />
-                  <span className="input-badge">Default</span>
-                </div>
-              </div>
-              
-              <div className="form-group-modern">
-                <label htmlFor="password" className="form-label">Password</label>
+              <div className="form-group">
+                <label htmlFor="password">Password</label>
                 <input
                   type="password"
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input-modern"
-                  placeholder="Enter your admin password"
-                  autoFocus
+                  className="input"
                   required
                 />
               </div>
-              
-              {error && (
-                <div className="error-message-modern" role="alert">
-                  <span className="error-icon">⚠️</span>
-                  {error}
-                </div>
-              )}
-              
-              <button 
-                type="submit" 
-                className="btn-login-modern" 
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <span className="spinner"></span>
-                    Signing in...
-                  </>
-                ) : (
-                  <>
-                    <span>Sign In</span>
-                    <span className="btn-arrow">→</span>
-                  </>
-                )}
+              {error && <div className="error-message">{error}</div>}
+              <button type="submit" className="btn" disabled={loading}>
+                {loading ? 'Logging in...' : 'Login'}
               </button>
             </form>
-            
-            <div className="login-footer">
-              <p className="security-note">
-                🔒 Secure admin access only
-              </p>
-            </div>
           </div>
         </div>
       </div>
@@ -113,3 +73,5 @@ function AdminLogin() {
 }
 
 export default AdminLogin;
+
+

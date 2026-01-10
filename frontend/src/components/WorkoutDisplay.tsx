@@ -84,3 +84,4 @@ function WorkoutDisplay({ workout }: WorkoutDisplayProps) {
 
 export default WorkoutDisplay;
 
+

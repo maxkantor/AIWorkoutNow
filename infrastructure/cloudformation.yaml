@@ -215,3 +215,4 @@ Outputs:
     Export:
       Name: !Sub '${AWS::StackName}-WorkoutsTable'
 
+

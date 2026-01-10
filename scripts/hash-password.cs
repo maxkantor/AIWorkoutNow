@@ -13,3 +13,4 @@ var password = args[0];
 var hash = BCrypt.Net.BCrypt.HashPassword(password);
 Console.WriteLine($"Hashed password: {hash}");
 
+

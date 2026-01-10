@@ -76,3 +76,4 @@ export function setFreeTrialUsed(deviceId: string, expiresAt: string) {
   localStorage.setItem(`${FREE_TRIAL_KEY}_${deviceId}`, JSON.stringify(data));
 }
 
+

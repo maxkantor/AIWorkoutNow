@@ -1,370 +1,61 @@
-/* Prevent horizontal scroll */
-html, body {
-  overflow-x: hidden;
-  max-width: 100vw;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-/* Main Content - Improved Width & Centering */
-main.min-h-screen {
+.home {
   min-height: calc(100vh - 200px);
-  background: #f8fafc;
-  background-image: url('/images/main-bg.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  position: relative;
-  padding: clamp(1.25rem, 2.5vw, 2rem) 0;
-  width: 100%;
-  overflow-x: hidden;
 }
 
-main.min-h-screen::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(248, 250, 252, 0.85);
-  z-index: 0;
-}
-
-main.min-h-screen > * {
-  position: relative;
-  z-index: 1;
-}
-
-.max-w-7xl {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 clamp(1rem, 3vw, 2rem);
-  width: 100%;
-}
-
-/* 3-Column Grid Layout - Better Column Proportions */
-.grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-12 {
-  display: grid;
-  width: 100%;
-  align-items: start;
-  gap: clamp(1.25rem, 2.5vw, 2rem);
-}
-
-/* Mobile: Single column */
-.grid.grid-cols-1 {
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-}
-
-/* Tablet: 2 columns */
-@media (min-width: 768px) {
-  .grid.md\:grid-cols-2 {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.75rem;
-  }
-}
-
-/* Desktop: 3 columns (Why Choose | Form | Pricing) - Better Proportions */
-@media (min-width: 1024px) {
-  main.min-h-screen {
-    padding: clamp(1.5rem, 3vw, 2.5rem) 0;
-  }
-
-  .max-w-7xl {
-    padding: 0 2rem;
-  }
-
-  .grid.lg\:grid-cols-12 {
-    grid-template-columns: repeat(12, 1fr);
-    gap: clamp(1.75rem, 3vw, 2.25rem);
-  }
-
-  /* Left Column - Why Choose (3 columns) */
-  aside.lg\:col-span-3 {
-    grid-column: span 3 / span 3;
-    order: 1;
-  }
-
-  /* Center Column - Form (6 columns - Focal Point, Larger) */
-  section.lg\:col-span-6 {
-    grid-column: span 6 / span 6;
-    order: 2;
-  }
-
-  /* Right Column - Pricing (3 columns) */
-  aside.lg\:col-span-3:last-of-type {
-    grid-column: span 3 / span 3;
-    order: 3;
-  }
-
-  /* Standardized Card Styles - Design System Normalization */
-  .bg-white.shadow-xl.rounded-2xl {
-    padding: clamp(1.75rem, 2.5vw, 2.5rem);
-    border-radius: 1rem; /* Consistent 16px radius */
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    border: 2px solid rgba(226, 232, 240, 0.8);
-  }
-
-  .bg-slate-50\/50.rounded-xl {
-    padding: clamp(1.5rem, 2vw, 1.75rem);
-    border-radius: 1rem; /* Consistent 16px radius */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    border: 2px solid rgba(226, 232, 240, 0.8);
-  }
-
-  /* Make form card stand out more - Primary CTA focus */
-  section.lg\:col-span-6 .bg-white.shadow-xl.rounded-2xl {
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    border: 2px solid rgba(37, 99, 235, 0.2);
-  }
-}
-
-/* Tablet: 2 columns (Form prioritized) */
-@media (min-width: 768px) and (max-width: 1023px) {
-  main.min-h-screen {
-    padding: 1.75rem 0;
-  }
-
-  .max-w-7xl {
-    padding: 0 1.5rem;
-  }
-
-  /* Benefits span full width at bottom */
-  aside.md\:col-span-2 {
-    grid-column: 1 / -1;
-    order: 3;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    margin-top: 1rem;
-  }
-
-  /* Form first */
-  section.md\:col-span-1 {
-    order: 1;
-  }
-
-  /* Pricing second */
-  aside.md\:col-span-1:last-of-type {
-    order: 2;
-  }
-
-  .bg-white.shadow-xl.rounded-2xl {
-    padding: 1.75rem;
-    border-radius: 1rem; /* Consistent 16px radius */
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    border: 2px solid rgba(226, 232, 240, 0.8);
-  }
-
-  .bg-slate-50\/50.rounded-xl {
-    padding: 1.5rem;
-    border-radius: 1rem; /* Consistent 16px radius */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    border: 2px solid rgba(226, 232, 240, 0.8);
-  }
-}
-
-/* Mobile: Single column stacked */
-@media (max-width: 767px) {
-  main.min-h-screen {
-    padding: 1.25rem 0;
-  }
-
-  .max-w-7xl {
-    padding: 0 1rem;
-  }
-
-  .grid.grid-cols-1 {
-    gap: 1.5rem;
-  }
-
-  /* Form first */
-  section.order-1 {
-    order: 1;
-  }
-
-  /* Pricing second */
-  aside.order-2 {
-    order: 2;
-  }
-
-  /* Benefits third */
-  aside.order-3 {
-    order: 3;
-  }
-
-  /* Standardized Card Styles - Mobile */
-  .bg-white.shadow-xl.rounded-2xl {
-    padding: 1.5rem;
-    border-radius: 1rem; /* Consistent 16px radius */
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    border: 2px solid rgba(226, 232, 240, 0.8);
-  }
-
-  .bg-slate-50\/50.rounded-xl {
-    padding: 1.25rem;
-    border-radius: 1rem; /* Consistent 16px radius */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    border: 2px solid rgba(226, 232, 240, 0.8);
-  }
-
-  /* Benefits section - reduced spacing */
-  section.bg-slate-50\/50.rounded-xl h2 {
-    font-size: clamp(1.125rem, 3vw, 1.25rem);
-    margin-bottom: 1rem;
-  }
-
-  section.bg-slate-50\/50.rounded-xl > div {
-    gap: 0.875rem;
-  }
-
-  section.bg-slate-50\/50.rounded-xl > div > div {
-    padding: 1rem;
-    border-radius: 0.75rem;
-  }
-}
-
-/* Small Mobile (375px) */
-@media (max-width: 375px) {
-  .max-w-7xl {
-    padding: 0 0.875rem;
-  }
-
-  .bg-white.shadow-xl.rounded-2xl {
-    padding: 1.25rem;
-  }
-
-  .bg-slate-50\/50.rounded-xl {
-    padding: 1rem;
-  }
-}
-
-/* Large Desktop (1440px+) - Better Space Utilization */
-@media (min-width: 1440px) {
-  .max-w-7xl {
-    max-width: 1400px;
-    padding: 0 2.5rem;
-  }
-
-  .grid.lg\:grid-cols-12 {
-    gap: 2.5rem;
-  }
-}
-
-/* Extra Large Desktop (1920px+) */
-@media (min-width: 1920px) {
-  .max-w-7xl {
-    max-width: 1600px;
-  }
-}
-
-/* Trust Badges - Under Workout Section in Center Column */
-section.lg\:col-span-6 > section.grid.grid-cols-2.md\:grid-cols-4 {
-  margin-top: 1.5rem;
-  gap: 0.75rem;
-}
-
-section.lg\:col-span-6 > section.grid.grid-cols-2.md\:grid-cols-4 > div {
-  background: white;
-  border-radius: 0.5rem;
-  padding: 0.75rem;
+.hero {
   text-align: center;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s;
+  padding: 3rem 0;
+  margin-bottom: 2rem;
 }
 
-section.lg\:col-span-6 > section.grid.grid-cols-2.md\:grid-cols-4 > div:hover {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
-  border-color: #667eea;
-}
-
-section.lg\:col-span-6 > section.grid.grid-cols-2.md\:grid-cols-4 > div > span:first-child {
-  font-size: 1.25rem;
-  display: block;
-  margin-bottom: 0.375rem;
-}
-
-section.lg\:col-span-6 > section.grid.grid-cols-2.md\:grid-cols-4 > div > span:last-child {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #475569;
-  line-height: 1.3;
-}
-
-/* Mobile: 2 columns */
-@media (max-width: 767px) {
-  section.lg\:col-span-6 > section.grid.grid-cols-2.md\:grid-cols-4 {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.625rem;
-  }
-}
-
-/* Tablet and Desktop: 4 columns */
-@media (min-width: 768px) {
-  section.lg\:col-span-6 > section.grid.grid-cols-2.md\:grid-cols-4 {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-/* Typography Improvements - Better Vertical Rhythm */
-h2 {
-  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+.hero h1 {
+  font-size: 2.5rem;
   font-weight: 700;
-  line-height: 1.3;
   margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-h3 {
-  font-size: clamp(1rem, 2vw, 1.125rem);
+.hero-subtitle {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.token-badge {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--success-color);
+  color: white;
+  border-radius: 2rem;
   font-weight: 600;
-  line-height: 1.4;
 }
 
-p {
-  font-size: clamp(0.875rem, 1.5vw, 0.9375rem);
-  line-height: 1.6;
+.limit-message {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #fef3c7;
+  border: 1px solid #fbbf24;
+  border-radius: 0.5rem;
+  color: #92400e;
 }
 
-/* Benefits Section - Improved Spacing */
-.bg-slate-50\/50.rounded-xl h2 {
-  font-size: clamp(1.125rem, 2.5vw, 1.375rem);
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 1.25rem;
+@media (max-width: 768px) {
+  .hero {
+    padding: 2rem 0;
+  }
+  
+  .hero h1 {
+    font-size: 2rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1rem;
+  }
 }
 
-.bg-slate-50\/50.rounded-xl > div.space-y-4 {
-  gap: 1rem;
-}
 
-.bg-slate-50\/50.rounded-xl > div.space-y-4 > div {
-  padding: 1.25rem;
-  border-radius: 0.75rem;
-  transition: all 0.2s;
-}
-
-.bg-slate-50\/50.rounded-xl > div.space-y-4 > div:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.08);
-}
-
-/* Stats Section - Better Spacing */
-.bg-gradient-to-br.from-blue-600.to-purple-600 {
-  padding: 1.5rem;
-  border-radius: 1rem;
-}
-
-.bg-gradient-to-br.from-blue-600.to-purple-600 > div.space-y-4 {
-  gap: 1.25rem;
-}
-
-/* Ensure all columns align at top */
-.grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-12 > * {
-  align-self: start;
-}

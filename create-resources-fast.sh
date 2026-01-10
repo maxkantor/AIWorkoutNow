@@ -250,3 +250,4 @@ echo "     --timeout 30 --memory-size 512 \\"
 echo "     --environment 'Variables={TABLE_PREFIX=$TABLE_PREFIX}' \\"
 echo "     --architectures arm64"
 
+

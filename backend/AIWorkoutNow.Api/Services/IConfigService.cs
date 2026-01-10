@@ -19,3 +19,4 @@ public interface IConfigService
     string GetFrontendBaseUrl();
 }
 
+

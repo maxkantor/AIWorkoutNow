@@ -106,3 +106,4 @@ echo "⏰ Timeout waiting for CDK stack. Please check manually:"
 echo "  aws cloudformation describe-stacks --stack-name AIWorkoutNowStack"
 exit 1
 
+

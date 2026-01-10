@@ -73,3 +73,4 @@ function AffiliateProducts({ workoutType }: AffiliateProductsProps) {
 
 export default AffiliateProducts;
 
+

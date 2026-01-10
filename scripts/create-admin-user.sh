@@ -31,3 +31,4 @@ echo ""
 echo "Then run:"
 echo "aws dynamodb put-item --table-name $TABLE_NAME --item '{\"AdminId\":{\"S\":\"$ADMIN_ID\"},\"Email\":{\"S\":\"$EMAIL\"},\"PasswordHash\":{\"S\":\"<hashed-password>\"},\"Role\":{\"S\":\"admin\"},\"CreatedAt\":{\"S\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}}'"
 
+

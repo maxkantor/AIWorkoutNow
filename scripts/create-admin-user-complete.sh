@@ -100,3 +100,4 @@ echo "💡 You can now log in with:"
 echo "   Email: $EMAIL"
 echo "   Password: $PASSWORD"
 
+

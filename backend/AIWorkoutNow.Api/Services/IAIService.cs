@@ -7,3 +7,4 @@ public interface IAIService
     Task<Workout> GenerateWorkoutAsync(WorkoutPreferences preferences);
 }
 
+

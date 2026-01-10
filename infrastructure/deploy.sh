@@ -44,3 +44,4 @@ echo ""
 echo "Example:"
 echo "  aws ssm put-parameter --name /aiworkoutnow/openai-api-key --value 'your-key' --type SecureString --overwrite"
 
+

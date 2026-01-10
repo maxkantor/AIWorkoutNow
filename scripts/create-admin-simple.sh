@@ -64,3 +64,4 @@ echo "   Password: $PASSWORD"
 echo ""
 echo "🔗 Access admin dashboard at: /admin/login (once frontend is deployed)"
 
+

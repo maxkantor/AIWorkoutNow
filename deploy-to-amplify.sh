@@ -89,3 +89,4 @@ echo "✅ Frontend is ready for deployment!"
 echo "   Build output: frontend/dist/"
 echo "   API URL configured: $(grep VITE_API_URL .env | cut -d'=' -f2)"
 
+

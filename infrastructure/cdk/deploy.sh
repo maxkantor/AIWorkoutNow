@@ -46,3 +46,4 @@ echo "  2. Update email parameters:"
 echo "     aws ssm put-parameter --name /aiworkoutnow/ses-from-email --value 'noreply@yourdomain.com' --overwrite"
 echo "     aws ssm put-parameter --name /aiworkoutnow/ses-admin-email --value 'admin@yourdomain.com' --overwrite"
 
+
