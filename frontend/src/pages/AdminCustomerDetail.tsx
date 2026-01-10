@@ -418,7 +418,7 @@ function AdminCustomerDetail() {
                     console.log('[Reset] Submit button mouse up!');
                     e.stopPropagation();
                   }}
-                  onClick={(e) => {
+                  onClick={() => {
                     console.log('[Reset] ===== SUBMIT BUTTON CLICKED =====');
                     // Don't preventDefault here - let form handle it
                   }}
