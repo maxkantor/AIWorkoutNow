@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Net;
+using Microsoft.AspNetCore.Http;
 using AIWorkoutNow.Api.Services;
 
 namespace AIWorkoutNow.Api;
@@ -101,6 +102,7 @@ public class Startup
             if (context.Request.Method == "OPTIONS")
             {
                 context.Response.StatusCode = 200;
+                // Lambda proxy integration expects a response, but empty body is fine for OPTIONS
                 return;
             }
 

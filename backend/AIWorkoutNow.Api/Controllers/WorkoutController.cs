@@ -34,10 +34,15 @@ public class WorkoutController : ControllerBase
     [HttpOptions("generate-workout")]
     public async Task<IActionResult> GenerateWorkout([FromBody] GenerateWorkoutRequest? request = null)
     {
-        // Handle OPTIONS preflight
+        // Handle OPTIONS preflight - explicitly set CORS headers (backup if middleware didn't catch it)
         if (Request.Method == "OPTIONS")
         {
-            return Ok();
+            Response.Headers["Access-Control-Allow-Origin"] = "*";
+            Response.Headers["Access-Control-Allow-Methods"] = "POST, OPTIONS";
+            Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With";
+            Response.Headers["Access-Control-Max-Age"] = "3600";
+            Response.Headers["Access-Control-Expose-Headers"] = "*";
+            return Ok(new { message = "OK" });
         }
         
         if (request == null)
