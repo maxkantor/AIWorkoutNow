@@ -47,9 +47,13 @@ fi
 echo "📦 Creating deployment package..."
 cd publish-lambda
 
-# For dotnet8 runtime, keep the executable as-is (don't rename to bootstrap)
-# bootstrap rename is only needed for provided.al2023 runtime
-# The executable name should match the assembly name for dotnet8
+# CRITICAL: For provided.al2023 runtime, rename executable to 'bootstrap'
+# This is required for Lambda to find the entry point
+if [ -f "AIWorkoutNow.Api" ] && [ ! -f "bootstrap" ]; then
+    echo "   Renaming AIWorkoutNow.Api to bootstrap for provided.al2023 runtime..."
+    mv AIWorkoutNow.Api bootstrap
+    chmod +x bootstrap
+fi
 
 # Use PowerShell on Windows if available, otherwise use zip command
 if [ "$MACHINE" = "Windows" ] && command -v powershell &> /dev/null; then
