@@ -28,6 +28,11 @@ function Home() {
   useEffect(() => {
     checkAccessStatus();
     
+    // Periodically refresh access status (every 30 seconds) to catch admin resets
+    const refreshInterval = setInterval(() => {
+      checkAccessStatus();
+    }, 30000);
+    
     // Listen for restore credits event from PricingPlans
     const handleOpenRestoreCredits = () => {
       setShowRestoreCredits(true);
@@ -47,6 +52,7 @@ function Home() {
     window.addEventListener('openRestoreCredits', handleOpenRestoreCredits);
     window.addEventListener('refreshAccessStatus', handleRefreshAccessStatus);
     return () => {
+      clearInterval(refreshInterval);
       window.removeEventListener('openRestoreCredits', handleOpenRestoreCredits);
       window.removeEventListener('refreshAccessStatus', handleRefreshAccessStatus);
     };
@@ -71,6 +77,7 @@ function Home() {
       const deviceId = getDeviceId();
       
       const status = await getUserAccessStatus(deviceId);
+      console.log('[Home] Access status from API:', status);
       setAccessStatus(status);
       
       // CRITICAL FIX: Backend returns hasUnlimitedAccess=false when tokens are reset (e.g., to 7)
@@ -81,10 +88,12 @@ function Home() {
         setTokenBalance(status.tokensRemaining);
         updateTokenStorage(deviceId, status.tokensRemaining);
       } else if (status.tokensRemaining > 0) {
-        // Regular token count (including when reset to 7 - hasUnlimitedAccess will be false)
+        // Regular token count (including when reset to 5 - hasUnlimitedAccess will be false)
         // This handles both regular tokens AND admin resets
         setTokenBalance(status.tokensRemaining);
         updateTokenStorage(deviceId, status.tokensRemaining);
+        // Clear free workouts when paid tokens exist
+        setFreeWorkoutsRemaining(0);
       } else {
         // No paid tokens, check free workouts
         const freeWorkouts = await getFreeWorkoutsRemaining(deviceId);
