@@ -249,20 +249,38 @@ public class DynamoDBService : IDynamoDBService
         var stats = new AdminStats();
 
         // Count unique device IDs in anonymous usage (free users)
+        var freeUsersSet = new System.Collections.Generic.HashSet<string>();
         var freeUsersResponse = await _dynamoDB.ScanAsync(new ScanRequest
         {
-            TableName = _anonymousUsageTable,
-            Select = Select.COUNT
+            TableName = _anonymousUsageTable
         });
-        stats.FreeUsers = freeUsersResponse.Count;
+        
+        foreach (var item in freeUsersResponse.Items)
+        {
+            if (item.ContainsKey("DeviceId"))
+            {
+                freeUsersSet.Add(item["DeviceId"].S);
+            }
+        }
+        stats.FreeUsers = freeUsersSet.Count;
+        Console.WriteLine($"[DynamoDBService] FreeUsers count: {stats.FreeUsers}");
 
         // Count unique device IDs in user tokens (paid users)
+        var paidUsersSet = new System.Collections.Generic.HashSet<string>();
         var paidUsersResponse = await _dynamoDB.ScanAsync(new ScanRequest
         {
-            TableName = _userTokensTable,
-            Select = Select.COUNT
+            TableName = _userTokensTable
         });
-        stats.PaidUsers = paidUsersResponse.Count;
+        
+        foreach (var item in paidUsersResponse.Items)
+        {
+            if (item.ContainsKey("DeviceId"))
+            {
+                paidUsersSet.Add(item["DeviceId"].S);
+            }
+        }
+        stats.PaidUsers = paidUsersSet.Count;
+        Console.WriteLine($"[DynamoDBService] PaidUsers count: {stats.PaidUsers}");
 
         // Count total workouts
         var workoutsResponse = await _dynamoDB.ScanAsync(new ScanRequest
@@ -271,6 +289,7 @@ public class DynamoDBService : IDynamoDBService
             Select = Select.COUNT
         });
         stats.TotalWorkouts = workoutsResponse.Count;
+        Console.WriteLine($"[DynamoDBService] TotalWorkouts count: {stats.TotalWorkouts}");
 
         // Count token purchases from UserPurchases table (not StripePurchases)
         var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
