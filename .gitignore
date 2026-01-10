@@ -7,7 +7,10 @@ frontend/dist/
 frontend/build/
 backend/**/bin/
 backend/**/obj/
+backend/**/publish-lambda/
 backend/deployment-package.zip
+backend/lambda-deployment.zip
+backend/*.zip
 
 # Environment variables
 .env
