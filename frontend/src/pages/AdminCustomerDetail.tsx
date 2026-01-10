@@ -351,86 +351,85 @@ function AdminCustomerDetail() {
           setShowResetModal(false);
           setError(null);
         }}>
-          <div className="modal-content" onClick={(e) => {
-            // Only stop propagation if clicking directly on modal-content background, not on child elements
-            if (e.target === e.currentTarget) {
-              console.log('[Reset] Modal content background clicked, stopping propagation');
-              e.stopPropagation();
-            } else {
-              console.log('[Reset] Modal content child clicked, allowing event to bubble');
-            }
-          }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2>Reset Workouts (This Device Only)</h2>
             {error && (
               <div className="error-message" style={{ color: '#dc2626', marginBottom: '1rem', padding: '0.5rem', backgroundColor: '#fee2e2', borderRadius: '4px' }}>
                 {error}
               </div>
             )}
-            <div className="form-group">
-              <label>Current 💪Remaining Workouts: {customer.tokensRemaining}</label>
-            </div>
-            <div className="form-group">
-              <label>New Workout Count:</label>
-              <input
-                type="number"
-                value={newTokenCount}
-                onChange={(e) => setNewTokenCount(parseInt(e.target.value) || 0)}
-                min="0"
-                className="input"
-              />
-            </div>
-            <div className="form-group">
-              <label>Reason (optional):</label>
-              <textarea
-                value={resetReason}
-                onChange={(e) => setResetReason(e.target.value)}
-                placeholder="Reason for resetting workouts..."
-                className="input"
-                rows={3}
-              />
-            </div>
-            <div className="modal-actions">
-              <button
-                onClick={() => {
-                  setShowResetModal(false);
-                  setError(null);
-                }}
-                className="btn btn-secondary"
-                disabled={resetting}
-              >
-                Cancel
-              </button>
-              <button
-                onMouseDown={(e) => {
-                  console.log('[Reset] Button mouse down event!', e);
-                  e.stopPropagation();
-                }}
-                onMouseUp={(e) => {
-                  console.log('[Reset] Button mouse up event!', e);
-                  e.stopPropagation();
-                }}
-                onClick={(e) => {
-                  console.log('[Reset] ===== BUTTON CLICK EVENT FIRED =====');
-                  console.log('[Reset] Event:', e);
-                  console.log('[Reset] Event target:', e.target);
-                  console.log('[Reset] Event currentTarget:', e.currentTarget);
-                  e.preventDefault();
-                  e.stopPropagation();
-                  
-                  // Call handler directly without async wrapper to avoid any issues
-                  handleResetTokens().catch((error) => {
-                    console.error('[Reset] Error in handleResetTokens:', error);
-                    setError(`Unexpected error: ${error instanceof Error ? error.message : String(error)}`);
-                  });
-                }}
-                className="btn btn-warning"
-                disabled={resetting}
-                type="button"
-                style={{ cursor: resetting ? 'not-allowed' : 'pointer', position: 'relative', zIndex: 1001 }}
-              >
-                {resetting ? 'Resetting...' : 'Reset This Device'}
-              </button>
-            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('[Reset] ===== FORM SUBMITTED =====');
+              console.log('[Reset] newTokenCount:', newTokenCount);
+              console.log('[Reset] deviceId:', deviceId);
+              
+              if (!resetting) {
+                await handleResetTokens();
+              }
+            }}>
+              <div className="form-group">
+                <label>Current 💪Remaining Workouts: {customer.tokensRemaining}</label>
+              </div>
+              <div className="form-group">
+                <label>New Workout Count:</label>
+                <input
+                  type="number"
+                  value={newTokenCount}
+                  onChange={(e) => setNewTokenCount(parseInt(e.target.value) || 0)}
+                  min="0"
+                  className="input"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Reason (optional):</label>
+                <textarea
+                  value={resetReason}
+                  onChange={(e) => setResetReason(e.target.value)}
+                  placeholder="Reason for resetting workouts..."
+                  className="input"
+                  rows={3}
+                />
+              </div>
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('[Reset] Cancel button clicked');
+                    setShowResetModal(false);
+                    setError(null);
+                  }}
+                  className="btn btn-secondary"
+                  disabled={resetting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  onMouseDown={(e) => {
+                    console.log('[Reset] Submit button mouse down!');
+                    e.stopPropagation();
+                  }}
+                  onMouseUp={(e) => {
+                    console.log('[Reset] Submit button mouse up!');
+                    e.stopPropagation();
+                  }}
+                  onClick={(e) => {
+                    console.log('[Reset] ===== SUBMIT BUTTON CLICKED =====');
+                    // Don't preventDefault here - let form handle it
+                  }}
+                  className="btn btn-warning"
+                  disabled={resetting}
+                  style={{ cursor: resetting ? 'not-allowed' : 'pointer' }}
+                >
+                  {resetting ? 'Resetting...' : 'Reset This Device'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
