@@ -324,8 +324,14 @@ function AdminCustomerDetail() {
       </div>
 
       {showResetModal && (
-        <div className="modal-overlay" onClick={() => setShowResetModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => {
+          console.log('[Reset] Modal overlay clicked, closing modal');
+          setShowResetModal(false);
+        }}>
+          <div className="modal-content" onClick={(e) => {
+            console.log('[Reset] Modal content clicked, stopping propagation');
+            e.stopPropagation();
+          }}>
             <h2>Reset Workouts (This Device Only)</h2>
             <div className="form-group">
               <label>Current 💪Remaining Workouts: {customer.tokensRemaining}</label>
