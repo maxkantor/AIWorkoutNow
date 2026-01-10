@@ -1,0 +1,17 @@
+{
+  "AdminId": {
+    "S": "admin-20260110100305"
+  },
+  "Email": {
+    "S": "admin@aiworkoutnow.com"
+  },
+  "PasswordHash": {
+    "S": "$2a$11$Lwdj9rUPp3pAdcCKVGXItOewTYpceEBWpn5eI/moUp6g5qLHqvdZO"
+  },
+  "Role": {
+    "S": "admin"
+  },
+  "CreatedAt": {
+    "S": "2026-01-10T15:03:05Z"
+  }
+}

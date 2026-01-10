@@ -47,9 +47,10 @@ body {
 }
 
 /* Desktop side backgrounds - fitness themed (only on screens > 1200px) */
+/* Exclude admin pages from background images */
 @media (min-width: 1201px) {
-  body::before,
-  body::after {
+  body:not(.admin-body)::before,
+  body:not(.admin-body)::after {
     content: '';
     position: fixed;
     top: 0;
@@ -61,7 +62,7 @@ body {
     filter: blur(8px) saturate(0.6);
   }
   
-  body::before {
+  body:not(.admin-body)::before {
     left: 0;
     background-image: url('/images/side-bg.png');
     background-size: cover;
@@ -69,13 +70,24 @@ body {
     background-repeat: no-repeat;
   }
   
-  body::after {
+  body:not(.admin-body)::after {
     right: 0;
     background-image: url('/images/side-bg.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
   }
+}
+
+/* Admin pages - clean background */
+body.admin-body {
+  background-color: var(--bg-secondary);
+  background-image: none;
+}
+
+body.admin-body::before,
+body.admin-body::after {
+  display: none;
 }
 
 /* Ensure main content is above side backgrounds */

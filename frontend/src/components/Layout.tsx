@@ -36,8 +36,20 @@ function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const isAdminPage = location.pathname.startsWith('/admin');
 
+  // Add/remove admin-body class to body element
+  useEffect(() => {
+    if (isAdminPage) {
+      document.body.classList.add('admin-body');
+    } else {
+      document.body.classList.remove('admin-body');
+    }
+    return () => {
+      document.body.classList.remove('admin-body');
+    };
+  }, [isAdminPage]);
+
   return (
-    <div className="layout">
+    <div className={`layout ${isAdminPage ? 'admin-layout' : ''}`}>
       {/* Hero Section - Hide on admin pages */}
       {!isAdminPage && (
       <section className="hero-section">

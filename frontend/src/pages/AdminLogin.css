@@ -1,8 +1,10 @@
 .admin-login {
-  min-height: calc(100vh - 200px);
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: var(--bg-secondary);
+  padding: 2rem 1rem;
 }
 
 .login-card {
