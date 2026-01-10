@@ -25,31 +25,19 @@ if (Test-Path $zipFile) {
     Remove-Item -Path $zipFile -Force
 }
 
-# Publish for Lambda
+# Publish for Lambda (.NET managed runtime)
 Write-Host "📦 Publishing .NET application..." -ForegroundColor Cyan
 Push-Location $projectDir
 
 try {
-    dotnet publish -c Release -r linux-arm64 --self-contained true -o publish-lambda
+    dotnet publish -c Release --self-contained false -o publish-lambda
 
     if (-not (Test-Path "publish-lambda")) {
         Write-Host "❌ Publish failed" -ForegroundColor Red
         exit 1
     }
 
-    # CRITICAL: For provided.al2023 runtime, rename executable to 'bootstrap'
-    # This is required for Lambda to find the entry point
-    if (Test-Path "publish-lambda\AIWorkoutNow.Api") {
-        Write-Host "   Creating bootstrap executable for provided.al2023 runtime..." -ForegroundColor Yellow
-        Copy-Item "publish-lambda\AIWorkoutNow.Api" "publish-lambda\bootstrap" -Force
-    }
-
-    # CRITICAL: For provided.al2023 runtime, rename executable to 'bootstrap'
-    # This is required for Lambda to find the entry point
-    if (Test-Path "publish-lambda\AIWorkoutNow.Api") {
-        Write-Host "   Creating bootstrap executable for provided.al2023 runtime..." -ForegroundColor Yellow
-        Copy-Item "publish-lambda\AIWorkoutNow.Api" "publish-lambda\bootstrap" -Force
-    }
+    # (No bootstrap renaming needed for dotnet8 managed runtime)
 
     # Create zip package
     Write-Host "📦 Creating deployment package..." -ForegroundColor Cyan
@@ -68,6 +56,12 @@ try {
     Write-Host "   aws lambda update-function-code \"
     Write-Host "     --function-name aiworkoutnow-api \"
     Write-Host "     --zip-file fileb://backend/lambda-deployment.zip \"
+    Write-Host "     --region us-east-1"
+    Write-Host ""
+    Write-Host "   aws lambda update-function-configuration \"
+    Write-Host "     --function-name aiworkoutnow-api \"
+    Write-Host "     --runtime dotnet8 \"
+    Write-Host "     --handler `"AIWorkoutNow.Api::AIWorkoutNow.Api.LambdaEntryPoint::FunctionHandlerAsync`" \"
     Write-Host "     --region us-east-1"
     Write-Host ""
     Write-Host "   Or use: ./deploy-backend.sh"

@@ -51,7 +51,7 @@ echo ""
 # Step 2: Build and Deploy Lambda
 echo "🔨 Step 2: Building Lambda function..."
 cd ../../backend/AIWorkoutNow.Api
-dotnet publish -c Release -r linux-x64 --self-contained false -o publish
+dotnet publish -c Release --self-contained false -o publish
 
 echo "📦 Creating deployment package..."
 cd publish
@@ -69,6 +69,8 @@ if aws lambda get-function --function-name aiworkoutnow-api --region us-east-1 &
     aws lambda update-function-configuration \
         --function-name aiworkoutnow-api \
         --region us-east-1 \
+        --runtime dotnet8 \
+        --handler "AIWorkoutNow.Api::AIWorkoutNow.Api.LambdaEntryPoint::FunctionHandlerAsync" \
         --environment "Variables={TABLE_PREFIX=AIWorkoutNow}" \
         --timeout 30 \
         --memory-size 512 > /dev/null
@@ -78,9 +80,9 @@ else
     echo "Creating new function..."
     aws lambda create-function \
         --function-name aiworkoutnow-api \
-        --runtime provided.al2023 \
+        --runtime dotnet8 \
         --role "$ROLE_ARN" \
-        --handler bootstrap \
+        --handler "AIWorkoutNow.Api::AIWorkoutNow.Api.LambdaEntryPoint::FunctionHandlerAsync" \
         --zip-file fileb://deployment-package.zip \
         --timeout 30 \
         --memory-size 512 \

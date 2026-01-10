@@ -45,6 +45,8 @@ while [ $ELAPSED -lt $MAX_WAIT ]; do
             aws lambda update-function-configuration \
                 --function-name aiworkoutnow-api \
                 --region us-east-1 \
+                --runtime dotnet8 \
+                --handler "AIWorkoutNow.Api::AIWorkoutNow.Api.LambdaEntryPoint::FunctionHandlerAsync" \
                 --environment "Variables={TABLE_PREFIX=AIWorkoutNow}" \
                 --timeout 30 \
                 --memory-size 512 > /dev/null
@@ -54,9 +56,9 @@ while [ $ELAPSED -lt $MAX_WAIT ]; do
             echo "Creating new Lambda function..."
             aws lambda create-function \
                 --function-name aiworkoutnow-api \
-                --runtime provided.al2023 \
+                --runtime dotnet8 \
                 --role "$ROLE_ARN" \
-                --handler bootstrap \
+                --handler "AIWorkoutNow.Api::AIWorkoutNow.Api.LambdaEntryPoint::FunctionHandlerAsync" \
                 --zip-file fileb://deployment-package.zip \
                 --timeout 30 \
                 --memory-size 512 \
