@@ -87,6 +87,7 @@ public class Startup
         // }
 
         // CORS must be before UseRouting for OPTIONS preflight requests
+        // Enable CORS for all origins (required for API Gateway HTTP API)
         app.UseCors("AllowAll");
         app.UseRouting();
         app.UseAuthentication();
