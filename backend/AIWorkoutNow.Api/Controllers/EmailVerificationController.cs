@@ -182,7 +182,7 @@ public class EmailVerificationController : ControllerBase
 
                 int totalTokensToGrant = 0;
                 DateTime? latestExpiration = null;
-                bool hasUnlimited = false;
+                bool purchaseIsUnlimited = false;
                 var purchasesToCopy = new List<UserPurchase>();
 
                 // Process all purchases for this email
@@ -198,7 +198,7 @@ public class EmailVerificationController : ControllerBase
                     // Check if unlimited
                     if (purchase.IsUnlimited || plan.IsUnlimited)
                     {
-                        hasUnlimited = true;
+                        purchaseIsUnlimited = true;
                         var purchaseExpiration = purchase.ExpiresAt ?? DateTime.UtcNow.AddDays(plan.UnlimitedDays ?? 365);
                         if (!latestExpiration.HasValue || purchaseExpiration > latestExpiration.Value)
                         {
@@ -226,8 +226,8 @@ public class EmailVerificationController : ControllerBase
                 }
 
                 // Determine final tokens to grant
-                int finalTokensToGrant = hasUnlimited ? 999999 : totalTokensToGrant;
-                Console.WriteLine($"[EmailVerificationController] Total tokens to grant: {finalTokensToGrant} (Unlimited: {hasUnlimited}, Regular: {totalTokensToGrant})");
+                int finalTokensToGrant = purchaseIsUnlimited ? 999999 : totalTokensToGrant;
+                Console.WriteLine($"[EmailVerificationController] Total tokens to grant: {finalTokensToGrant} (Unlimited: {purchaseIsUnlimited}, Regular: {totalTokensToGrant})");
 
                 if (finalTokensToGrant > 0)
                 {
@@ -239,7 +239,7 @@ public class EmailVerificationController : ControllerBase
                         if (finalTokensToGrant >= 999999 || currentTokens.TokensRemaining < finalTokensToGrant)
                         {
                             currentTokens.TokensRemaining = finalTokensToGrant;
-                            if (latestExpiration.HasValue || hasUnlimited)
+                            if (latestExpiration.HasValue || purchaseIsUnlimited)
                             {
                                 currentTokens.ExpiresAt = latestExpiration;
                             }
