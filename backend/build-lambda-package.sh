@@ -47,6 +47,13 @@ fi
 echo "📦 Creating deployment package..."
 cd publish-lambda
 
+# CRITICAL: Rename executable to 'bootstrap' for Lambda (required for provided.al2023 runtime)
+if [ -f "AIWorkoutNow.Api" ] && [ ! -f "bootstrap" ]; then
+    echo "   Renaming AIWorkoutNow.Api to bootstrap..."
+    mv AIWorkoutNow.Api bootstrap
+    chmod +x bootstrap
+fi
+
 # Use PowerShell on Windows if available, otherwise use zip command
 if [ "$MACHINE" = "Windows" ] && command -v powershell &> /dev/null; then
     # Use PowerShell Compress-Archive (creates zip files compatible with Lambda)
