@@ -88,6 +88,23 @@ public class Startup
         // This must run before ANY other middleware
         app.Use(async (context, next) =>
         {
+            // AGGRESSIVE: Handle OPTIONS FIRST - before anything else
+            if (string.Equals(context.Request.Method, "OPTIONS", StringComparison.OrdinalIgnoreCase))
+            {
+                // Set CORS headers
+                context.Response.Headers["Access-Control-Allow-Origin"] = "*";
+                context.Response.Headers["Access-Control-Allow-Methods"] = "*";
+                context.Response.Headers["Access-Control-Allow-Headers"] = "*";
+                context.Response.Headers["Access-Control-Allow-Credentials"] = "false";
+                context.Response.Headers["Access-Control-Max-Age"] = "3600";
+                context.Response.Headers["Access-Control-Expose-Headers"] = "*";
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "text/plain";
+                // Write minimal response body
+                await context.Response.WriteAsync("OK");
+                return; // STOP - don't call next()
+            }
+
             // AGGRESSIVE: Set CORS headers on EVERY response, no matter what
             context.Response.OnStarting(() =>
             {
@@ -101,23 +118,13 @@ public class Startup
                 return Task.CompletedTask;
             });
 
-            // Set CORS headers immediately
+            // Set CORS headers immediately for non-OPTIONS requests
             context.Response.Headers["Access-Control-Allow-Origin"] = "*";
             context.Response.Headers["Access-Control-Allow-Methods"] = "*";
             context.Response.Headers["Access-Control-Allow-Headers"] = "*";
             context.Response.Headers["Access-Control-Allow-Credentials"] = "false";
             context.Response.Headers["Access-Control-Max-Age"] = "3600";
             context.Response.Headers["Access-Control-Expose-Headers"] = "*";
-
-            // AGGRESSIVE: Handle OPTIONS immediately - don't let it go to controllers
-            if (context.Request.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
-            {
-                context.Response.StatusCode = 200;
-                context.Response.ContentType = "text/plain";
-                // Lambda needs a response body for OPTIONS in some cases
-                await context.Response.WriteAsync("OK");
-                return;
-            }
 
             try
             {
