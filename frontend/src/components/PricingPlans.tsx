@@ -287,24 +287,6 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
         </div>
       )}
 
-      {/* Restore Credits Link */}
-      <div className="mt-4 text-center">
-        <button
-          onClick={() => {
-            // Scroll to restore credits section or trigger modal
-            const restoreSection = document.getElementById('restore-credits-section');
-            if (restoreSection) {
-              restoreSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              // Trigger the restore credits modal
-              const event = new CustomEvent('openRestoreCredits');
-              window.dispatchEvent(event);
-            }
-          }}
-          className="text-sm text-blue-600 hover:text-blue-700 underline font-medium"
-        >
-          📱 Restore credits from another device
-        </button>
-      </div>
     </section>
   );
 }

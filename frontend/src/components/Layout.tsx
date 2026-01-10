@@ -110,14 +110,13 @@ function Layout({ children }: LayoutProps) {
                     </div>
                   ) : null}
                   
-                  {/* Restore Credits Button */}
+                  {/* Restore Credits Button - Matches Trust Signals Style */}
                   <button
                     onClick={() => setShowRestoreCredits(true)}
-                    className="restore-credits-hero-btn"
+                    className="px-3 py-1.5 bg-blue-50 text-slate-700 rounded-full text-xs md:text-sm font-medium shadow-sm hover:bg-blue-100 hover:shadow-md transition-all cursor-pointer"
                     title="Restore credits from another device"
                   >
-                    <span className="restore-icon">📱</span>
-                    <span className="restore-text">Restore Credits</span>
+                    📱 Restore Credits
                   </button>
                 </div>
                 
