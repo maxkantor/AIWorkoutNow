@@ -1667,6 +1667,46 @@ public class DynamoDBService : IDynamoDBService
         targetTokens.TokensRemaining = totalTokens;
         targetTokens.ExpiresAt = latestExpiration;
         await SaveUserTokensAsync(targetTokens);
+    }
+
+    public async Task ResetFreeWorkoutCountAsync(string deviceId)
+    {
+        try
+        {
+            Console.WriteLine($"[DynamoDBService] Resetting free workout count for device {deviceId}");
+            
+            // Get all AnonymousUsage records for this device
+            var usageResponse = await _dynamoDB.ScanAsync(new ScanRequest
+            {
+                TableName = _anonymousUsageTable,
+                FilterExpression = "DeviceId = :deviceId",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    { ":deviceId", new AttributeValue { S = deviceId } }
+                }
+            });
+
+            // Delete all usage records to reset free workout count
+            foreach (var item in usageResponse.Items)
+            {
+                await _dynamoDB.DeleteItemAsync(new DeleteItemRequest
+                {
+                    TableName = _anonymousUsageTable,
+                    Key = new Dictionary<string, AttributeValue>
+                    {
+                        { "DeviceId", new AttributeValue { S = deviceId } },
+                        { "Date", item["Date"] }
+                    }
+                });
+            }
+            
+            Console.WriteLine($"[DynamoDBService] Deleted {usageResponse.Items.Count} AnonymousUsage records for device {deviceId}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error resetting free workout count: {ex.Message}");
+            // Don't throw - this is a non-critical operation
+        }
         
         Console.WriteLine($"[DynamoDBService] Merged credits complete - Target device now has {totalTokens} tokens, expires: {latestExpiration}");
     }

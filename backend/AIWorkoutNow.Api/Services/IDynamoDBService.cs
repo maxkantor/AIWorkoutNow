@@ -53,6 +53,7 @@ public interface IDynamoDBService
     Task<EmailVisitorMapping?> GetEmailVisitorMappingAsync(string email);
     Task<List<string>> GetVisitorIdsByEmailAsync(string email);
     Task MergeCreditsFromVisitorIdsAsync(string targetDeviceId, List<string> sourceVisitorIds);
+    Task ResetFreeWorkoutCountAsync(string deviceId);
 }
 
 public class AdminStats

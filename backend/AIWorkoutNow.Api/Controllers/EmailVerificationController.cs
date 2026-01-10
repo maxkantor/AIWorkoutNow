@@ -156,6 +156,10 @@ public class EmailVerificationController : ControllerBase
             // Save mapping
             await _dynamoService.SaveEmailVisitorMappingAsync(mapping);
 
+            // Reset free workout count for this device (fresh start after restore)
+            Console.WriteLine($"[EmailVerificationController] Resetting free workout count for device {request.DeviceId}");
+            await _dynamoService.ResetFreeWorkoutCountAsync(request.DeviceId);
+
             // Merge credits from all linked visitor IDs
             var allVisitorIds = mapping.VisitorIds.Where(id => id != request.DeviceId).ToList();
             if (allVisitorIds.Any())
@@ -168,13 +172,19 @@ public class EmailVerificationController : ControllerBase
             var tokens = await _dynamoService.GetUserTokensAsync(request.DeviceId);
             var tokensRemaining = tokens?.TokensRemaining ?? 0;
             var hasUnlimited = tokensRemaining >= 999999;
+            
+            // Get updated free workout count (should be 0 after reset, so 3 remaining)
+            var freeWorkoutsUsed = await _dynamoService.GetTotalFreeWorkoutsAsync(request.DeviceId);
+            var freeWorkoutsRemaining = Math.Max(0, 3 - freeWorkoutsUsed);
 
             return Ok(new
             {
                 message = "Credits restored successfully",
                 tokensRemaining = tokensRemaining,
                 hasUnlimited = hasUnlimited,
-                expiresAt = tokens?.ExpiresAt?.ToString("O")
+                expiresAt = tokens?.ExpiresAt?.ToString("O"),
+                freeWorkoutsRemaining = freeWorkoutsRemaining,
+                freeWorkoutsUsed = freeWorkoutsUsed
             });
         }
         catch (Exception ex)
