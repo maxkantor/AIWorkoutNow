@@ -15,7 +15,7 @@
   position: relative;
   background-image: url('/images/hero-bg.png');
   background-size: cover;
-  background-position: center;
+  background-position: center center;
   background-repeat: no-repeat;
   min-height: 360px;
   display: flex;
@@ -46,10 +46,10 @@
   bottom: 0;
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.6) 0%,
-    rgba(0, 0, 0, 0.55) 30%,
-    rgba(0, 0, 0, 0.5) 60%,
-    rgba(0, 0, 0, 0.55) 100%
+    rgba(0, 0, 0, 0.45) 0%,
+    rgba(0, 0, 0, 0.4) 30%,
+    rgba(0, 0, 0, 0.35) 60%,
+    rgba(0, 0, 0, 0.4) 100%
   );
   z-index: 1;
 }
@@ -61,7 +61,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.2) 100%);
+  background: radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.15) 100%);
   z-index: 1;
   pointer-events: none;
 }
