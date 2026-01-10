@@ -9,6 +9,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Net;
 using Microsoft.AspNetCore.Http;
+using System;
+using System.Threading.Tasks;
+using System.Text.Json;
 using AIWorkoutNow.Api.Services;
 
 namespace AIWorkoutNow.Api;
@@ -81,28 +84,38 @@ public class Startup
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
-        // Swagger disabled for Lambda (can enable if needed)
-        // if (env.IsDevelopment())
-        // {
-        //     app.UseSwagger();
-        //     app.UseSwaggerUI();
-        // }
-
-        // Handle OPTIONS requests explicitly for API Gateway HTTP API
+        // AGGRESSIVE CORS FIX - Handle OPTIONS at the VERY FIRST middleware
+        // This must run before ANY other middleware
         app.Use(async (context, next) =>
         {
-            // Add CORS headers to all responses BEFORE processing
+            // AGGRESSIVE: Set CORS headers on EVERY response, no matter what
+            context.Response.OnStarting(() =>
+            {
+                // Ensure headers are set even if they were removed
+                context.Response.Headers["Access-Control-Allow-Origin"] = "*";
+                context.Response.Headers["Access-Control-Allow-Methods"] = "*";
+                context.Response.Headers["Access-Control-Allow-Headers"] = "*";
+                context.Response.Headers["Access-Control-Allow-Credentials"] = "false";
+                context.Response.Headers["Access-Control-Max-Age"] = "3600";
+                context.Response.Headers["Access-Control-Expose-Headers"] = "*";
+                return Task.CompletedTask;
+            });
+
+            // Set CORS headers immediately
             context.Response.Headers["Access-Control-Allow-Origin"] = "*";
-            context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH";
-            context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With";
+            context.Response.Headers["Access-Control-Allow-Methods"] = "*";
+            context.Response.Headers["Access-Control-Allow-Headers"] = "*";
+            context.Response.Headers["Access-Control-Allow-Credentials"] = "false";
             context.Response.Headers["Access-Control-Max-Age"] = "3600";
             context.Response.Headers["Access-Control-Expose-Headers"] = "*";
 
-            // Handle OPTIONS preflight requests
-            if (context.Request.Method == "OPTIONS")
+            // AGGRESSIVE: Handle OPTIONS immediately - don't let it go to controllers
+            if (context.Request.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
             {
                 context.Response.StatusCode = 200;
-                // Lambda proxy integration expects a response, but empty body is fine for OPTIONS
+                context.Response.ContentType = "text/plain";
+                // Lambda needs a response body for OPTIONS in some cases
+                await context.Response.WriteAsync("OK");
                 return;
             }
 
@@ -110,16 +123,23 @@ public class Startup
             {
                 await next();
             }
-            catch
+            catch (Exception ex)
             {
-                // Ensure CORS headers are still set even on exception
+                // AGGRESSIVE: Ensure CORS headers are ALWAYS set, even on errors
                 if (!context.Response.HasStarted)
                 {
+                    context.Response.StatusCode = 500;
                     context.Response.Headers["Access-Control-Allow-Origin"] = "*";
-                    context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH";
-                    context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With";
+                    context.Response.Headers["Access-Control-Allow-Methods"] = "*";
+                    context.Response.Headers["Access-Control-Allow-Headers"] = "*";
+                    context.Response.ContentType = "application/json";
+                    var errorResponse = System.Text.Json.JsonSerializer.Serialize(new { 
+                        error = ex.Message,
+                        message = "An error occurred"
+                    });
+                    await context.Response.WriteAsync(errorResponse);
                 }
-                throw;
+                // Don't rethrow - we've already handled the error response
             }
         });
 
