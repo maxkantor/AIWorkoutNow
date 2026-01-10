@@ -15,10 +15,10 @@
   position: relative;
   background-image: url('/images/hero-bg.png');
   background-size: cover;
-  background-position: center 40%;
+  background-position: center 50%;
   background-repeat: no-repeat;
-  min-height: 380px;
-  max-height: 420px;
+  min-height: 320px;
+  max-height: 380px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -256,27 +256,27 @@
 /* Desktop (1024px - 1279px) */
 @media (min-width: 1024px) and (max-width: 1279px) {
   .hero-section {
-    min-height: 380px;
-    max-height: 420px;
-    background-position: center 40%;
+    min-height: 320px;
+    max-height: 380px;
+    background-position: center 50%;
   }
 
   .hero-container {
-    padding: 2.5rem 1.5rem;
+    padding: 2rem 1.5rem;
   }
 }
 
 /* MacBook Air and similar laptop screens (1280px - 1440px) - COMPACT HEIGHT */
 @media (min-width: 1280px) and (max-width: 1440px) {
   .hero-section {
-    min-height: 360px;
-    max-height: 400px;
+    min-height: 300px;
+    max-height: 360px;
     background-size: cover;
-    background-position: center 45%;
+    background-position: center 50%;
   }
 
   .hero-container {
-    padding: 2rem 1.5rem;
+    padding: 1.5rem 1.5rem;
   }
 }
 
