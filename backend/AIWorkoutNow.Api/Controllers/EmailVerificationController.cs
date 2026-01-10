@@ -22,8 +22,15 @@ public class EmailVerificationController : ControllerBase
     }
 
     [HttpPost("send-code")]
-    public async Task<IActionResult> SendVerificationCode([FromBody] SendCodeRequest request)
+    [HttpOptions("send-code")]
+    public async Task<IActionResult> SendVerificationCode([FromBody] SendCodeRequest? request = null)
     {
+        // Handle OPTIONS preflight
+        if (Request.Method == "OPTIONS")
+        {
+            return Ok();
+        }
+        
         try
         {
             if (request == null || string.IsNullOrEmpty(request.Email))
@@ -74,8 +81,15 @@ public class EmailVerificationController : ControllerBase
     }
 
     [HttpPost("verify-and-restore")]
-    public async Task<IActionResult> VerifyAndRestore([FromBody] VerifyAndRestoreRequest request)
+    [HttpOptions("verify-and-restore")]
+    public async Task<IActionResult> VerifyAndRestore([FromBody] VerifyAndRestoreRequest? request = null)
     {
+        // Handle OPTIONS preflight
+        if (Request.Method == "OPTIONS")
+        {
+            return Ok();
+        }
+        
         try
         {
             if (request == null || string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Code) || string.IsNullOrEmpty(request.DeviceId))

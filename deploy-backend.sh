@@ -39,17 +39,40 @@ fi
 cd ../../backend
 
 # Check if pre-built package exists, otherwise build it
-if [ -f "lambda-deployment.zip" ]; then
-    echo "✅ Using existing Lambda deployment package: lambda-deployment.zip"
+ZIP_FILE="lambda-deployment.zip"
+if [ -f "$ZIP_FILE" ]; then
+    echo "✅ Using existing Lambda deployment package: $ZIP_FILE"
 else
     echo "🔨 Building Lambda deployment package..."
-    # Try PowerShell script first on Windows, then bash script
-    if [ -f "build-lambda-package.ps1" ] && command -v powershell &> /dev/null; then
-        powershell -ExecutionPolicy Bypass -File build-lambda-package.ps1
-    elif [ -f "build-lambda-package.sh" ]; then
-        bash build-lambda-package.sh || ./build-lambda-package.sh
-    else
-        echo "❌ Build script not found"
+    
+    # Detect OS and use appropriate build script
+    OS="$(uname -s)"
+    case "${OS}" in
+        CYGWIN*|MINGW*|MSYS*)
+            # Windows - try PowerShell first
+            if [ -f "build-lambda-package.ps1" ] && command -v powershell &> /dev/null; then
+                powershell -ExecutionPolicy Bypass -File build-lambda-package.ps1
+            elif [ -f "build-lambda-package.sh" ]; then
+                bash build-lambda-package.sh || ./build-lambda-package.sh
+            else
+                echo "❌ Build script not found"
+                exit 1
+            fi
+            ;;
+        *)
+            # Mac/Linux - use bash script
+            if [ -f "build-lambda-package.sh" ]; then
+                bash build-lambda-package.sh || ./build-lambda-package.sh
+            else
+                echo "❌ Build script not found: build-lambda-package.sh"
+                exit 1
+            fi
+            ;;
+    esac
+    
+    # Verify zip was created
+    if [ ! -f "$ZIP_FILE" ]; then
+        echo "❌ Failed to build Lambda deployment package"
         exit 1
     fi
 fi

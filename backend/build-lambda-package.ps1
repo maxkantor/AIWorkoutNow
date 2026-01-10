@@ -1,60 +1,62 @@
-# Build Lambda deployment package (PowerShell version for Windows)
-# Usage: .\build-lambda-package.ps1
+# Build Lambda deployment package (Windows PowerShell)
+# Also works on Mac/Linux if PowerShell is installed
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "Building Lambda deployment package..." -ForegroundColor Cyan
+Write-Host "🔨 Building Lambda deployment package..." -ForegroundColor Cyan
 Write-Host ""
 
-# Get script directory
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ProjectDir = Join-Path $ScriptDir "AIWorkoutNow.Api"
-$OutputZip = Join-Path $ScriptDir "lambda-deployment.zip"
-$PublishDir = Join-Path $ProjectDir "publish-lambda"
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$projectDir = Join-Path $scriptDir "AIWorkoutNow.Api"
+
+if (-not (Test-Path $projectDir)) {
+    Write-Host "❌ Could not find AIWorkoutNow.Api directory in $scriptDir" -ForegroundColor Red
+    exit 1
+}
 
 # Clean previous builds
-Write-Host "Cleaning previous builds..." -ForegroundColor Yellow
-if (Test-Path $PublishDir) {
-    Remove-Item -Path $PublishDir -Recurse -Force
+$publishDir = Join-Path $projectDir "publish-lambda"
+$zipFile = Join-Path $scriptDir "lambda-deployment.zip"
+
+if (Test-Path $publishDir) {
+    Remove-Item -Path $publishDir -Recurse -Force
 }
-if (Test-Path $OutputZip) {
-    Remove-Item -Path $OutputZip -Force
+if (Test-Path $zipFile) {
+    Remove-Item -Path $zipFile -Force
 }
 
 # Publish for Lambda
-Write-Host "Publishing .NET application..." -ForegroundColor Yellow
-Push-Location $ProjectDir
+Write-Host "📦 Publishing .NET application..." -ForegroundColor Cyan
+Push-Location $projectDir
+
 try {
-    dotnet publish -c Release -r linux-arm64 --self-contained false -o publish-lambda /p:PublishReadyToRun=false
-    
+    dotnet publish -c Release -r linux-x64 --self-contained false -o publish-lambda
+
     if (-not (Test-Path "publish-lambda")) {
-        Write-Host "Publish failed" -ForegroundColor Red
+        Write-Host "❌ Publish failed" -ForegroundColor Red
         exit 1
     }
-    
+
     # Create zip package
-    Write-Host "Creating deployment package..." -ForegroundColor Yellow
-    Push-Location "publish-lambda"
-    try {
-        Compress-Archive -Path * -DestinationPath $OutputZip -Force
-    }
-    finally {
-        Pop-Location
-    }
-    
+    Write-Host "📦 Creating deployment package..." -ForegroundColor Cyan
+    Compress-Archive -Path "publish-lambda\*" -DestinationPath $zipFile -Force
+
     # Show package info
-    $PackageSize = (Get-Item $OutputZip).Length
-    $PackageSizeMB = [math]::Round($PackageSize / 1MB, 2)
-    
+    $zipInfo = Get-Item $zipFile
+    $sizeMB = [math]::Round($zipInfo.Length / 1MB, 2)
+
     Write-Host ""
-    Write-Host "Lambda deployment package created" -ForegroundColor Green
-    Write-Host "   Package: backend/lambda-deployment.zip"
-    Write-Host "   Size: $PackageSizeMB MB"
+    Write-Host "✅ Lambda deployment package created" -ForegroundColor Green
+    Write-Host "   Package: $zipFile"
+    Write-Host "   Size: $sizeMB MB"
     Write-Host ""
-    Write-Host "To deploy:" -ForegroundColor Cyan
-    Write-Host "   aws lambda update-function-code --function-name aiworkoutnow-api --zip-file fileb://backend/lambda-deployment.zip --region us-east-1"
+    Write-Host "🚀 To deploy:" -ForegroundColor Cyan
+    Write-Host "   aws lambda update-function-code \"
+    Write-Host "     --function-name aiworkoutnow-api \"
+    Write-Host "     --zip-file fileb://backend/lambda-deployment.zip \"
+    Write-Host "     --region us-east-1"
     Write-Host ""
-    Write-Host "   Or use: deploy-backend.sh or deploy-backend.ps1" -ForegroundColor Cyan
+    Write-Host "   Or use: ./deploy-backend.sh"
 }
 finally {
     Pop-Location

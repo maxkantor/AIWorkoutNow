@@ -17,19 +17,21 @@ case "${OS}" in
     *)          MACHINE="UNKNOWN:${OS}"
 esac
 
-cd "$(dirname "$0")/AIWorkoutNow.Api"
+# Get script directory (works on Mac, Linux, Windows with Git Bash)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/AIWorkoutNow.Api" || {
+    echo "❌ Could not find AIWorkoutNow.Api directory in $SCRIPT_DIR"
+    exit 1
+}
 
 # Clean previous builds (cross-platform)
-if [ "$MACHINE" = "Windows" ]; then
-    if [ -d "publish-lambda" ]; then
-        rm -rf publish-lambda
-    fi
-    if [ -f "../lambda-deployment.zip" ]; then
-        rm -f ../lambda-deployment.zip
-    fi
-else
+if [ -d "publish-lambda" ]; then
     rm -rf publish-lambda
-    rm -f ../lambda-deployment.zip
+fi
+
+ZIP_PATH="$SCRIPT_DIR/lambda-deployment.zip"
+if [ -f "$ZIP_PATH" ]; then
+    rm -f "$ZIP_PATH"
 fi
 
 # Publish for Lambda (using x86_64 for compatibility)
@@ -48,37 +50,46 @@ cd publish-lambda
 # Use PowerShell on Windows if available, otherwise use zip command
 if [ "$MACHINE" = "Windows" ] && command -v powershell &> /dev/null; then
     # Use PowerShell Compress-Archive (creates zip files compatible with Lambda)
-    powershell -Command "Compress-Archive -Path * -DestinationPath ..\..\lambda-deployment.zip -Force"
+    powershell -Command "Compress-Archive -Path * -DestinationPath '$ZIP_PATH' -Force"
 elif command -v zip &> /dev/null; then
     # Use zip command (available on macOS, Linux, and Git Bash on Windows)
-    zip -r ../../lambda-deployment.zip . > /dev/null 2>&1
+    zip -r "$ZIP_PATH" . > /dev/null 2>&1
 elif command -v 7z &> /dev/null; then
     # Fallback to 7zip if available
-    7z a -tzip ../../lambda-deployment.zip * > /dev/null 2>&1
+    7z a -tzip "$ZIP_PATH" * > /dev/null 2>&1
 else
     echo "❌ No zip tool found. Please install zip, 7zip, or use PowerShell"
+    echo "   On Windows: PowerShell is usually available"
+    echo "   On Mac: Install zip via Homebrew: brew install zip"
+    echo "   On Linux: Install zip via apt/yum"
     exit 1
 fi
 
-cd ../..
+cd "$SCRIPT_DIR" || exit 1
+
+# Verify zip was created
+if [ ! -f "$ZIP_PATH" ]; then
+    echo "❌ Failed to create zip package"
+    exit 1
+fi
 
 # Show package info (cross-platform)
 if [ "$MACHINE" = "Windows" ] && command -v powershell &> /dev/null; then
-    PACKAGE_SIZE=$(powershell -Command "(Get-Item lambda-deployment.zip).Length | ForEach-Object {[math]::Round($_/1MB, 2)}")
+    PACKAGE_SIZE=$(powershell -Command "(Get-Item '$ZIP_PATH').Length | ForEach-Object {[math]::Round($_/1MB, 2)}")
     PACKAGE_SIZE="${PACKAGE_SIZE} MB"
 elif command -v stat &> /dev/null; then
     # macOS and Linux
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        PACKAGE_SIZE=$(stat -f%z lambda-deployment.zip | numfmt --to=iec-i --suffix=B 2>/dev/null || echo "N/A")
+        PACKAGE_SIZE=$(stat -f%z "$ZIP_PATH" 2>/dev/null | awk '{printf "%.2f MB", $1/1024/1024}' || echo "N/A")
     else
-        PACKAGE_SIZE=$(stat -c%s lambda-deployment.zip | numfmt --to=iec-i --suffix=B 2>/dev/null || echo "N/A")
+        PACKAGE_SIZE=$(stat -c%s "$ZIP_PATH" 2>/dev/null | awk '{printf "%.2f MB", $1/1024/1024}' || echo "N/A")
     fi
 else
     PACKAGE_SIZE="N/A"
 fi
 
 echo "✅ Lambda deployment package created"
-echo "   Package: backend/lambda-deployment.zip"
+echo "   Package: $ZIP_PATH"
 if [ "$PACKAGE_SIZE" != "N/A" ]; then
     echo "   Size: $PACKAGE_SIZE"
 fi

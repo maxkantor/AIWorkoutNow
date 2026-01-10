@@ -82,6 +82,14 @@ aws apigatewayv2 create-route \
     --region $REGION > /dev/null 2>&1 || echo "Route POST /generate-workout already exists or failed"
 echo "✅ Route: POST /generate-workout"
 
+# OPTIONS /generate-workout (CORS preflight)
+aws apigatewayv2 create-route \
+    --api-id "$API_ID" \
+    --route-key "OPTIONS /generate-workout" \
+    --target "integrations/$INTEGRATION_ID" \
+    --region $REGION > /dev/null 2>&1 || echo "Route OPTIONS /generate-workout already exists or failed"
+echo "✅ Route: OPTIONS /generate-workout (CORS)"
+
 # POST /contact
 aws apigatewayv2 create-route \
     --api-id "$API_ID" \
@@ -161,6 +169,22 @@ aws apigatewayv2 create-route \
     --target "integrations/$INTEGRATION_ID" \
     --region $REGION > /dev/null 2>&1 || echo "Route POST /api/email-verification/verify-and-restore already exists or failed"
 echo "✅ Route: POST /api/email-verification/verify-and-restore"
+
+# OPTIONS /api/email-verification/verify-and-restore (CORS preflight)
+aws apigatewayv2 create-route \
+    --api-id "$API_ID" \
+    --route-key "OPTIONS /api/email-verification/verify-and-restore" \
+    --target "integrations/$INTEGRATION_ID" \
+    --region $REGION > /dev/null 2>&1 || echo "Route OPTIONS /api/email-verification/verify-and-restore already exists or failed"
+echo "✅ Route: OPTIONS /api/email-verification/verify-and-restore (CORS)"
+
+# OPTIONS /api/email-verification/send-code (CORS preflight)
+aws apigatewayv2 create-route \
+    --api-id "$API_ID" \
+    --route-key "OPTIONS /api/email-verification/send-code" \
+    --target "integrations/$INTEGRATION_ID" \
+    --region $REGION > /dev/null 2>&1 || echo "Route OPTIONS /api/email-verification/send-code already exists or failed"
+echo "✅ Route: OPTIONS /api/email-verification/send-code (CORS)"
 
 # GET /api/email-verification/check-email
 aws apigatewayv2 create-route \

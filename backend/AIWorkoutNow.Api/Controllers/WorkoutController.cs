@@ -31,8 +31,20 @@ public class WorkoutController : ControllerBase
     }
 
     [HttpPost("generate-workout")]
-    public async Task<IActionResult> GenerateWorkout([FromBody] GenerateWorkoutRequest request)
+    [HttpOptions("generate-workout")]
+    public async Task<IActionResult> GenerateWorkout([FromBody] GenerateWorkoutRequest? request = null)
     {
+        // Handle OPTIONS preflight
+        if (Request.Method == "OPTIONS")
+        {
+            return Ok();
+        }
+        
+        if (request == null)
+        {
+            return BadRequest(new { message = "Request body is required" });
+        }
+        
         try
         {
             Console.WriteLine($"[WorkoutController] Starting GenerateWorkout - DeviceId: {request.DeviceId}, IsFreeUser: {request.IsFreeUser}");
