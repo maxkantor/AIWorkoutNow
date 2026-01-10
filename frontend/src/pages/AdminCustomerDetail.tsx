@@ -78,13 +78,34 @@ function AdminCustomerDetail() {
   };
 
   const handleResetTokens = async () => {
-    if (!deviceId || !customer) return;
+    if (!deviceId || !customer) {
+      console.error('[Reset] Missing deviceId or customer:', { deviceId, customer });
+      setError('Missing device ID or customer data');
+      return;
+    }
+
+    if (newTokenCount <= 0) {
+      setError('Please enter a valid workout count (greater than 0)');
+      return;
+    }
 
     const token = localStorage.getItem('admin_token');
-    if (!token) return;
+    if (!token) {
+      console.error('[Reset] No admin token found');
+      setError('Not authenticated. Please log in again.');
+      navigate('/admin');
+      return;
+    }
 
+    console.log('[Reset] Starting reset for device:', deviceId);
+    console.log('[Reset] New token count:', newTokenCount);
+    console.log('[Reset] Previous count:', customer.tokensRemaining);
+    
     setResetting(true);
+    setError(null);
+    
     try {
+      console.log('[Reset] Calling resetUserTokens API...');
       await resetUserTokens(
         token,
         deviceId,
@@ -93,12 +114,21 @@ function AdminCustomerDetail() {
         resetReason
       );
       
+      console.log('[Reset] Reset successful, reloading customer data...');
+      
       // Reload customer data
       await loadCustomerData(token, deviceId);
       setShowResetModal(false);
       setResetReason('');
+      setNewTokenCount(0);
+      
+      // Show success message
+      alert(`Successfully reset workouts to ${newTokenCount} for this device.`);
     } catch (err: any) {
-      setError(err.message || 'Failed to reset workouts');
+      console.error('[Reset] Error:', err);
+      const errorMessage = err.message || 'Failed to reset workouts';
+      setError(errorMessage);
+      alert(`Error: ${errorMessage}`);
     } finally {
       setResetting(false);
     }

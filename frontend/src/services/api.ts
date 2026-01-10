@@ -486,7 +486,12 @@ export async function getCustomerActivities(token: string, deviceId: string, lim
 }
 
 export async function resetUserTokens(token: string, deviceId: string, newTokenCount: number, previousTokenCount?: number, reason?: string): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/admin/customers/${deviceId}/reset-tokens`, {
+  const url = `${API_BASE_URL}/admin/customers/${deviceId}/reset-tokens`;
+  console.log('[API] Resetting tokens for device:', deviceId);
+  console.log('[API] URL:', url);
+  console.log('[API] Payload:', { newTokenCount, previousTokenCount, reason });
+  
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -499,10 +504,17 @@ export async function resetUserTokens(token: string, deviceId: string, newTokenC
     }),
   });
 
+  console.log('[API] Reset response status:', response.status);
+  console.log('[API] Reset response ok:', response.ok);
+
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(errorText || 'Failed to reset user tokens');
+    console.error('[API] Reset error response:', errorText);
+    throw new Error(errorText || `Failed to reset user tokens: ${response.status} ${response.statusText}`);
   }
+
+  const result = await response.json();
+  console.log('[API] Reset success:', result);
 }
 
 export async function getCustomersByEmail(token: string, email: string): Promise<{ email: string; deviceIds: string[]; customers: any[] }> {
