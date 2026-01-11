@@ -57,6 +57,7 @@ public interface IDynamoDBService
     Task ResetFreeWorkoutCountAsync(string deviceId);
     Task<List<UserPurchase>> GetPurchasesByEmailAsync(string email);
     Task DeleteCustomerAsync(string deviceId);
+    Task DeactivateCustomerAsync(string deviceId);
 }
 
 public class AdminStats
