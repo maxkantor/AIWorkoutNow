@@ -1,16 +1,14 @@
-# Build Lambda deployment package (Windows PowerShell)
-# Also works on Mac/Linux if PowerShell is installed
-
+# Build Lambda deployment package (PowerShell, ASCII-only)
 $ErrorActionPreference = "Stop"
 
-Write-Host "🔨 Building Lambda deployment package..." -ForegroundColor Cyan
+Write-Host "Building Lambda deployment package..." -ForegroundColor Cyan
 Write-Host ""
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectDir = Join-Path $scriptDir "AIWorkoutNow.Api"
 
 if (-not (Test-Path $projectDir)) {
-    Write-Host "❌ Could not find AIWorkoutNow.Api directory in $scriptDir" -ForegroundColor Red
+    Write-Host "ERROR: Could not find AIWorkoutNow.Api directory in $scriptDir" -ForegroundColor Red
     exit 1
 }
 
@@ -26,33 +24,25 @@ if (Test-Path $zipFile) {
 }
 
 # Publish for Lambda
-Write-Host "📦 Publishing .NET application..." -ForegroundColor Cyan
+Write-Host "Publishing .NET application..." -ForegroundColor Cyan
 Push-Location $projectDir
 
 try {
     dotnet publish -c Release -r linux-arm64 --self-contained true -o publish-lambda
 
     if (-not (Test-Path "publish-lambda")) {
-        Write-Host "❌ Publish failed" -ForegroundColor Red
+        Write-Host "ERROR: Publish failed" -ForegroundColor Red
         exit 1
     }
 
-    # CRITICAL: For provided.al2023 runtime, rename executable to 'bootstrap'
-    # This is required for Lambda to find the entry point
+    # For provided.al2023 runtime, executable must be named bootstrap
     if (Test-Path "publish-lambda\AIWorkoutNow.Api") {
-        Write-Host "   Creating bootstrap executable for provided.al2023 runtime..." -ForegroundColor Yellow
-        Copy-Item "publish-lambda\AIWorkoutNow.Api" "publish-lambda\bootstrap" -Force
-    }
-
-    # CRITICAL: For provided.al2023 runtime, rename executable to 'bootstrap'
-    # This is required for Lambda to find the entry point
-    if (Test-Path "publish-lambda\AIWorkoutNow.Api") {
-        Write-Host "   Creating bootstrap executable for provided.al2023 runtime..." -ForegroundColor Yellow
+        Write-Host "Creating bootstrap executable for provided.al2023 runtime..." -ForegroundColor Yellow
         Copy-Item "publish-lambda\AIWorkoutNow.Api" "publish-lambda\bootstrap" -Force
     }
 
     # Create zip package
-    Write-Host "📦 Creating deployment package..." -ForegroundColor Cyan
+    Write-Host "Creating deployment package..." -ForegroundColor Cyan
     Compress-Archive -Path "publish-lambda\*" -DestinationPath $zipFile -Force
 
     # Show package info
@@ -60,13 +50,12 @@ try {
     $sizeMB = [math]::Round($zipInfo.Length / 1MB, 2)
 
     Write-Host ""
-    Write-Host "✅ Lambda deployment package created" -ForegroundColor Green
+    Write-Host "Lambda deployment package created" -ForegroundColor Green
     Write-Host "   Package: $zipFile"
     Write-Host "   Size: $sizeMB MB"
     Write-Host ""
-    Write-Host "🚀 To deploy:" -ForegroundColor Cyan
+    Write-Host "To deploy:" -ForegroundColor Cyan
     Write-Host "   aws lambda update-function-code --function-name aiworkoutnow-api --zip-file fileb://backend/lambda-deployment.zip --region us-east-1"
-    Write-Host ""
     Write-Host "   Or use: ./deploy-backend.sh"
 }
 finally {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { getAllCustomers, CustomerSummary } from '../services/api';
+import { getAllCustomers, deleteCustomer, CustomerSummary } from '../services/api';
 import './AdminCustomers.css';
 
 function AdminCustomers() {
