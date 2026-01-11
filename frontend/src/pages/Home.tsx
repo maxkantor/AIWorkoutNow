@@ -28,11 +28,6 @@ function Home() {
   useEffect(() => {
     checkAccessStatus();
     
-    // Periodically refresh access status (every 30 seconds) to catch admin resets
-    const refreshInterval = setInterval(() => {
-      checkAccessStatus();
-    }, 30000);
-    
     // Listen for restore credits event from PricingPlans
     const handleOpenRestoreCredits = () => {
       setShowRestoreCredits(true);
@@ -52,7 +47,6 @@ function Home() {
     window.addEventListener('openRestoreCredits', handleOpenRestoreCredits);
     window.addEventListener('refreshAccessStatus', handleRefreshAccessStatus);
     return () => {
-      clearInterval(refreshInterval);
       window.removeEventListener('openRestoreCredits', handleOpenRestoreCredits);
       window.removeEventListener('refreshAccessStatus', handleRefreshAccessStatus);
     };
