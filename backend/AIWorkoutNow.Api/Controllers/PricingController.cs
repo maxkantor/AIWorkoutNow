@@ -503,6 +503,37 @@ public class PricingController : ControllerBase
             // Check if tokens indicate unlimited access (999999 is our marker for unlimited)
             var hasUnlimitedFromTokens = tokensRemaining >= 999999;
             
+            // SAFETY NET: if we have completed purchases with token grants, ensure tokens reflect at least the purchased total
+            try
+            {
+                var completedPurchases = await _dynamoService.GetUserPurchasesAsync(deviceId);
+                var purchasedTokensTotal = completedPurchases
+                    .Where(p => p.Status == "completed" && p.TokensGranted.HasValue && p.TokensGranted.Value > 0)
+                    .Sum(p => p.TokensGranted!.Value);
+                
+                if (purchasedTokensTotal > 0 && tokensRemaining < purchasedTokensTotal && tokensRemaining < 999999)
+                {
+                    tokensRemaining = Math.Min(999998, purchasedTokensTotal);
+                    if (tokens == null)
+                    {
+                        tokens = new Models.UserTokens
+                        {
+                            DeviceId = deviceId,
+                            TokensRemaining = tokensRemaining
+                        };
+                    }
+                    else
+                    {
+                        tokens.TokensRemaining = tokensRemaining;
+                    }
+                    await _dynamoService.SaveUserTokensAsync(tokens);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[PricingController] Warning: failed purchase total reconciliation: {ex.Message}");
+            }
+            
             // CRITICAL FIX: If tokens are explicitly set to a non-unlimited value (admin reset),
             // respect that override and DON'T check for unlimited purchases
             // This ensures admin token resets take precedence over unlimited purchases
