@@ -327,8 +327,9 @@ public class PricingController : ControllerBase
             
             // AGGRESSIVE FIX: If tokens are low (< 999999), check Stripe for completed payments
             // BUT: Skip this if tokens are exactly 5 or another small number (likely admin reset)
-            // Only check Stripe if tokens are 0 or very low (not explicitly set by admin)
-            bool shouldCheckStripe = tokensRemaining < 999999 && (tokensRemaining == 0 || tokensRemaining < 10);
+            // Only check Stripe if tokens are exactly 0 (not explicitly set by admin)
+            // CRITICAL: If tokens are > 0, they were likely set by admin, so don't override them
+            bool shouldCheckStripe = tokensRemaining == 0;
             
             if (shouldCheckStripe)
             {
