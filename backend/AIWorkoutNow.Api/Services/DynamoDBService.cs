@@ -19,6 +19,8 @@ public class DynamoDBService : IDynamoDBService
     private readonly string _emailVerificationTable;
     private readonly string _emailVisitorMappingTable;
 
+    private const int DefaultTokensPerPack = 10;
+
     public DynamoDBService(IAmazonDynamoDB dynamoDB)
     {
         _dynamoDB = dynamoDB;
@@ -216,6 +218,81 @@ public class DynamoDBService : IDynamoDBService
         if (response.Item.ContainsKey("ExpiresAt"))
         {
             tokens.ExpiresAt = DateTime.Parse(response.Item["ExpiresAt"].S);
+        }
+
+        return tokens;
+    }
+
+    /// <summary>
+    /// Reconcile tokens for a device from purchases. Returns the up-to-date UserTokens (persisted).
+    /// </summary>
+    public async Task<UserTokens> ReconcileTokensAsync(string deviceId)
+    {
+        // Start with current tokens (or default)
+        var tokens = await GetUserTokensAsync(deviceId) ?? new UserTokens
+        {
+            DeviceId = deviceId,
+            TokensRemaining = 0,
+            IsActive = true
+        };
+
+        var purchases = await GetUserPurchasesByDeviceIdAsync(deviceId);
+        var completed = purchases.Where(p => p.Status == "completed").ToList();
+
+        // Unlimited check
+        var unlimitedPurchase = completed.FirstOrDefault(p => p.IsUnlimited);
+        if (unlimitedPurchase != null)
+        {
+            tokens.TokensRemaining = 999999;
+            tokens.ExpiresAt = (unlimitedPurchase.ExpiresAt ?? unlimitedPurchase.PurchasedAt.AddDays(365));
+            tokens.IsActive = true;
+            await SaveUserTokensAsync(tokens);
+            return tokens;
+        }
+
+        // Sum paid tokens; backfill TokensGranted when missing
+        int purchasedTokens = 0;
+        foreach (var p in completed)
+        {
+            if (p.TokensGranted.HasValue && p.TokensGranted.Value > 0)
+            {
+                purchasedTokens += p.TokensGranted.Value;
+                continue;
+            }
+
+            try
+            {
+                var plan = await GetPricingPlanAsync(p.PlanId);
+                if (plan?.IsUnlimited == true)
+                {
+                    // Should have been caught above; skip
+                    continue;
+                }
+
+                if (plan?.TokenCount != null && plan.TokenCount.Value > 0)
+                {
+                    purchasedTokens += plan.TokenCount.Value;
+                    Console.WriteLine($"[DynamoDBService] ReconcileTokens - Backfilled TokensGranted from plan {p.PlanId} => {plan.TokenCount}");
+                }
+                else
+                {
+                    purchasedTokens += DefaultTokensPerPack;
+                    Console.WriteLine($"[DynamoDBService] ReconcileTokens - Plan {p.PlanId} missing TokenCount, defaulting TokensGranted to {DefaultTokensPerPack}");
+                }
+            }
+            catch (Exception exPlan)
+            {
+                purchasedTokens += DefaultTokensPerPack;
+                Console.WriteLine($"[DynamoDBService] ReconcileTokens - Plan lookup failed for {p.PlanId}: {exPlan.Message}. Defaulting TokensGranted to {DefaultTokensPerPack}");
+            }
+        }
+
+        if (purchasedTokens > tokens.TokensRemaining)
+        {
+            tokens.TokensRemaining = purchasedTokens;
+            tokens.ExpiresAt = null;
+            tokens.IsActive = true;
+            await SaveUserTokensAsync(tokens);
         }
 
         return tokens;
@@ -789,19 +866,19 @@ public class DynamoDBService : IDynamoDBService
             Console.WriteLine($"[DynamoDBService] GetAllCustomersAsync free usage scan error: {ex.Message}");
         }
 
-        // Tokens
+        // Tokens (reconciled)
         try
         {
             var tokensResp = await _dynamoDB.ScanAsync(new ScanRequest { TableName = _userTokensTable });
             foreach (var item in tokensResp.Items)
             {
                 var deviceId = item["DeviceId"].S;
-                var tokens = int.Parse(item["TokensRemaining"].N);
-                var isActive = item.ContainsKey("IsActive") ? item["IsActive"].BOOL : true;
-                tokensActive[deviceId] = (tokens, isActive);
+                // Reconcile per-device to ensure purchased tokens are applied and IsActive set
+                var reconciled = await ReconcileTokensAsync(deviceId);
+                tokensActive[deviceId] = (reconciled.TokensRemaining, reconciled.IsActive);
                 var summary = Ensure(deviceId);
-                summary.RemainingTokens = isActive ? tokens : 0;
-                summary.IsDeactivated = !isActive;
+                summary.RemainingTokens = reconciled.IsActive ? reconciled.TokensRemaining : 0;
+                summary.IsDeactivated = !reconciled.IsActive;
             }
         }
         catch (Exception ex)

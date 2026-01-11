@@ -315,8 +315,8 @@ public class PricingController : ControllerBase
             var freeWorkoutsRemaining = Math.Max(0, 3 - totalWorkouts);
             var hasFreeAccess = freeWorkoutsRemaining > 0;
 
-            // Check token balance first (to detect unlimited via 999999 tokens)
-            var tokens = await _dynamoService.GetUserTokensAsync(deviceId);
+            // Reconcile tokens from purchases; ensures IsActive=true and backfills token counts
+            var tokens = await _dynamoService.ReconcileTokensAsync(deviceId);
             var tokensRemaining = tokens?.TokensRemaining ?? 0;
             
             // Aggressive reconciliation: if purchases exist and tokensRemaining is lower than purchased tokens, bump tokensRemaining
