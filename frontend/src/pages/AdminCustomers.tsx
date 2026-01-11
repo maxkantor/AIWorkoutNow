@@ -118,17 +118,19 @@ function AdminCustomers() {
               <tbody>
                 {filteredCustomers.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="no-data">No customers found</td>
+                    <td colSpan={12} className="no-data">No customers found</td>
                   </tr>
                 ) : (
-                  filteredCustomers.map((customer) => (
+                  filteredCustomers.map((customer) => {
+                    const isPaid = customer.isPaidUser || (customer.tokensRemaining ?? 0) > 0 || (customer.totalPurchases ?? 0) > 0;
+                    return (
                     <tr key={customer.deviceId}>
                       <td className="device-id">{customer.deviceId.substring(0, 8)}...</td>
                       <td>{customer.email || '-'}</td>
                       <td>{customer.name || '-'}</td>
                       <td>
-                        <span className={`badge ${customer.isPaidUser ? 'badge-paid' : 'badge-free'}`}>
-                          {customer.isPaidUser ? 'Paid' : 'Free'}
+                        <span className={`badge ${isPaid ? 'badge-paid' : 'badge-free'}`}>
+                          {isPaid ? 'Paid' : 'Free'}
                         </span>
                       </td>
                       <td>{customer.tokensRemaining}</td>
@@ -167,7 +169,8 @@ function AdminCustomers() {
                         </div>
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>

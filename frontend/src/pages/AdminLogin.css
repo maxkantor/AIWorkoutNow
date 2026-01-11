@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #e8d5ff;
+  background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
   padding: 2rem 1rem;
   position: relative;
   overflow: hidden;
@@ -27,10 +27,11 @@
 .admin-login-card {
   background: #ffffff;
   border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
   padding: 3rem 2.5rem;
   width: 100%;
   animation: slideUp 0.3s ease-out;
+  border: 1px solid #e5e7eb;
 }
 
 @keyframes slideUp {
@@ -169,75 +170,39 @@
 .login-button {
   width: 100%;
   padding: 1rem 1.5rem;
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 700;
-  color: #dc2626 !important;
-  background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  border: none;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  letter-spacing: 0.2px;
+  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   margin-top: 1rem;
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
-  position: relative;
-  z-index: 1;
-  pointer-events: auto;
-}
-
-/* CRITICAL: Make Login text RED and visible */
-.login-button {
-  color: #dc2626 !important;
-}
-
-.login-button *,
-.login-button span {
-  color: #dc2626 !important;
+  text-align: center;
 }
 
 .login-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
-  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.28);
   transform: translateY(-1px);
 }
 
 .login-button:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.2);
 }
 
 .login-button:disabled {
-  opacity: 0.6;
+  opacity: 0.7;
   cursor: not-allowed;
   transform: none;
-}
-
-.button-icon {
-  font-size: 1.125rem;
-  filter: hue-rotate(20deg) saturate(1.3);
-  display: inline-block;
-}
-
-/* Button text is now direct text, no span needed */
-.login-button {
-  text-align: center;
-}
-
-.login-button::before {
-  content: '';
-  display: none;
-}
-
-.login-button span:not(.button-icon):not(.spinner):not(.button-text) {
-  display: inline-block;
-  color: #ffffff;
-  font-weight: 600;
 }
 
 .spinner {
