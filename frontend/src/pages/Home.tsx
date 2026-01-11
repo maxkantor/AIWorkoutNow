@@ -78,25 +78,32 @@ function Home() {
       
       const status = await getUserAccessStatus(deviceId);
       console.log('[Home] Access status from API:', status);
+      console.log('[Home] tokensRemaining:', status.tokensRemaining);
+      console.log('[Home] hasUnlimitedAccess:', status.hasUnlimitedAccess);
       setAccessStatus(status);
       
-      // CRITICAL FIX: Backend returns hasUnlimitedAccess=false when tokens are reset (e.g., to 7)
+      // CRITICAL FIX: Backend returns hasUnlimitedAccess=false when tokens are reset (e.g., to 5)
       // ALWAYS respect the API response - if hasUnlimitedAccess is false, never show unlimited
       // Even if tokensRemaining is high, if hasUnlimitedAccess is false, treat it as regular tokens
       if (status.hasUnlimitedAccess === true && status.tokensRemaining >= 999999) {
         // Only set unlimited if API explicitly confirms it
+        console.log('[Home] Setting unlimited access');
         setTokenBalance(status.tokensRemaining);
         updateTokenStorage(deviceId, status.tokensRemaining);
-      } else if (status.tokensRemaining > 0) {
+        setFreeWorkoutsRemaining(0);
+      } else if (status.tokensRemaining !== undefined && status.tokensRemaining !== null && status.tokensRemaining > 0) {
         // Regular token count (including when reset to 5 - hasUnlimitedAccess will be false)
         // This handles both regular tokens AND admin resets
+        console.log('[Home] Setting paid tokens:', status.tokensRemaining);
         setTokenBalance(status.tokensRemaining);
         updateTokenStorage(deviceId, status.tokensRemaining);
         // Clear free workouts when paid tokens exist
         setFreeWorkoutsRemaining(0);
       } else {
         // No paid tokens, check free workouts
+        console.log('[Home] No paid tokens, checking free workouts');
         const freeWorkouts = await getFreeWorkoutsRemaining(deviceId);
+        console.log('[Home] Free workouts:', freeWorkouts.remaining);
         setFreeWorkoutsRemaining(freeWorkouts.remaining);
         setTokenBalance(null);
       }
