@@ -109,11 +109,12 @@ function AdminLogin() {
                 {loading ? (
                   <>
                     <span className="spinner"></span>
-                    <span>Logging in...</span>
+                    <span>Signing in...</span>
                   </>
                 ) : (
                   <>
-                    🔒 Login
+                    <span className="button-icon">🔒</span>
+                    <span className="button-text">Sign in</span>
                   </>
                 )}
               </button>

@@ -319,6 +319,66 @@ public class PricingController : ControllerBase
             var tokens = await _dynamoService.GetUserTokensAsync(deviceId);
             var tokensRemaining = tokens?.TokensRemaining ?? 0;
             
+            // Aggressive reconciliation: if purchases exist and tokensRemaining is lower than purchased tokens, bump tokensRemaining
+            try
+            {
+                var purchases = await _dynamoService.GetUserPurchasesAsync(deviceId);
+                var completed = purchases.Where(p => p.Status == "completed").ToList();
+                var reconUnlimited = completed.FirstOrDefault(p => p.IsUnlimited);
+
+                if (reconUnlimited != null)
+                {
+                    // Set unlimited marker
+                    tokensRemaining = 999999;
+                    var expiresAt = reconUnlimited.ExpiresAt ?? reconUnlimited.PurchasedAt.AddDays(365);
+                    if (tokens == null)
+                    {
+                        tokens = new UserTokens
+                        {
+                            DeviceId = deviceId,
+                            TokensRemaining = tokensRemaining,
+                            ExpiresAt = expiresAt
+                        };
+                    }
+                    else
+                    {
+                        tokens.TokensRemaining = tokensRemaining;
+                        tokens.ExpiresAt = expiresAt;
+                    }
+                    await _dynamoService.SaveUserTokensAsync(tokens);
+                }
+                else
+                {
+                    var purchasedTokens = completed
+                        .Where(p => p.TokensGranted.HasValue)
+                        .Sum(p => p.TokensGranted!.Value);
+
+                    if (purchasedTokens > tokensRemaining)
+                    {
+                        if (tokens == null)
+                        {
+                            tokens = new UserTokens
+                            {
+                                DeviceId = deviceId,
+                                TokensRemaining = purchasedTokens,
+                                ExpiresAt = null
+                            };
+                        }
+                        else
+                        {
+                            tokens.TokensRemaining = purchasedTokens;
+                            tokens.ExpiresAt = null;
+                        }
+                        tokensRemaining = purchasedTokens;
+                        await _dynamoService.SaveUserTokensAsync(tokens);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[PricingController] Reconciliation error: {ex.Message}");
+            }
+            
             Console.WriteLine($"[PricingController] GetUserAccessStatus - DeviceId: {deviceId}, TokensRemaining: {tokensRemaining}, HasTokens: {tokens != null}");
             if (tokens != null)
             {
@@ -503,22 +563,14 @@ public class PricingController : ControllerBase
             // Check if tokens indicate unlimited access (999999 is our marker for unlimited)
             var hasUnlimitedFromTokens = tokensRemaining >= 999999;
             
-            // CRITICAL FIX: If tokens are explicitly set to a non-unlimited value (admin reset),
-            // respect that override and DON'T check for unlimited purchases
-            // This ensures admin token resets take precedence over unlimited purchases
+            // Allow purchase reconciliation even if tokens were admin-reset
             bool hasUnlimitedFromPurchase = false;
             var unlimitedPurchase = (UserPurchase?)null;
             
-            // Only check for unlimited purchases if tokens are actually unlimited
-            // If tokens are < 999999, it means admin explicitly reset them, so respect that
             if (hasUnlimitedFromTokens)
             {
                 unlimitedPurchase = await _dynamoService.GetActiveUnlimitedPurchaseAsync(deviceId);
                 hasUnlimitedFromPurchase = unlimitedPurchase != null;
-            }
-            else if (tokensRemaining < 999999 && tokensRemaining >= 10)
-            {
-                Console.WriteLine($"[PricingController] Tokens are {tokensRemaining} (likely admin reset), respecting admin reset - NOT checking for unlimited purchases");
             }
             
             Console.WriteLine($"[PricingController] Unlimited check - FromTokens: {hasUnlimitedFromTokens}, FromPurchase: {hasUnlimitedFromPurchase}");
@@ -613,20 +665,7 @@ public class PricingController : ControllerBase
                 // REMOVED: Last resort fix that used UtcNow - this was causing expiration to be set from current date
                 // Instead, we rely on the purchase-based calculation above
             }
-            else if (tokens != null && tokensRemaining < 999999 && tokensRemaining > 0)
-            {
-                // CRITICAL: If tokens are explicitly set to a non-unlimited value (admin reset),
-                // ensure ExpiresAt is cleared to prevent any confusion
-                if (tokens.ExpiresAt.HasValue)
-                {
-                    Console.WriteLine($"[PricingController] Tokens reset to {tokensRemaining} (admin reset), clearing ExpiresAt to prevent unlimited status");
-                    tokens.ExpiresAt = null;
-                    await _dynamoService.SaveUserTokensAsync(tokens);
-                }
-            }
-            
-            // CRITICAL FIX: If tokens are < 999999 (admin reset), NEVER show unlimited
-            // Admin resets take absolute precedence
+            // Determine unlimited access
             var hasUnlimitedAccess = false;
             DateTime? unlimitedExpiresAt = null;
             
@@ -636,7 +675,7 @@ public class PricingController : ControllerBase
                 hasUnlimitedAccess = true;
                 unlimitedExpiresAt = unlimitedPurchase?.ExpiresAt ?? tokens?.ExpiresAt;
             }
-            // If tokens are < 999999, hasUnlimitedAccess stays false (admin reset override)
+            // If tokens are < 999999, hasUnlimitedAccess stays false
             
             var hasTokenAccess = tokens != null && tokensRemaining > 0 && tokensRemaining < 999999;
 

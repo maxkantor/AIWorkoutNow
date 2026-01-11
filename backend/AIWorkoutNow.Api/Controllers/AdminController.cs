@@ -249,17 +249,24 @@ public class AdminController : ControllerBase
 
             await _dynamoService.SaveContactReplyAsync(reply);
 
-            // Send email reply
-            await _emailService.SendEmailAsync(
-                message.Email,
-                $"Re: Your message to AIWorkoutNow",
-                request.ReplyText
-            );
+            try
+            {
+                // Send email reply
+                await _emailService.SendEmailAsync(
+                    message.Email,
+                    $"Re: Your message to AIWorkoutNow",
+                    request.ReplyText
+                );
 
-            reply.Sent = true;
-            await _dynamoService.SaveContactReplyAsync(reply);
-
-            return Ok(new { message = "Reply sent successfully", reply });
+                reply.Sent = true;
+                await _dynamoService.SaveContactReplyAsync(reply);
+                return Ok(new { message = "Reply sent successfully", reply });
+            }
+            catch (Exception emailEx)
+            {
+                Console.WriteLine($"[AdminController] Email send failed: {emailEx.Message}");
+                return Ok(new { message = "Reply saved but email failed to send", reply, error = emailEx.Message });
+            }
         }
         catch (Exception ex)
         {
