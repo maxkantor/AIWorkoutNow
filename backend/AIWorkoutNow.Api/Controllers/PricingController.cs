@@ -337,32 +337,6 @@ public class PricingController : ControllerBase
             
             // Only check Stripe if tokens are exactly 0
             bool shouldCheckStripe = tokensRemaining == 0;
-
-            // AGGRESSIVE FIX: Always try to merge credits from linked devices (email mapping)
-            // so paid tokens/unlimited follow the user across devices and reflect on home + CRM.
-            try
-            {
-                var emailMapping = await _dynamoService.GetEmailByVisitorIdAsync(deviceId);
-                if (emailMapping != null && emailMapping.VisitorIds.Any())
-                {
-                    Console.WriteLine($"[PricingController] Merging credits for {deviceId} from linked devices: {string.Join(", ", emailMapping.VisitorIds)}");
-                    await _dynamoService.MergeCreditsFromVisitorIdsAsync(deviceId, emailMapping.VisitorIds);
-
-                    // Re-read tokens and free counts after merge
-                    tokens = await _dynamoService.GetUserTokensAsync(deviceId);
-                    tokensRemaining = tokens?.TokensRemaining ?? 0;
-                    totalWorkouts = await _dynamoService.GetTotalFreeWorkoutsAsync(deviceId);
-                    freeWorkoutsRemaining = Math.Max(0, 3 - totalWorkouts);
-                    hasFreeAccess = freeWorkoutsRemaining > 0;
-
-                    // Update shouldCheckStripe based on merged balance
-                    shouldCheckStripe = tokensRemaining == 0;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[PricingController] Merge credits failed: {ex.Message}");
-            }
             
             if (shouldCheckStripe)
             {
