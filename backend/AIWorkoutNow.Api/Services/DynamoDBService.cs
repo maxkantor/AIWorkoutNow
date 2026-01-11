@@ -155,7 +155,7 @@ public class DynamoDBService : IDynamoDBService
                 {
                     { "DeviceId", new AttributeValue { S = deviceId } }
                 },
-                UpdateExpression = "ADD TokensRemaining :delta SET IsActive = if_not_exists(IsActive, :true)",
+                UpdateExpression = "ADD TokensRemaining :delta SET IsActive = :true",
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
                     { ":delta", new AttributeValue { N = tokensToAdd.ToString() } },
@@ -1025,12 +1025,14 @@ public class DynamoDBService : IDynamoDBService
             {
                 DeviceId = deviceId,
                 TokensRemaining = newTokenCount,
-                ExpiresAt = null // No expiration for non-unlimited tokens
+                ExpiresAt = null, // No expiration for non-unlimited tokens
+                IsActive = true
             };
         }
         else
         {
             tokens.TokensRemaining = newTokenCount;
+            tokens.IsActive = true;
             // CRITICAL FIX: If resetting from unlimited (999999) to a lower number, clear expiration
             // This ensures the system doesn't still think it's unlimited
             if (newTokenCount < 999999)
