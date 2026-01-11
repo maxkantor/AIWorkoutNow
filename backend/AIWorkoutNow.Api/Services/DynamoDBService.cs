@@ -935,21 +935,6 @@ public class DynamoDBService : IDynamoDBService
             FreeWorkoutsRemaining = 3
         };
 
-        // Aggressive merge: pull credits/purchases from any linked devices for this visitor
-        try
-        {
-            var emailMapping = await GetEmailByVisitorIdAsync(deviceId);
-            if (emailMapping != null && emailMapping.VisitorIds.Any())
-            {
-                Console.WriteLine($"[DynamoDBService] CustomerSummary merge credits for {deviceId} from linked devices: {string.Join(", ", emailMapping.VisitorIds)}");
-                await MergeCreditsFromVisitorIdsAsync(deviceId, emailMapping.VisitorIds);
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[DynamoDBService] Merge credits in GetCustomerSummaryAsync failed: {ex.Message}");
-        }
-
         // Check if paid user
         var tokens = await GetUserTokensAsync(deviceId);
         if (tokens != null)
