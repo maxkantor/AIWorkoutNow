@@ -41,7 +41,7 @@ function Home() {
     
     // Listen for refresh access status event
     const handleRefreshAccessStatus = () => {
-      checkAccessStatus();
+      checkAccessStatus(true); // Force refresh with cache bust
     };
     
     window.addEventListener('openRestoreCredits', handleOpenRestoreCredits);
@@ -65,12 +65,13 @@ function Home() {
     });
   }, [freeWorkoutsRemaining, accessStatus, tokenBalance, checkingAccess, setHeroContent]);
 
-  const checkAccessStatus = async () => {
+  const checkAccessStatus = async (forceRefresh: boolean = false) => {
     try {
       setCheckingAccess(true);
       const deviceId = getDeviceId();
       
-      const status = await getUserAccessStatus(deviceId);
+      // Force cache bust on refresh
+      const status = await getUserAccessStatus(deviceId, forceRefresh);
       console.log('[Home] Access status from API:', status);
       console.log('[Home] tokensRemaining:', status.tokensRemaining);
       console.log('[Home] hasUnlimitedAccess:', status.hasUnlimitedAccess);

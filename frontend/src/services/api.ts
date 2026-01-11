@@ -298,13 +298,19 @@ export async function getFreeWorkoutsRemaining(deviceId: string): Promise<{ rema
   }
 }
 
-export async function getUserAccessStatus(deviceId: string): Promise<UserAccessStatus> {
+export async function getUserAccessStatus(deviceId: string, cacheBust?: boolean): Promise<UserAccessStatus> {
   try {
-    const response = await fetch(`${API_BASE_URL}/user-access-status?deviceId=${deviceId}`, {
+    // Add cache busting timestamp to prevent browser/CDN caching
+    const timestamp = cacheBust ? `&_t=${Date.now()}` : '';
+    const response = await fetch(`${API_BASE_URL}/user-access-status?deviceId=${deviceId}${timestamp}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
       },
+      cache: 'no-store',
     });
 
     if (!response.ok) {

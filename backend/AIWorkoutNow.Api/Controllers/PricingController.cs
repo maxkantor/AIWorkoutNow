@@ -325,10 +325,34 @@ public class PricingController : ControllerBase
                 Console.WriteLine($"[PricingController] Token expires at: {tokens.ExpiresAt}");
             }
             
-            // AGGRESSIVE FIX: If tokens are low (< 999999), check Stripe for completed payments
-            // BUT: Skip this if tokens are exactly 5 or another small number (likely admin reset)
-            // Only check Stripe if tokens are exactly 0 (not explicitly set by admin)
-            // CRITICAL: If tokens are > 0, they were likely set by admin, so don't override them
+            // ULTRA AGGRESSIVE FIX: If tokens are > 0 and < 999999, assume admin reset and return immediately
+            // NEVER check Stripe or modify tokens if they're explicitly set (admin reset)
+            // This prevents any Stripe checks from overriding admin resets
+            if (tokensRemaining > 0 && tokensRemaining < 999999)
+            {
+                Console.WriteLine($"[PricingController] ULTRA AGGRESSIVE: Tokens are {tokensRemaining} (admin reset), skipping ALL Stripe checks and returning immediately");
+                // Clear ExpiresAt if set to prevent unlimited status confusion
+                if (tokens != null && tokens.ExpiresAt.HasValue)
+                {
+                    Console.WriteLine($"[PricingController] Clearing ExpiresAt for admin reset tokens");
+                    tokens.ExpiresAt = null;
+                    await _dynamoService.SaveUserTokensAsync(tokens);
+                }
+                
+                var adminResetFreeWorkouts = Math.Max(0, 3 - await _dynamoService.GetTotalFreeWorkoutsAsync(deviceId));
+                return Ok(new
+                {
+                    hasFreeAccess = adminResetFreeWorkouts > 0,
+                    freeWorkoutsRemaining = adminResetFreeWorkouts,
+                    hasUnlimitedAccess = false,
+                    unlimitedExpiresAt = (string?)null,
+                    hasTokenAccess = true,
+                    tokensRemaining = tokensRemaining, // Return the admin-set value directly
+                    canGenerateWorkout = true
+                });
+            }
+            
+            // Only check Stripe if tokens are exactly 0
             bool shouldCheckStripe = tokensRemaining == 0;
             
             if (shouldCheckStripe)
