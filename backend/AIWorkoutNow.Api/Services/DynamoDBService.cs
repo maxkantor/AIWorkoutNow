@@ -448,7 +448,7 @@ public class DynamoDBService : IDynamoDBService
         catch (Exception ex)
         {
             Console.WriteLine($"[DynamoDBService] Error counting token purchases: {ex.Message}");
-            stats.TokenPurchases = 0;
+        stats.TokenPurchases = 0;
         }
 
         return stats;
