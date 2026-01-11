@@ -4,7 +4,7 @@ import WorkoutGenerator from '../components/WorkoutGenerator';
 import PricingPlans from '../components/PricingPlans';
 import PaywallModal from '../components/PaywallModal';
 import RestoreCredits from '../components/RestoreCredits';
-import { getDeviceId, getTokenBalance, setTokenBalance as updateTokenStorage } from '../utils/storage';
+import { getDeviceId, setTokenBalance as updateTokenStorage } from '../utils/storage';
 import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus } from '../services/api';
 import { useHeroContext } from '../components/Layout';
 import './Home.css';
