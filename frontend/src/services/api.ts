@@ -378,19 +378,38 @@ export interface AdminCustomerSummary {
   deviceId: string;
   email?: string;
   name?: string;
-  status: 'Free' | 'Paid' | 'Deactivated' | string;
+  isDeactivated: boolean;
+  statusLabel: 'Free' | 'Paid' | 'Deactivated' | string;
   remainingTokens: number;
   generatedWorkouts: number;
   remainingWorkouts: number;
   purchasesCount: number;
-  totalSpent: number;
-  lastActivity?: string;
+  totalSpentCents: number;
+  totalSpentFormatted: string;
+  lastActivityIso?: string;
 }
 
 export interface AdminCustomerDetails extends AdminCustomerSummary {
   freeWorkoutsUsed: number;
   freeWorkoutsRemaining: number;
-  recentActivities?: CustomerActivity[];
+  purchases: AdminPurchaseDto[];
+  usageEvents: AdminUsageEventDto[];
+}
+
+export interface AdminPurchaseDto {
+  purchaseId: string;
+  planId: string;
+  planName: string;
+  amountCents: number;
+  amountFormatted: string;
+  status: string;
+  purchasedAtIso: string;
+}
+
+export interface AdminUsageEventDto {
+  activityType: string;
+  description: string;
+  timestampIso: string;
 }
 
 export interface CustomerActivity {

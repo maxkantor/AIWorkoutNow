@@ -737,11 +737,9 @@ public class DynamoDBService : IDynamoDBService
     public async Task<List<AdminCustomerSummary>> GetAllCustomersAsync()
     {
         var summaries = new Dictionary<string, AdminCustomerSummary>();
-        var freeUsageCounts = new Dictionary<string, int>();
-        var freeRemaining = new Dictionary<string, int>();
-        var lastActivityMap = new Dictionary<string, DateTime>();
-        var activeMap = new Dictionary<string, bool>();
         var planCache = new Dictionary<string, PricingPlan?>();
+        var freeUsed = new Dictionary<string, int>();
+        var tokensActive = new Dictionary<string, (int tokens, bool isActive)>();
 
         AdminCustomerSummary Ensure(string deviceId)
         {
@@ -750,141 +748,125 @@ public class DynamoDBService : IDynamoDBService
                 summaries[deviceId] = new AdminCustomerSummary
                 {
                     DeviceId = deviceId,
-                    Status = "Free",
                     RemainingTokens = 0,
                     GeneratedWorkouts = 0,
-                    RemainingWorkouts = 3,
+                    RemainingWorkouts = 0,
                     PurchasesCount = 0,
-                    TotalSpent = 0
+                    TotalSpentCents = 0,
+                    TotalSpentFormatted = "$0.00",
+                    StatusLabel = "Free",
+                    IsDeactivated = false
                 };
             }
             return summaries[deviceId];
         }
 
-        void UpdateLastActivity(string deviceId, DateTime timestamp)
-        {
-            if (!lastActivityMap.ContainsKey(deviceId) || timestamp > lastActivityMap[deviceId])
-            {
-                lastActivityMap[deviceId] = timestamp;
-            }
-        }
-
         int GetFreeRemaining(string deviceId)
         {
-            if (freeRemaining.TryGetValue(deviceId, out var remaining))
-            {
-                return remaining;
-            }
-            return 3;
+            var used = freeUsed.TryGetValue(deviceId, out var v) ? v : 0;
+            return Math.Max(0, 3 - used);
         }
 
-        // Free usage (anonymous usage -> free workouts)
-        var freeUsersResponse = await _dynamoDB.ScanAsync(new ScanRequest
+        string FormatCurrency(int cents)
         {
-            TableName = _anonymousUsageTable
-        });
-
-        foreach (var item in freeUsersResponse.Items)
-        {
-            var deviceId = item["DeviceId"].S;
-            var count = item.ContainsKey("Count") ? int.Parse(item["Count"].N) : 1;
-
-            if (!freeUsageCounts.ContainsKey(deviceId))
-            {
-                freeUsageCounts[deviceId] = 0;
-            }
-            freeUsageCounts[deviceId] += count;
-
-            var used = freeUsageCounts[deviceId];
-            var remaining = Math.Max(0, 3 - used);
-            freeRemaining[deviceId] = remaining;
-            Ensure(deviceId);
+            return $"${(cents / 100.0m):0.00}";
         }
 
-        // Token balances (source of truth for remainingTokens)
-        var paidUsersResponse = await _dynamoDB.ScanAsync(new ScanRequest
-        {
-            TableName = _userTokensTable
-        });
-
-        foreach (var item in paidUsersResponse.Items)
-        {
-            var deviceId = item["DeviceId"].S;
-            var tokensRemaining = int.Parse(item["TokensRemaining"].N);
-            var isActive = item.ContainsKey("IsActive") ? item["IsActive"].BOOL : true;
-            activeMap[deviceId] = isActive;
-
-            var summary = Ensure(deviceId);
-            summary.RemainingTokens = isActive ? tokensRemaining : 0;
-            // status finalized later after purchases aggregation
-        }
-
-        // Workout generation count (lifetime)
-        var activitiesTablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
-        var activitiesTable = $"{activitiesTablePrefix}-CustomerActivities";
-
+        // Free usage
         try
         {
-            var activitiesResponse = await _dynamoDB.ScanAsync(new ScanRequest
+            var freeResp = await _dynamoDB.ScanAsync(new ScanRequest { TableName = _anonymousUsageTable });
+            foreach (var item in freeResp.Items)
+            {
+                var deviceId = item["DeviceId"].S;
+                var count = item.ContainsKey("Count") ? int.Parse(item["Count"].N) : 0;
+                freeUsed[deviceId] = freeUsed.TryGetValue(deviceId, out var existing) ? existing + count : count;
+                Ensure(deviceId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] GetAllCustomersAsync free usage scan error: {ex.Message}");
+        }
+
+        // Tokens
+        try
+        {
+            var tokensResp = await _dynamoDB.ScanAsync(new ScanRequest { TableName = _userTokensTable });
+            foreach (var item in tokensResp.Items)
+            {
+                var deviceId = item["DeviceId"].S;
+                var tokens = int.Parse(item["TokensRemaining"].N);
+                var isActive = item.ContainsKey("IsActive") ? item["IsActive"].BOOL : true;
+                tokensActive[deviceId] = (tokens, isActive);
+                var summary = Ensure(deviceId);
+                summary.RemainingTokens = isActive ? tokens : 0;
+                summary.IsDeactivated = !isActive;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] GetAllCustomersAsync tokens scan error: {ex.Message}");
+        }
+
+        var lastActivity = new Dictionary<string, DateTime>();
+
+        // Activities
+        try
+        {
+            var prefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+            var activitiesTable = $"{prefix}-CustomerActivities";
+            var resp = await _dynamoDB.ScanAsync(new ScanRequest
             {
                 TableName = activitiesTable,
-                FilterExpression = "ActivityType = :workoutType",
-                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-                {
-                    { ":workoutType", new AttributeValue { S = "workout_generated" } }
-                },
                 Limit = 20000
             });
 
-            foreach (var item in activitiesResponse.Items)
+            foreach (var item in resp.Items)
             {
                 var deviceId = item["DeviceId"].S;
-                var timestamp = item.ContainsKey("Timestamp")
-                    ? DateTime.Parse(item["Timestamp"].S)
-                    : DateTime.UtcNow;
+                var type = item.ContainsKey("ActivityType") ? item["ActivityType"].S : "";
+                var ts = item.ContainsKey("Timestamp") ? DateTime.Parse(item["Timestamp"].S) : DateTime.UtcNow;
 
-                var summary = Ensure(deviceId);
-                summary.GeneratedWorkouts += 1;
-                UpdateLastActivity(deviceId, timestamp);
+                if (type == "workout_generated")
+                {
+                    var summary = Ensure(deviceId);
+                    summary.GeneratedWorkouts += 1;
+                }
+
+                if (!lastActivity.ContainsKey(deviceId) || ts > lastActivity[deviceId])
+                {
+                    lastActivity[deviceId] = ts;
+                }
+                Ensure(deviceId);
             }
         }
-        catch
+        catch (Exception ex)
         {
-            Console.WriteLine("[DynamoDBService] CustomerActivities table not found, skipping workout counts");
+            Console.WriteLine($"[DynamoDBService] GetAllCustomersAsync activities scan error: {ex.Message}");
         }
 
-        // Purchases aggregation
-        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
-        var purchasesTable = $"{tablePrefix}-UserPurchases";
-
+        // Purchases
         try
         {
-            var purchasesResponse = await _dynamoDB.ScanAsync(new ScanRequest
-            {
-                TableName = purchasesTable,
-                Limit = 5000
-            });
+            var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+            var purchasesTable = $"{tablePrefix}-UserPurchases";
+            var resp = await _dynamoDB.ScanAsync(new ScanRequest { TableName = purchasesTable, Limit = 5000 });
 
-            Console.WriteLine($"[DynamoDBService] Found {purchasesResponse.Items.Count} purchases in UserPurchases table");
-
-            foreach (var item in purchasesResponse.Items)
+            foreach (var item in resp.Items)
             {
                 try
                 {
                     var deviceId = item["DeviceId"].S;
                     var status = item["Status"].S;
-                    var purchasedAt = item.ContainsKey("PurchasedAt")
-                        ? DateTime.Parse(item["PurchasedAt"].S)
-                        : DateTime.UtcNow;
-
-                    if (status != "completed") continue;
+                    var purchasedAt = item.ContainsKey("PurchasedAt") ? DateTime.Parse(item["PurchasedAt"].S) : DateTime.UtcNow;
+                    var planId = item.ContainsKey("PlanId") ? item["PlanId"].S : string.Empty;
 
                     var summary = Ensure(deviceId);
-                    summary.PurchasesCount += 1;
 
-                    var planId = item.ContainsKey("PlanId") ? item["PlanId"].S : string.Empty;
-                    if (!string.IsNullOrEmpty(planId))
+                    if (status == "completed")
                     {
+                        summary.PurchasesCount += 1;
                         if (!planCache.ContainsKey(planId))
                         {
                             planCache[planId] = await GetPricingPlanAsync(planId);
@@ -893,7 +875,8 @@ public class DynamoDBService : IDynamoDBService
                         var plan = planCache[planId];
                         if (plan != null)
                         {
-                            summary.TotalSpent += plan.Price;
+                            var cents = (int)Math.Round(plan.Price * 100);
+                            summary.TotalSpentCents += cents;
                         }
                     }
 
@@ -902,44 +885,41 @@ public class DynamoDBService : IDynamoDBService
                     if (string.IsNullOrEmpty(summary.Name) && item.ContainsKey("CustomerName"))
                         summary.Name = item["CustomerName"].S;
 
-                    UpdateLastActivity(deviceId, purchasedAt);
+                    if (!lastActivity.ContainsKey(deviceId) || purchasedAt > lastActivity[deviceId])
+                    {
+                        lastActivity[deviceId] = purchasedAt;
+                    }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[DynamoDBService] Error processing purchase item: {ex.Message}");
+                    Console.WriteLine($"[DynamoDBService] GetAllCustomersAsync purchase parse error: {ex.Message}");
                 }
             }
         }
-        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
-        {
-            Console.WriteLine("[DynamoDBService] UserPurchases table does not exist yet");
-        }
         catch (Exception ex)
         {
-            Console.WriteLine($"[DynamoDBService] Error getting purchases: {ex.Message}");
+            Console.WriteLine($"[DynamoDBService] GetAllCustomersAsync purchases scan error: {ex.Message}");
         }
 
-        // Finalize derived fields and status
+        // Finalize
         foreach (var summary in summaries.Values)
         {
-            var isActive = !activeMap.ContainsKey(summary.DeviceId) || activeMap[summary.DeviceId];
             var freeRem = GetFreeRemaining(summary.DeviceId);
-            summary.RemainingWorkouts = isActive
-                ? Math.Max(0, summary.RemainingTokens) + Math.Max(0, freeRem)
-                : 0;
-            summary.RemainingTokens = isActive ? summary.RemainingTokens : 0;
+            summary.RemainingWorkouts = Math.Max(0, summary.RemainingTokens) + freeRem;
+            summary.TotalSpentFormatted = FormatCurrency(summary.TotalSpentCents);
 
+            var isActive = !summary.IsDeactivated;
             var isPaid = summary.RemainingTokens > 0 || summary.PurchasesCount > 0;
-            summary.Status = isActive ? (isPaid ? "Paid" : "Free") : "Deactivated";
+            summary.StatusLabel = !isActive ? "Deactivated" : (isPaid ? "Paid" : "Free");
 
-            if (lastActivityMap.TryGetValue(summary.DeviceId, out var last))
+            if (lastActivity.TryGetValue(summary.DeviceId, out var ts))
             {
-                summary.LastActivity = last;
+                summary.LastActivityIso = ts.ToUniversalTime().ToString("o");
             }
         }
 
         return summaries.Values
-            .OrderByDescending(c => c.LastActivity ?? DateTime.MinValue)
+            .OrderByDescending(c => c.LastActivityIso ?? string.Empty)
             .ToList();
     }
 
@@ -954,13 +934,15 @@ public class DynamoDBService : IDynamoDBService
             DeviceId = summary.DeviceId,
             Email = summary.Email,
             Name = summary.Name,
-            Status = summary.Status,
+            IsDeactivated = summary.IsDeactivated,
+            StatusLabel = summary.StatusLabel,
             RemainingTokens = summary.RemainingTokens,
             GeneratedWorkouts = summary.GeneratedWorkouts,
             RemainingWorkouts = summary.RemainingWorkouts,
             PurchasesCount = summary.PurchasesCount,
-            TotalSpent = summary.TotalSpent,
-            LastActivity = summary.LastActivity
+            TotalSpentCents = summary.TotalSpentCents,
+            TotalSpentFormatted = summary.TotalSpentFormatted,
+            LastActivityIso = summary.LastActivityIso
         };
 
         try
@@ -974,15 +956,61 @@ public class DynamoDBService : IDynamoDBService
             Console.WriteLine($"[DynamoDBService] Error counting free workouts for {deviceId}: {ex.Message}");
         }
 
-        var activities = await GetCustomerActivitiesAsync(deviceId, 50);
-        details.RecentActivities = activities;
-        if (activities.Any())
+        // Purchases detail
+        try
         {
-            var latest = activities.First().Timestamp;
-            if (!details.LastActivity.HasValue || latest > details.LastActivity.Value)
+            var purchases = await GetUserPurchasesByDeviceIdAsync(deviceId);
+            var planCache = new Dictionary<string, PricingPlan?>();
+            foreach (var p in purchases.OrderByDescending(p => p.PurchasedAt))
             {
-                details.LastActivity = latest;
+                if (!planCache.ContainsKey(p.PlanId))
+                {
+                    planCache[p.PlanId] = await GetPricingPlanAsync(p.PlanId);
+                }
+                var plan = planCache[p.PlanId];
+                var cents = plan != null ? (int)Math.Round(plan.Price * 100) : 0;
+                details.Purchases.Add(new AdminPurchaseDto
+                {
+                    PurchaseId = p.PurchaseId,
+                    PlanId = p.PlanId,
+                    PlanName = plan?.Name ?? p.PlanId,
+                    AmountCents = cents,
+                    AmountFormatted = $"${(cents / 100.0m):0.00}",
+                    Status = p.Status,
+                    PurchasedAtIso = p.PurchasedAt.ToUniversalTime().ToString("o")
+                });
             }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error loading purchases for {deviceId}: {ex.Message}");
+        }
+
+        // Usage events detail (recent)
+        try
+        {
+            var activities = await GetCustomerActivitiesAsync(deviceId, 50);
+            details.UsageEvents = activities
+                .Select(a => new AdminUsageEventDto
+                {
+                    ActivityType = a.ActivityType,
+                    Description = a.Description,
+                    TimestampIso = a.Timestamp.ToUniversalTime().ToString("o")
+                })
+                .ToList();
+
+            if (activities.Any())
+            {
+                var latest = activities.Max(a => a.Timestamp);
+                if (string.IsNullOrEmpty(details.LastActivityIso) || latest > DateTime.Parse(details.LastActivityIso))
+                {
+                    details.LastActivityIso = latest.ToUniversalTime().ToString("o");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error loading activities for {deviceId}: {ex.Message}");
         }
 
         return details;

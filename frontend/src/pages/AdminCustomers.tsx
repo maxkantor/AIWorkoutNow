@@ -24,19 +24,7 @@ function AdminCustomers() {
   const loadCustomers = async (token: string) => {
     try {
       const data = await getAllCustomers(token);
-      const normalized = data.map((c) => ({
-        ...c,
-        status: c.status || 'Free',
-        remainingTokens: (c.status || 'Free') === 'Deactivated' ? 0 : (c.remainingTokens ?? 0),
-        generatedWorkouts: c.generatedWorkouts ?? 0,
-        remainingWorkouts:
-          (c.status || 'Free') === 'Deactivated'
-            ? 0
-            : c.remainingWorkouts ?? (c.remainingTokens ?? 0),
-        purchasesCount: c.purchasesCount ?? 0,
-        totalSpent: c.totalSpent ?? 0,
-      }));
-      setCustomers(normalized);
+      setCustomers(data);
     } catch (err: any) {
       setError(err.message || 'Failed to load customers');
       if (err.message?.includes('401') || err.message?.includes('unauthorized')) {
@@ -133,7 +121,7 @@ function AdminCustomers() {
                   </tr>
                 ) : (
                   filteredCustomers.map((customer) => {
-                    const status = customer.status || 'Free';
+                    const status = customer.statusLabel || 'Free';
                     return (
                       <tr key={customer.deviceId}>
                         <td className="device-id">{customer.deviceId.substring(0, 8)}...</td>
@@ -148,10 +136,10 @@ function AdminCustomers() {
                         <td className="numeric">{customer.generatedWorkouts}</td>
                         <td className="numeric">{customer.remainingWorkouts}</td>
                         <td className="numeric">{customer.purchasesCount}</td>
-                        <td className="numeric">${customer.totalSpent.toFixed(2)}</td>
+                        <td className="numeric">{customer.totalSpentFormatted}</td>
                         <td>
-                          {customer.lastActivity
-                            ? new Date(customer.lastActivity).toLocaleDateString()
+                          {customer.lastActivityIso
+                            ? new Date(customer.lastActivityIso).toLocaleDateString()
                             : '-'}
                         </td>
                         <td>

@@ -32,19 +32,20 @@ function AdminCustomerDetail() {
   const normalizeDetail = (c: AdminCustomerDetails): AdminCustomerDetails => {
     const freeUsed = c.freeWorkoutsUsed ?? 0;
     const freeRemaining = c.freeWorkoutsRemaining ?? Math.max(0, 3 - freeUsed);
-    const normalizedStatus = c.status || 'Free';
-    const isDeactivated = normalizedStatus === 'Deactivated';
+    const normalizedStatus = c.statusLabel || 'Free';
+    const isDeactivated = normalizedStatus === 'Deactivated' || c.isDeactivated;
     const remainingTokens = isDeactivated ? 0 : (c.remainingTokens ?? 0);
     const remainingWorkouts = isDeactivated
       ? 0
       : (c.remainingWorkouts ?? remainingTokens + freeRemaining);
     return {
       ...c,
-      status: normalizedStatus,
+      statusLabel: normalizedStatus,
       remainingTokens,
       generatedWorkouts: c.generatedWorkouts ?? 0,
       purchasesCount: c.purchasesCount ?? 0,
-      totalSpent: c.totalSpent ?? 0,
+      totalSpentCents: c.totalSpentCents ?? 0,
+      totalSpentFormatted: c.totalSpentFormatted ?? '$0.00',
       freeWorkoutsUsed: freeUsed,
       freeWorkoutsRemaining: freeRemaining,
       remainingWorkouts,
@@ -103,15 +104,6 @@ function AdminCustomerDetail() {
       const data = await getCustomersByEmail(token, email);
       const normalized = (data.customers || []).map((c) => ({
         ...c,
-        status: c.status || 'Free',
-        remainingTokens: (c.status || 'Free') === 'Deactivated' ? 0 : (c.remainingTokens ?? 0),
-        generatedWorkouts: c.generatedWorkouts ?? 0,
-        remainingWorkouts:
-          (c.status || 'Free') === 'Deactivated'
-            ? 0
-            : c.remainingWorkouts ?? (c.remainingTokens ?? 0),
-        purchasesCount: c.purchasesCount ?? 0,
-        totalSpent: c.totalSpent ?? 0,
       }));
       setLinkedDevices(normalized);
     } catch (err: any) {
@@ -332,8 +324,8 @@ function AdminCustomerDetail() {
               </div>
               <div className="info-row">
                 <span className="label">Status:</span>
-                <span className={`badge ${customer.status === 'Paid' ? 'badge-paid' : customer.status === 'Deactivated' ? 'badge-inactive' : 'badge-free'}`}>
-                  {customer.status}
+                <span className={`badge ${customer.statusLabel === 'Paid' ? 'badge-paid' : customer.statusLabel === 'Deactivated' ? 'badge-inactive' : 'badge-free'}`}>
+                  {customer.statusLabel}
                 </span>
               </div>
             </div>
@@ -354,7 +346,7 @@ function AdminCustomerDetail() {
               </div>
               <div className="info-row">
                 <span className="label">Total Spent:</span>
-                <span className="value highlight">${customer.totalSpent.toFixed(2)}</span>
+                <span className="value highlight">{customer.totalSpentFormatted}</span>
               </div>
             </div>
 

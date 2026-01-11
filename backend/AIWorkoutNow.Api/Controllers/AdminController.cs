@@ -349,24 +349,26 @@ public class AdminController : ControllerBase
                 return Ok(new { email, deviceIds = new List<string>(), message = "No devices found for this email" });
             }
 
-            var customers = new List<object>();
+            var customers = new List<AdminCustomerSummary>();
             foreach (var deviceId in visitorIds)
             {
                 var summary = await _dynamoService.GetCustomerSummaryAsync(deviceId);
                 if (summary != null)
                 {
-                    customers.Add(new
+                    customers.Add(new AdminCustomerSummary
                     {
-                        deviceId = summary.DeviceId,
-                        email = summary.Email,
-                        name = summary.Name,
-                        status = summary.Status,
-                        remainingTokens = summary.RemainingTokens,
-                        generatedWorkouts = summary.GeneratedWorkouts,
-                        remainingWorkouts = summary.RemainingWorkouts,
-                        purchasesCount = summary.PurchasesCount,
-                        totalSpent = summary.TotalSpent,
-                        lastActivity = summary.LastActivity
+                        DeviceId = summary.DeviceId,
+                        Email = summary.Email,
+                        Name = summary.Name,
+                        IsDeactivated = summary.IsDeactivated,
+                        StatusLabel = summary.StatusLabel,
+                        RemainingTokens = summary.RemainingTokens,
+                        GeneratedWorkouts = summary.GeneratedWorkouts,
+                        RemainingWorkouts = summary.RemainingWorkouts,
+                        PurchasesCount = summary.PurchasesCount,
+                        TotalSpentCents = summary.TotalSpentCents,
+                        TotalSpentFormatted = summary.TotalSpentFormatted,
+                        LastActivityIso = summary.LastActivityIso
                     });
                 }
             }

@@ -66,13 +66,33 @@ public class AdminCustomerSummary
     public string DeviceId { get; set; } = string.Empty;
     public string? Email { get; set; }
     public string? Name { get; set; }
-    public string Status { get; set; } = "Free"; // Free / Paid / Deactivated
+    public bool IsDeactivated { get; set; }
+    public string StatusLabel { get; set; } = "Free"; // Free | Paid | Deactivated
     public int RemainingTokens { get; set; }
     public int GeneratedWorkouts { get; set; }
     public int RemainingWorkouts { get; set; }
     public int PurchasesCount { get; set; }
-    public decimal TotalSpent { get; set; }
-    public DateTime? LastActivity { get; set; }
+    public int TotalSpentCents { get; set; }
+    public string TotalSpentFormatted { get; set; } = "$0.00";
+    public string? LastActivityIso { get; set; }
+}
+
+public class AdminPurchaseDto
+{
+    public string PurchaseId { get; set; } = string.Empty;
+    public string PlanId { get; set; } = string.Empty;
+    public string PlanName { get; set; } = string.Empty;
+    public int AmountCents { get; set; }
+    public string AmountFormatted { get; set; } = "$0.00";
+    public string Status { get; set; } = string.Empty;
+    public string PurchasedAtIso { get; set; } = string.Empty;
+}
+
+public class AdminUsageEventDto
+{
+    public string ActivityType { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string TimestampIso { get; set; } = string.Empty;
 }
 
 // Admin-facing DTO for Customer detail view (extends summary + history)
@@ -80,5 +100,6 @@ public class AdminCustomerDetails : AdminCustomerSummary
 {
     public int FreeWorkoutsUsed { get; set; }
     public int FreeWorkoutsRemaining { get; set; }
-    public List<CustomerActivity>? RecentActivities { get; set; }
+    public List<AdminPurchaseDto> Purchases { get; set; } = new();
+    public List<AdminUsageEventDto> UsageEvents { get; set; } = new();
 }
