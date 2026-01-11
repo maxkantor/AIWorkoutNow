@@ -355,8 +355,8 @@ function AdminCustomerDetail() {
               <div className="info-row">
                 <span className="label">Last Activity:</span>
                 <span className="value">
-                  {customer.lastActivity
-                    ? new Date(customer.lastActivity).toLocaleString()
+                  {customer.lastActivityIso
+                    ? new Date(customer.lastActivityIso).toLocaleString()
                     : 'Unknown'}
                 </span>
               </div>
