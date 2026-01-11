@@ -1662,6 +1662,45 @@ public class DynamoDBService : IDynamoDBService
         return mapping?.VisitorIds ?? new List<string>();
     }
 
+    // Aggressive helper: find email mapping by visitor/device ID (scan)
+    public async Task<EmailVisitorMapping?> GetEmailByVisitorIdAsync(string visitorId)
+    {
+        try
+        {
+            var scanResponse = await _dynamoDB.ScanAsync(new ScanRequest
+            {
+                TableName = _emailVisitorMappingTable
+            });
+
+            foreach (var item in scanResponse.Items)
+            {
+                if (!item.TryGetValue("VisitorIds", out var visitorIdsAttr)) continue;
+                var visitorIdsStr = visitorIdsAttr.S ?? string.Empty;
+                var visitorIds = visitorIdsStr.Split(',').Where(id => !string.IsNullOrEmpty(id)).ToList();
+                if (visitorIds.Contains(visitorId))
+                {
+                    return new EmailVisitorMapping
+                    {
+                        Email = item["Email"].S,
+                        VisitorIds = visitorIds,
+                        CreatedAt = item.ContainsKey("CreatedAt") ? DateTime.Parse(item["CreatedAt"].S) : DateTime.UtcNow,
+                        UpdatedAt = item.ContainsKey("UpdatedAt") ? DateTime.Parse(item["UpdatedAt"].S) : DateTime.UtcNow
+                    };
+                }
+            }
+        }
+        catch (ResourceNotFoundException)
+        {
+            Console.WriteLine($"[DynamoDBService] EmailVisitorMapping table does not exist: {_emailVisitorMappingTable}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error scanning EmailVisitorMapping: {ex.Message}");
+        }
+
+        return null;
+    }
+
     public async Task MergeCreditsFromVisitorIdsAsync(string targetDeviceId, List<string> sourceVisitorIds)
     {
         Console.WriteLine($"[DynamoDBService] Merging credits from {sourceVisitorIds.Count} visitor IDs to {targetDeviceId}");
