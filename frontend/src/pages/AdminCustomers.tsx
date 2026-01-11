@@ -42,6 +42,26 @@ function AdminCustomers() {
     customer.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleDelete = async (deviceId: string) => {
+    if (!window.confirm('Are you sure you want to deactivate this customer? They will be marked as inactive and hidden from the customer list, but their data will be preserved.')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('admin_token');
+      if (!token) {
+        navigate('/admin');
+        return;
+      }
+
+      await deleteCustomer(token, deviceId);
+      // Reload customers list
+      await loadCustomers(token);
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete customer');
+    }
+  };
+
   if (loading) {
     return (
       <div className="admin-customers">
@@ -119,12 +139,28 @@ function AdminCustomers() {
                           : '-'}
                       </td>
                       <td>
-                        <Link
-                          to={`/admin/customers/${customer.deviceId}`}
-                          className="btn btn-sm btn-primary"
-                        >
-                          View
-                        </Link>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <Link
+                            to={`/admin/customers/${customer.deviceId}`}
+                            className="btn btn-sm btn-primary"
+                          >
+                            View
+                          </Link>
+                          <button
+                            onClick={() => handleDelete(customer.deviceId)}
+                            className="btn btn-sm"
+                            style={{
+                              background: '#dc2626',
+                              color: 'white',
+                              border: 'none',
+                              padding: '0.5rem 1rem',
+                              borderRadius: '4px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Deactivate
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

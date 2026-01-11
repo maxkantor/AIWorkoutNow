@@ -7,6 +7,7 @@ import {
   resetUserTokens,
   getCustomersByEmail,
   resetTokensByEmail,
+  deleteCustomer,
   CustomerSummary,
   CustomerActivity,
 } from '../services/api';
@@ -241,6 +242,32 @@ function AdminCustomerDetail() {
                   Reset All Devices (by Email)
                 </button>
               )}
+              <button
+                onClick={async () => {
+                  if (!window.confirm('Are you sure you want to deactivate this customer? They will be marked as inactive and hidden from the customer list, but their data will be preserved.')) {
+                    return;
+                  }
+                  try {
+                    const token = localStorage.getItem('admin_token');
+                    if (!token) {
+                      navigate('/admin');
+                      return;
+                    }
+                    await deleteCustomer(token, deviceId!);
+                    navigate('/admin/customers');
+                  } catch (err: any) {
+                    setError(err.message || 'Failed to deactivate customer');
+                  }
+                }}
+                className="btn"
+                style={{ 
+                  background: '#dc2626', 
+                  color: 'white',
+                  border: 'none'
+                }}
+              >
+                Deactivate Customer
+              </button>
             </div>
           </div>
 

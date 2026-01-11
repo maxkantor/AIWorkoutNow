@@ -54,6 +54,7 @@ public class UserTokens
     public string DeviceId { get; set; } = string.Empty;
     public int TokensRemaining { get; set; }
     public DateTime? ExpiresAt { get; set; }
+    public bool IsActive { get; set; } = true; // For marking customers as inactive
 }
 
 public class ProgressLog

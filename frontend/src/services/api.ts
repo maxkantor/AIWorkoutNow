@@ -561,6 +561,21 @@ export async function resetTokensByEmail(token: string, email: string, newTokenC
   return response.json();
 }
 
+export async function deleteCustomer(token: string, deviceId: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/admin/customers/${deviceId}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || 'Failed to delete customer');
+  }
+}
+
 export async function getAllContacts(token: string): Promise<ContactMessage[]> {
   const response = await fetch(`${API_BASE_URL}/admin/contacts`, {
     method: 'GET',

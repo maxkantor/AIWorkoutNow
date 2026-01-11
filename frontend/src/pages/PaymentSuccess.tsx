@@ -55,10 +55,17 @@ function PaymentSuccess() {
         
         setAccessStatus(status);
         
-        // Auto-redirect to home after 3 seconds
+        // CRITICAL: Force refresh access status on home page after redirect
+        window.dispatchEvent(new CustomEvent('refreshAccessStatus'));
+        
+        // Auto-redirect to home after 2 seconds
         setTimeout(() => {
           navigate('/');
-        }, 3000);
+          // Force a hard refresh after a short delay to ensure tokens are loaded
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        }, 2000);
       } catch (error) {
         console.error('Failed to check access status:', error);
       } finally {

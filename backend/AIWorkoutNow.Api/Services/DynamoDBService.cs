@@ -121,6 +121,7 @@ public class DynamoDBService : IDynamoDBService
         document["DeviceId"] = tokens.DeviceId;
         document["TokensRemaining"] = tokens.TokensRemaining;
         document["ExpiresAt"] = tokens.ExpiresAt?.ToString("O");
+        document["IsActive"] = tokens.IsActive; // Save IsActive flag
 
         await _dynamoDB.PutItemAsync(new PutItemRequest
         {
@@ -146,7 +147,8 @@ public class DynamoDBService : IDynamoDBService
         var tokens = new UserTokens
         {
             DeviceId = response.Item["DeviceId"].S,
-            TokensRemaining = int.Parse(response.Item["TokensRemaining"].N)
+            TokensRemaining = int.Parse(response.Item["TokensRemaining"].N),
+            IsActive = response.Item.ContainsKey("IsActive") ? response.Item["IsActive"].BOOL : true // Default to active if not set
         };
 
         if (response.Item.ContainsKey("ExpiresAt"))
@@ -707,6 +709,11 @@ public class DynamoDBService : IDynamoDBService
         {
             var deviceId = item["DeviceId"].S;
             var tokensRemaining = int.Parse(item["TokensRemaining"].N);
+            var isActive = item.ContainsKey("IsActive") ? item["IsActive"].BOOL : true; // Default to active
+            
+            // Skip inactive customers
+            if (!isActive) continue;
+            
             if (!customers.ContainsKey(deviceId))
             {
                 customers[deviceId] = new CustomerSummary
@@ -716,13 +723,15 @@ public class DynamoDBService : IDynamoDBService
                     TokensRemaining = tokensRemaining,
                     TotalWorkouts = 0,
                     TotalPurchases = 0,
-                    TotalSpent = 0
+                    TotalSpent = 0,
+                    IsActive = true
                 };
             }
             else
             {
                 customers[deviceId].IsPaidUser = true;
                 customers[deviceId].TokensRemaining = tokensRemaining;
+                customers[deviceId].IsActive = true;
             }
         }
 
@@ -854,9 +863,15 @@ public class DynamoDBService : IDynamoDBService
             // If tokens are >= 999999, they represent unlimited, but we still show the count
             // The frontend will handle displaying "Unlimited" vs the actual number
             summary.TokensRemaining = tokens.TokensRemaining;
+            summary.IsActive = tokens.IsActive; // Set IsActive from tokens
             
             // Log for debugging token count discrepancies
-            Console.WriteLine($"[DynamoDBService] GetCustomerSummaryAsync - DeviceId: {deviceId}, TokensRemaining: {tokens.TokensRemaining}");
+            Console.WriteLine($"[DynamoDBService] GetCustomerSummaryAsync - DeviceId: {deviceId}, TokensRemaining: {tokens.TokensRemaining}, IsActive: {tokens.IsActive}");
+        }
+        else
+        {
+            // If no tokens record, customer is active by default (free user)
+            summary.IsActive = true;
         }
 
         // AGGRESSIVE FIX: Get purchases from UserPurchases table and calculate totals
@@ -2073,6 +2088,48 @@ public class DynamoDBService : IDynamoDBService
         {
             Console.WriteLine($"[DynamoDBService] Error getting purchases by email {email}: {ex.Message}");
             return new List<UserPurchase>();
+        }
+    }
+
+    public async Task DeleteCustomerAsync(string deviceId)
+    {
+        // AGGRESSIVE FIX: Mark as inactive instead of deleting
+        await DeactivateCustomerAsync(deviceId);
+    }
+
+    public async Task DeactivateCustomerAsync(string deviceId)
+    {
+        try
+        {
+            Console.WriteLine($"[DynamoDBService] DeactivateCustomer called for device: {deviceId}");
+            
+            // Mark customer as inactive by updating UserTokens
+            var tokens = await GetUserTokensAsync(deviceId);
+            if (tokens != null)
+            {
+                tokens.IsActive = false;
+                await SaveUserTokensAsync(tokens);
+                Console.WriteLine($"[DynamoDBService] Marked customer {deviceId} as inactive");
+            }
+            else
+            {
+                // If no tokens record exists, create one with IsActive=false
+                tokens = new UserTokens
+                {
+                    DeviceId = deviceId,
+                    TokensRemaining = 0,
+                    IsActive = false
+                };
+                await SaveUserTokensAsync(tokens);
+                Console.WriteLine($"[DynamoDBService] Created inactive UserTokens record for device {deviceId}");
+            }
+            
+            Console.WriteLine($"[DynamoDBService] Successfully deactivated customer {deviceId}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error in DeactivateCustomer: {ex.Message}");
+            throw;
         }
     }
 }

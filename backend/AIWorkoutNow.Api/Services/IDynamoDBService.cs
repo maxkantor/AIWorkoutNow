@@ -56,6 +56,7 @@ public interface IDynamoDBService
     Task MergeCreditsFromVisitorIdsAsync(string targetDeviceId, List<string> sourceVisitorIds);
     Task ResetFreeWorkoutCountAsync(string deviceId);
     Task<List<UserPurchase>> GetPurchasesByEmailAsync(string email);
+    Task DeleteCustomerAsync(string deviceId);
 }
 
 public class AdminStats

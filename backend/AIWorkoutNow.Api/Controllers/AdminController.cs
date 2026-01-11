@@ -376,6 +376,27 @@ public class AdminController : ControllerBase
     }
 
     [Authorize]
+    [HttpDelete("admin/customers/{deviceId}")]
+    public async Task<IActionResult> DeleteCustomer(string deviceId)
+    {
+        try
+        {
+            Console.WriteLine($"[AdminController] DeleteCustomer (deactivate) called for device: {deviceId}");
+            
+            // Mark customer as inactive instead of deleting
+            await _dynamoService.DeactivateCustomerAsync(deviceId);
+            
+            Console.WriteLine($"[AdminController] Customer deactivated successfully: {deviceId}");
+            return Ok(new { message = "Customer deactivated successfully" });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AdminController] DeleteCustomer error: {ex.Message}");
+            return StatusCode(500, new { message = "Failed to deactivate customer", error = ex.Message });
+        }
+    }
+
+    [Authorize]
     [HttpPost("admin/customers/by-email/{email}/reset-tokens")]
     public async Task<IActionResult> ResetTokensByEmail(string email, [FromBody] ResetTokensRequest request)
     {

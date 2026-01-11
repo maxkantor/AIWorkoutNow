@@ -55,4 +55,5 @@ public class CustomerSummary
     public DateTime? FirstSeen { get; set; }
     public DateTime? LastActivity { get; set; }
     public List<CustomerActivity>? RecentActivities { get; set; }
+    public bool IsActive { get; set; } = true; // Default to active
 }

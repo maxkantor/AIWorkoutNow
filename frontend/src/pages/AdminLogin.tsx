@@ -5,8 +5,15 @@ import { adminLogin } from '../services/api';
 import './AdminLogin.css';
 
 function AdminLogin() {
-  const [email, setEmail] = useState('admin@aiworkoutnow.com');
-  const [password, setPassword] = useState('');
+  // Load cached credentials from localStorage
+  const [email, setEmail] = useState(() => {
+    const cached = localStorage.getItem('admin_email');
+    return cached || 'admin@aiworkoutnow.com';
+  });
+  const [password, setPassword] = useState(() => {
+    const cached = localStorage.getItem('admin_password');
+    return cached || '';
+  });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -19,6 +26,9 @@ function AdminLogin() {
     try {
       const token = await adminLogin(email, password);
       localStorage.setItem('admin_token', token);
+      // Cache credentials for next time
+      localStorage.setItem('admin_email', email);
+      localStorage.setItem('admin_password', password);
       navigate('/admin/dashboard');
     } catch (err: any) {
       setError(err.message || 'Login failed');
