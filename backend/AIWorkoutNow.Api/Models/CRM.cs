@@ -52,6 +52,8 @@ public class CustomerSummary
     public int TotalWorkouts { get; set; }
     public int TotalPurchases { get; set; }
     public decimal TotalSpent { get; set; }
+    public int FreeWorkoutsUsed { get; set; }
+    public int FreeWorkoutsRemaining { get; set; }
     public DateTime? FirstSeen { get; set; }
     public DateTime? LastActivity { get; set; }
     public List<CustomerActivity>? RecentActivities { get; set; }

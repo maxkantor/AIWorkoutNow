@@ -383,6 +383,7 @@ export interface CustomerSummary {
   totalSpent: number;
   lastActivity?: string;
   freeWorkoutsUsed: number;
+  freeWorkoutsRemaining?: number;
   email?: string;
   name?: string;
   firstSeen?: string;

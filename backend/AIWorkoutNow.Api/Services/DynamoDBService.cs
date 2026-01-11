@@ -676,17 +676,26 @@ public class DynamoDBService : IDynamoDBService
     {
         var customers = new Dictionary<string, CustomerSummary>();
         
-        // Get all device IDs from anonymous usage
+        // Get all device IDs from anonymous usage and aggregate free workout counts
         var freeUsersResponse = await _dynamoDB.ScanAsync(new ScanRequest
         {
             TableName = _anonymousUsageTable
         });
         
+        var freeUsageCounts = new Dictionary<string, int>();
         foreach (var item in freeUsersResponse.Items)
         {
             var deviceId = item["DeviceId"].S;
+            var count = item.ContainsKey("Count") ? int.Parse(item["Count"].N) : 1;
+            if (!freeUsageCounts.ContainsKey(deviceId))
+            {
+                freeUsageCounts[deviceId] = 0;
+            }
+            freeUsageCounts[deviceId] += count;
+            
             if (!customers.ContainsKey(deviceId))
             {
+                var used = freeUsageCounts[deviceId];
                 customers[deviceId] = new CustomerSummary
                 {
                     DeviceId = deviceId,
@@ -694,8 +703,17 @@ public class DynamoDBService : IDynamoDBService
                     TokensRemaining = 0,
                     TotalWorkouts = 0,
                     TotalPurchases = 0,
-                    TotalSpent = 0
+                    TotalSpent = 0,
+                    FreeWorkoutsUsed = used,
+                    FreeWorkoutsRemaining = Math.Max(0, 3 - used)
                 };
+            }
+            else
+            {
+                // If customer already exists, update counts
+                var used = freeUsageCounts[deviceId];
+                customers[deviceId].FreeWorkoutsUsed = used;
+                customers[deviceId].FreeWorkoutsRemaining = Math.Max(0, 3 - used);
             }
         }
 
@@ -714,6 +732,9 @@ public class DynamoDBService : IDynamoDBService
             // Skip inactive customers
             if (!isActive) continue;
             
+            var freeUsed = freeUsageCounts.ContainsKey(deviceId) ? freeUsageCounts[deviceId] : 0;
+            var freeRemaining = Math.Max(0, 3 - freeUsed);
+            
             if (!customers.ContainsKey(deviceId))
             {
                 customers[deviceId] = new CustomerSummary
@@ -724,7 +745,9 @@ public class DynamoDBService : IDynamoDBService
                     TotalWorkouts = 0,
                     TotalPurchases = 0,
                     TotalSpent = 0,
-                    IsActive = true
+                    IsActive = true,
+                    FreeWorkoutsUsed = freeUsed,
+                    FreeWorkoutsRemaining = freeRemaining
                 };
             }
             else
@@ -732,6 +755,8 @@ public class DynamoDBService : IDynamoDBService
                 customers[deviceId].IsPaidUser = true;
                 customers[deviceId].TokensRemaining = tokensRemaining;
                 customers[deviceId].IsActive = true;
+                customers[deviceId].FreeWorkoutsUsed = freeUsed;
+                customers[deviceId].FreeWorkoutsRemaining = freeRemaining;
             }
         }
 
@@ -851,7 +876,9 @@ public class DynamoDBService : IDynamoDBService
             TokensRemaining = 0,
             TotalWorkouts = 0,
             TotalPurchases = 0,
-            TotalSpent = 0
+            TotalSpent = 0,
+            FreeWorkoutsUsed = 0,
+            FreeWorkoutsRemaining = 3
         };
 
         // Check if paid user
@@ -917,6 +944,17 @@ public class DynamoDBService : IDynamoDBService
         {
             summary.LastActivity = activities.First().Timestamp;
             summary.FirstSeen = activities.Last().Timestamp;
+        }
+
+        // Free workout usage (align with homepage logic)
+        try
+        {
+            summary.FreeWorkoutsUsed = await GetTotalFreeWorkoutsAsync(deviceId);
+            summary.FreeWorkoutsRemaining = Math.Max(0, 3 - summary.FreeWorkoutsUsed);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error counting free workouts for {deviceId}: {ex.Message}");
         }
 
         return summary;

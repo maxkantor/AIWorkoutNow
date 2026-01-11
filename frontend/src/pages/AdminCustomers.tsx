@@ -105,7 +105,9 @@ function AdminCustomers() {
                   <th>Email</th>
                   <th>Name</th>
                   <th>Type</th>
-                  <th>💪Remaining Workouts</th>
+                  <th>💪 Tokens</th>
+                  <th>Free Left</th>
+                  <th>Free Used</th>
                   <th>Workouts</th>
                   <th>Purchases</th>
                   <th>Total Spent</th>
@@ -130,6 +132,8 @@ function AdminCustomers() {
                         </span>
                       </td>
                       <td>{customer.tokensRemaining}</td>
+                      <td>{Math.max(0, customer.freeWorkoutsRemaining ?? (3 - (customer.freeWorkoutsUsed || 0)))}</td>
+                      <td>{customer.freeWorkoutsUsed ?? 0}</td>
                       <td>{customer.totalWorkouts}</td>
                       <td>{customer.totalPurchases}</td>
                       <td>${customer.totalSpent.toFixed(2)}</td>
