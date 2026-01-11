@@ -64,6 +64,7 @@ builder.Services.AddSingleton<IEmailService, SESEmailService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddSingleton<IConfigService, ConfigService>();
 builder.Services.AddSingleton<IAuthService, AuthService>();
+builder.Services.AddSingleton<IAmazonAffiliateService, AmazonAffiliateService>();
 
 var app = builder.Build();
 
