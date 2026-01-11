@@ -141,7 +141,7 @@ function AdminLogin() {
           <div className="modal-backdrop" role="dialog" aria-modal="true">
             <div className="modal">
               <h2>Reset access</h2>
-              <p>Contact the site owner to reset admin access.</p>
+              <p>Contact site owner to reset admin credentials.</p>
               <button className="modal-close" onClick={() => setShowForgot(false)}>
                 Close
               </button>
