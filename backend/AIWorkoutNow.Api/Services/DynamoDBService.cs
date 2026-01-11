@@ -864,7 +864,61 @@ public class DynamoDBService : IDynamoDBService
             Console.WriteLine($"[DynamoDBService] Error getting purchases: {ex.Message}");
         }
 
-        return customers.Values.OrderByDescending(c => c.LastActivity ?? c.FirstSeen).ToList();
+        // AGGRESSIVE FIX: consolidate customers by email to avoid duplicates and ensure totals align with homepage
+        var consolidated = new List<CustomerSummary>();
+        var byEmail = customers.Values
+            .Where(c => !string.IsNullOrEmpty(c.Email))
+            .GroupBy(c => c.Email!.ToLowerInvariant())
+            .ToList();
+
+        var usedDeviceIds = new HashSet<string>();
+
+        // Consolidate by email
+        foreach (var group in byEmail)
+        {
+            var list = group.ToList();
+            var primary = list
+                .OrderByDescending(c => c.TokensRemaining >= 999999)
+                .ThenByDescending(c => c.TokensRemaining)
+                .ThenByDescending(c => c.TotalSpent)
+                .First();
+
+            var allTokensUnlimited = list.Any(c => c.TokensRemaining >= 999999);
+            var summedTokens = allTokensUnlimited ? 999999 : list.Sum(c => c.TokensRemaining);
+            var totalWorkouts = list.Sum(c => c.TotalWorkouts);
+            var totalPurchases = list.Sum(c => c.TotalPurchases);
+            var totalSpent = list.Sum(c => c.TotalSpent);
+            var freeUsed = list.Min(c => c.FreeWorkoutsUsed);
+            var freeRemaining = Math.Max(0, 3 - freeUsed);
+            var firstSeen = list.Where(c => c.FirstSeen.HasValue).Select(c => c.FirstSeen!.Value).DefaultIfEmpty(primary.FirstSeen ?? DateTime.UtcNow).Min();
+            var lastActivity = list.Where(c => c.LastActivity.HasValue).Select(c => c.LastActivity!.Value).DefaultIfEmpty(primary.LastActivity ?? DateTime.UtcNow).Max();
+
+            primary.TokensRemaining = summedTokens;
+            primary.TotalWorkouts = totalWorkouts;
+            primary.TotalPurchases = totalPurchases;
+            primary.TotalSpent = totalSpent;
+            primary.FreeWorkoutsUsed = freeUsed;
+            primary.FreeWorkoutsRemaining = freeRemaining;
+            primary.FirstSeen = firstSeen;
+            primary.LastActivity = lastActivity;
+
+            consolidated.Add(primary);
+            foreach (var c in list)
+            {
+                usedDeviceIds.Add(c.DeviceId);
+            }
+        }
+
+        // Add entries without email (or not yet consolidated)
+        foreach (var c in customers.Values)
+        {
+            if (!usedDeviceIds.Contains(c.DeviceId))
+            {
+                consolidated.Add(c);
+            }
+        }
+
+        return consolidated.OrderByDescending(c => c.LastActivity ?? c.FirstSeen).ToList();
     }
 
     public async Task<CustomerSummary?> GetCustomerSummaryAsync(string deviceId)
@@ -880,6 +934,21 @@ public class DynamoDBService : IDynamoDBService
             FreeWorkoutsUsed = 0,
             FreeWorkoutsRemaining = 3
         };
+
+        // Aggressive merge: pull credits/purchases from any linked devices for this visitor
+        try
+        {
+            var emailMapping = await GetEmailByVisitorIdAsync(deviceId);
+            if (emailMapping != null && emailMapping.VisitorIds.Any())
+            {
+                Console.WriteLine($"[DynamoDBService] CustomerSummary merge credits for {deviceId} from linked devices: {string.Join(", ", emailMapping.VisitorIds)}");
+                await MergeCreditsFromVisitorIdsAsync(deviceId, emailMapping.VisitorIds);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Merge credits in GetCustomerSummaryAsync failed: {ex.Message}");
+        }
 
         // Check if paid user
         var tokens = await GetUserTokensAsync(deviceId);
