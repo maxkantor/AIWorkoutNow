@@ -101,13 +101,11 @@ function AdminCustomers() {
             <table>
               <thead>
                 <tr>
-                  <th>Device ID</th>
+                  <th>Device</th>
                   <th>Email</th>
                   <th>Name</th>
-                  <th>Type</th>
-                  <th>💪 Tokens</th>
-                  <th>Free Left</th>
-                  <th>Free Used</th>
+                  <th>Status</th>
+                  <th>Tokens</th>
                   <th>Workouts</th>
                   <th>Purchases</th>
                   <th>Total Spent</th>
@@ -118,57 +116,47 @@ function AdminCustomers() {
               <tbody>
                 {filteredCustomers.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className="no-data">No customers found</td>
+                    <td colSpan={10} className="no-data">No customers found</td>
                   </tr>
                 ) : (
                   filteredCustomers.map((customer) => {
                     const isPaid = customer.isPaidUser || (customer.tokensRemaining ?? 0) > 0 || (customer.totalPurchases ?? 0) > 0;
                     return (
-                    <tr key={customer.deviceId}>
-                      <td className="device-id">{customer.deviceId.substring(0, 8)}...</td>
-                      <td>{customer.email || '-'}</td>
-                      <td>{customer.name || '-'}</td>
-                      <td>
-                        <span className={`badge ${isPaid ? 'badge-paid' : 'badge-free'}`}>
-                          {isPaid ? 'Paid' : 'Free'}
-                        </span>
-                      </td>
-                      <td>{customer.tokensRemaining}</td>
-                      <td>{Math.max(0, customer.freeWorkoutsRemaining ?? (3 - (customer.freeWorkoutsUsed || 0)))}</td>
-                      <td>{customer.freeWorkoutsUsed ?? 0}</td>
-                      <td>{customer.totalWorkouts}</td>
-                      <td>{customer.totalPurchases}</td>
-                      <td>${customer.totalSpent.toFixed(2)}</td>
-                      <td>
-                        {customer.lastActivity
-                          ? new Date(customer.lastActivity).toLocaleDateString()
-                          : '-'}
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <Link
-                            to={`/admin/customers/${customer.deviceId}`}
-                            className="btn btn-sm btn-primary"
-                          >
-                            View
-                          </Link>
-                          <button
-                            onClick={() => handleDelete(customer.deviceId)}
-                            className="btn btn-sm"
-                            style={{
-                              background: '#dc2626',
-                              color: 'white',
-                              border: 'none',
-                              padding: '0.5rem 1rem',
-                              borderRadius: '4px',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            Deactivate
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                      <tr key={customer.deviceId}>
+                        <td className="device-id">{customer.deviceId.substring(0, 8)}...</td>
+                        <td>{customer.email || '-'}</td>
+                        <td>{customer.name || '-'}</td>
+                        <td>
+                          <span className={`badge ${isPaid ? 'badge-paid' : 'badge-free'}`}>
+                            {isPaid ? 'Paid' : 'Free'}
+                          </span>
+                        </td>
+                        <td className="numeric">{customer.tokensRemaining}</td>
+                        <td className="numeric">{customer.totalWorkouts}</td>
+                        <td className="numeric">{customer.totalPurchases}</td>
+                        <td className="numeric">${customer.totalSpent.toFixed(2)}</td>
+                        <td>
+                          {customer.lastActivity
+                            ? new Date(customer.lastActivity).toLocaleDateString()
+                            : '-'}
+                        </td>
+                        <td>
+                          <div className="actions">
+                            <Link
+                              to={`/admin/customers/${customer.deviceId}`}
+                              className="btn btn-sm btn-primary"
+                            >
+                              View
+                            </Link>
+                            <button
+                              onClick={() => handleDelete(customer.deviceId)}
+                              className="btn btn-sm btn-danger"
+                            >
+                              Deactivate
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
                     );
                   })
                 )}

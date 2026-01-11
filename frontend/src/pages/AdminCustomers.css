@@ -31,9 +31,10 @@
 
 .customers-table {
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
 }
 
 .customers-table table {
@@ -42,32 +43,32 @@
 }
 
 .customers-table thead {
-  background: #f3f4f6;
+  background: #f8fafc;
   color: #1f2937;
   position: sticky;
   top: 0;
   z-index: 10;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .customers-table th {
-  padding: 0.85rem 1rem;
+  padding: 0.9rem 1rem;
   text-align: left;
   font-weight: 700;
   font-size: 0.9rem;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
-  background: #f3f4f6;
-  color: #1f2937 !important;
-  border-bottom: 1px solid #e5e7eb;
+  letter-spacing: 0.25px;
+  color: #111827 !important;
 }
 
 .customers-table td {
-  padding: 1rem;
-  border-bottom: 1px solid #eee;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #374151;
 }
 
 .customers-table tbody tr:hover {
-  background: #f8f9fa;
+  background: #f8fafc;
 }
 
 .device-id {
@@ -91,6 +92,27 @@
 .badge-free {
   background: #fff3cd;
   color: #856404;
+}
+
+.numeric {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: #111827;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.btn.btn-sm.btn-danger {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
 }
 
 .btn-sm {
