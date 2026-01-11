@@ -55,6 +55,7 @@ public interface IDynamoDBService
     Task<List<string>> GetVisitorIdsByEmailAsync(string email);
     Task<EmailVisitorMapping?> GetEmailByVisitorIdAsync(string visitorId);
     Task MergeCreditsFromVisitorIdsAsync(string targetDeviceId, List<string> sourceVisitorIds);
+    Task<int> IncrementUserTokensAsync(string deviceId, int tokensToAdd);
     Task ResetFreeWorkoutCountAsync(string deviceId);
     Task<List<UserPurchase>> GetPurchasesByEmailAsync(string email);
     Task DeleteCustomerAsync(string deviceId);

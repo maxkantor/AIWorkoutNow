@@ -494,24 +494,8 @@ public class StripeController : ControllerBase
                     {
                         // AGGRESSIVE FIX: Add all purchased tokens to the current deviceId (no dilution across linked devices)
                         int tokensToAdd = purchase.TokensGranted.Value;
-                        var currentTokens = await _dynamoService.GetUserTokensAsync(deviceId);
-                        if (currentTokens == null)
-                        {
-                            currentTokens = new UserTokens
-                            {
-                                DeviceId = deviceId,
-                                TokensRemaining = 0
-                            };
-                        }
-
-                        if (currentTokens.TokensRemaining < 999999)
-                        {
-                            var newBalance = currentTokens.TokensRemaining + tokensToAdd;
-                            currentTokens.TokensRemaining = Math.Min(newBalance, 999998); // leave headroom for unlimited sentinel
-                        }
-
-                        await _dynamoService.SaveUserTokensAsync(currentTokens);
-                        Console.WriteLine($"[StripeController] Added {tokensToAdd} tokens to device {deviceId}. New balance: {currentTokens.TokensRemaining}");
+                        var newBalance = await _dynamoService.IncrementUserTokensAsync(deviceId, tokensToAdd);
+                        Console.WriteLine($"[StripeController] Added {tokensToAdd} tokens to device {deviceId}. New balance: {newBalance}");
                     }
 
                     // Save purchase record (may fail if table doesn't exist, but that's OK)
@@ -865,24 +849,8 @@ public class StripeController : ControllerBase
                     
                     // Add purchased tokens to CURRENT device only (no cross-device merge)
                     int tokensToAdd = purchase.TokensGranted.Value;
-                    var tokens = await _dynamoService.GetUserTokensAsync(request.DeviceId);
-                    if (tokens == null)
-                    {
-                        tokens = new UserTokens
-                        {
-                            DeviceId = request.DeviceId,
-                            TokensRemaining = 0
-                        };
-                    }
-
-                    if (tokens.TokensRemaining < 999999)
-                    {
-                        var newBalance = tokens.TokensRemaining + tokensToAdd;
-                        tokens.TokensRemaining = Math.Min(newBalance, 999998);
-                    }
-
-                    await _dynamoService.SaveUserTokensAsync(tokens);
-                    Console.WriteLine($"[StripeController] VerifyPayment - Added {tokensToAdd} tokens to device {request.DeviceId}. New balance: {tokens.TokensRemaining}");
+                    var newBalance = await _dynamoService.IncrementUserTokensAsync(request.DeviceId, tokensToAdd);
+                    Console.WriteLine($"[StripeController] VerifyPayment - Added {tokensToAdd} tokens to device {request.DeviceId}. New balance: {newBalance}");
                 }
 
                 // Try to save purchase (may fail if table doesn't exist, but that's OK)

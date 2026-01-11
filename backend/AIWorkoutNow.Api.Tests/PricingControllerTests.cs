@@ -149,4 +149,42 @@ public class PricingControllerTests
         Assert.Equal(1, freeRemaining);
         Assert.Equal(0, tokensRemaining);
     }
+
+    [Fact]
+    public async Task GetUserAccessStatus_ReconcilesPurchasedTokens_WhenStoredBalanceIsLower()
+    {
+        // Arrange
+        var deviceId = "device-reconcile";
+        var tokens = new UserTokens
+        {
+            DeviceId = deviceId,
+            TokensRemaining = 90,
+            IsActive = true
+        };
+
+        var purchases = new List<UserPurchase>
+        {
+            new UserPurchase { DeviceId = deviceId, Status = "completed", TokensGranted = 90 },
+            new UserPurchase { DeviceId = deviceId, Status = "completed", TokensGranted = 10 }
+        };
+
+        _mockDynamoService.Setup(x => x.GetUserTokensAsync(deviceId))
+            .ReturnsAsync(tokens);
+        _mockDynamoService.Setup(x => x.GetTotalFreeWorkoutsAsync(deviceId))
+            .ReturnsAsync(0);
+        _mockDynamoService.Setup(x => x.GetUserPurchasesAsync(deviceId))
+            .ReturnsAsync(purchases);
+        _mockDynamoService.Setup(x => x.SaveUserTokensAsync(It.IsAny<UserTokens>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _controller.GetUserAccessStatus(deviceId);
+
+        // Assert
+        var okResult = Assert.IsAssignableFrom<ObjectResult>(result);
+        Assert.True(okResult.StatusCode is null or 200);
+        var tokensRemaining = GetProp<int?>(okResult.Value!, "tokensRemaining");
+        Assert.Equal(100, tokensRemaining);
+        _mockDynamoService.Verify(x => x.SaveUserTokensAsync(It.Is<UserTokens>(t => t.DeviceId == deviceId && t.TokensRemaining == 100)), Times.AtLeastOnce);
+    }
 }

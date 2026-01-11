@@ -130,6 +130,55 @@ public class DynamoDBService : IDynamoDBService
         });
     }
 
+    // Atomically increment tokens for a device, returning the new balance
+    public async Task<int> IncrementUserTokensAsync(string deviceId, int tokensToAdd)
+    {
+        if (tokensToAdd == 0) return (await GetUserTokensAsync(deviceId))?.TokensRemaining ?? 0;
+
+        try
+        {
+            var response = await _dynamoDB.UpdateItemAsync(new UpdateItemRequest
+            {
+                TableName = _userTokensTable,
+                Key = new Dictionary<string, AttributeValue>
+                {
+                    { "DeviceId", new AttributeValue { S = deviceId } }
+                },
+                UpdateExpression = "ADD TokensRemaining :delta SET IsActive = if_not_exists(IsActive, :true)",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    { ":delta", new AttributeValue { N = tokensToAdd.ToString() } },
+                    { ":true", new AttributeValue { BOOL = true } }
+                },
+                ReturnValues = "UPDATED_NEW"
+            });
+
+            if (response.Attributes != null && response.Attributes.ContainsKey("TokensRemaining"))
+            {
+                return int.Parse(response.Attributes["TokensRemaining"].N);
+            }
+        }
+        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+        {
+            Console.WriteLine($"[DynamoDBService] UserTokens table not found when incrementing tokens");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] IncrementUserTokensAsync error: {ex.Message}");
+        }
+
+        // Fallback: create record with provided delta
+        var fallbackTokens = new UserTokens
+        {
+            DeviceId = deviceId,
+            TokensRemaining = Math.Max(tokensToAdd, 0),
+            ExpiresAt = null,
+            IsActive = true
+        };
+        await SaveUserTokensAsync(fallbackTokens);
+        return fallbackTokens.TokensRemaining;
+    }
+
     public async Task<UserTokens?> GetUserTokensAsync(string deviceId)
     {
         var response = await _dynamoDB.GetItemAsync(new GetItemRequest
