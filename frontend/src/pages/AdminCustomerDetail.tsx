@@ -142,6 +142,9 @@ function AdminCustomerDetail() {
       setResetReason('');
       setNewTokenCount(0);
       
+      // Trigger refresh on home page if it's open
+      window.dispatchEvent(new CustomEvent('refreshAccessStatus'));
+      
       // Show success message
       alert(`Successfully reset workouts to ${tokenCountNum} for this device.`);
     } catch (err: any) {

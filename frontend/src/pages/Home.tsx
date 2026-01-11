@@ -116,23 +116,36 @@ function Home() {
     
     try {
       const deviceId = getDeviceId();
-      const balance = getTokenBalance(deviceId);
-      const needsToken = balance === null || balance === 0;
       
-      if (needsToken && freeWorkoutsRemaining <= 0 && !accessStatus?.hasUnlimitedAccess) {
+      // ULTRA AGGRESSIVE FIX: Use API status, not localStorage, to determine if user is free
+      // Refresh access status first to get latest data
+      await checkAccessStatus(true);
+      
+      // Determine if free user based on API response, not localStorage
+      const isFreeUser = (accessStatus?.tokensRemaining === 0 || accessStatus?.tokensRemaining === undefined) && 
+                         !accessStatus?.hasUnlimitedAccess &&
+                         (accessStatus?.freeWorkoutsRemaining ?? 0) > 0;
+      
+      if (isFreeUser && (accessStatus?.freeWorkoutsRemaining ?? 0) <= 0 && !accessStatus?.hasUnlimitedAccess) {
         setShowPaywall(true);
         setLoading(false);
         return;
       }
       
-      const result = await generateWorkout(preferences, deviceId, needsToken);
+      if (!isFreeUser && (accessStatus?.tokensRemaining ?? 0) <= 0 && !accessStatus?.hasUnlimitedAccess) {
+        setShowPaywall(true);
+        setLoading(false);
+        return;
+      }
+      
+      const result = await generateWorkout(preferences, deviceId, isFreeUser);
       setWorkout(result);
       
       // Update tokens immediately from response
       if (result.tokensRemaining !== undefined) {
-        if (needsToken) {
+        if (isFreeUser) {
           // Free workout was used
-          setFreeWorkoutsRemaining(Math.max(0, freeWorkoutsRemaining - 1));
+          setFreeWorkoutsRemaining(Math.max(0, (accessStatus?.freeWorkoutsRemaining ?? freeWorkoutsRemaining) - 1));
         } else {
           // Paid token was used - update immediately
           setTokenBalance(result.tokensRemaining);
