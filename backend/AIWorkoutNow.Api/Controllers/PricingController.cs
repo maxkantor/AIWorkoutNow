@@ -362,23 +362,30 @@ public class PricingController : ControllerBase
                         try
                         {
                             var plan = await _dynamoService.GetPricingPlanAsync(p.PlanId);
-                            if (plan?.TokenCount != null)
+                            if (plan?.IsUnlimited == true)
+                            {
+                                // Unlimited purchases should be handled in the unlimited branch; skip counting here
+                                Console.WriteLine($"[PricingController] Skip token backfill for unlimited plan {p.PlanId}");
+                                continue;
+                            }
+
+                            if (plan?.TokenCount != null && plan.TokenCount.Value > 0)
                             {
                                 purchasedTokens += plan.TokenCount.Value;
                                 Console.WriteLine($"[PricingController] Backfilled TokensGranted from plan {p.PlanId} => {plan.TokenCount}");
                             }
                             else
                             {
-                                // Fallback to default 10 if plan not found to avoid zeroing purchases
+                                // Fallback to 10 only for non-unlimited plans when token count is missing
                                 purchasedTokens += 10;
-                                Console.WriteLine($"[PricingController] Plan {p.PlanId} missing TokenCount, defaulting TokensGranted to 10");
+                                Console.WriteLine($"[PricingController] Plan {p.PlanId} missing TokenCount, defaulting TokensGranted to 10 (non-unlimited fallback)");
                             }
                         }
                         catch (Exception exPlan)
                         {
-                            // Fallback to default 10 if plan lookup fails
+                            // Fallback to 10 only for non-unlimited plans when lookup fails
                             purchasedTokens += 10;
-                            Console.WriteLine($"[PricingController] Plan lookup failed for {p.PlanId}: {exPlan.Message}. Defaulting TokensGranted to 10");
+                            Console.WriteLine($"[PricingController] Plan lookup failed for {p.PlanId}: {exPlan.Message}. Defaulting TokensGranted to 10 (non-unlimited fallback)");
                         }
                     }
 
