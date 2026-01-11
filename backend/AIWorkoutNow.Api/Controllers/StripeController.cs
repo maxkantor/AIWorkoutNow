@@ -430,6 +430,25 @@ public class StripeController : ControllerBase
                     // Grant tokens or unlimited access
                     Console.WriteLine($"[StripeController] Granting access - IsUnlimited: {purchase.IsUnlimited}, TokensGranted: {purchase.TokensGranted}");
                     
+                    // AGGRESSIVE FIX: If customer has email, merge tokens across all devices linked to that email
+                    List<string> linkedDeviceIds = new List<string> { deviceId };
+                    if (!string.IsNullOrEmpty(customerEmail))
+                    {
+                        try
+                        {
+                            var allLinkedDevices = await _dynamoService.GetVisitorIdsByEmailAsync(customerEmail);
+                            if (allLinkedDevices.Any())
+                            {
+                                linkedDeviceIds = allLinkedDevices.Distinct().ToList();
+                                Console.WriteLine($"[StripeController] Found {linkedDeviceIds.Count} devices linked to email {customerEmail}: {string.Join(", ", linkedDeviceIds)}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[StripeController] Error getting linked devices: {ex.Message}");
+                        }
+                    }
+                    
                     if (purchase.IsUnlimited)
                     {
                         // CRITICAL FIX: Ensure PurchasedAt is set before calculating expiration
@@ -446,45 +465,79 @@ public class StripeController : ControllerBase
                             Console.WriteLine($"[StripeController] Set/Updated expiration to {purchase.ExpiresAt} (1 year from purchase date: {purchase.PurchasedAt})");
                         }
                         
-                        // For unlimited, we need to track expiration in UserTokens
-                        var tokens = await _dynamoService.GetUserTokensAsync(deviceId);
-                        if (tokens == null)
+                        // AGGRESSIVE FIX: Grant unlimited access to ALL devices linked to this email
+                        foreach (var linkedDeviceId in linkedDeviceIds)
                         {
-                            tokens = new UserTokens
+                            var tokens = await _dynamoService.GetUserTokensAsync(linkedDeviceId);
+                            if (tokens == null)
                             {
-                                DeviceId = deviceId,
-                                TokensRemaining = 999999, // Large number for unlimited
-                                ExpiresAt = purchase.ExpiresAt
-                            };
-                            Console.WriteLine($"[StripeController] Creating new UserTokens with expiration: {tokens.ExpiresAt}");
+                                tokens = new UserTokens
+                                {
+                                    DeviceId = linkedDeviceId,
+                                    TokensRemaining = 999999, // Large number for unlimited
+                                    ExpiresAt = purchase.ExpiresAt
+                                };
+                                Console.WriteLine($"[StripeController] Creating new UserTokens for device {linkedDeviceId} with expiration: {tokens.ExpiresAt}");
+                            }
+                            else
+                            {
+                                tokens.TokensRemaining = 999999;
+                                // CRITICAL FIX: Always use purchase date for expiration, never current date
+                                tokens.ExpiresAt = purchase.ExpiresAt;
+                                Console.WriteLine($"[StripeController] Updated existing tokens for device {linkedDeviceId} expiration to {tokens.ExpiresAt} (from purchase date: {purchase.PurchasedAt})");
+                            }
+                            await _dynamoService.SaveUserTokensAsync(tokens);
                         }
-                        else
-                        {
-                            tokens.TokensRemaining = 999999;
-                            // CRITICAL FIX: Always use purchase date for expiration, never current date
-                            tokens.ExpiresAt = purchase.ExpiresAt;
-                            Console.WriteLine($"[StripeController] Updated existing tokens expiration to {tokens.ExpiresAt} (from purchase date: {purchase.PurchasedAt})");
-                        }
-                        await _dynamoService.SaveUserTokensAsync(tokens);
-                        Console.WriteLine($"[StripeController] Granted unlimited access until {purchase.ExpiresAt} (purchased on {purchase.PurchasedAt})");
+                        Console.WriteLine($"[StripeController] Granted unlimited access to {linkedDeviceIds.Count} device(s) until {purchase.ExpiresAt} (purchased on {purchase.PurchasedAt})");
                     }
                     else if (purchase.TokensGranted.HasValue)
                     {
-                        var tokens = await _dynamoService.GetUserTokensAsync(deviceId);
-                        if (tokens == null)
+                        // AGGRESSIVE FIX: Sum tokens across all linked devices, then distribute evenly
+                        int totalTokensToAdd = purchase.TokensGranted.Value;
+                        int totalExistingTokens = 0;
+                        
+                        // First, calculate total existing tokens across all linked devices
+                        foreach (var linkedDeviceId in linkedDeviceIds)
                         {
-                            tokens = new UserTokens
+                            var existingTokens = await _dynamoService.GetUserTokensAsync(linkedDeviceId);
+                            if (existingTokens != null && existingTokens.TokensRemaining < 999999) // Don't count unlimited
                             {
-                                DeviceId = deviceId,
-                                TokensRemaining = purchase.TokensGranted.Value
-                            };
+                                totalExistingTokens += existingTokens.TokensRemaining;
+                            }
                         }
-                        else
+                        
+                        // Total tokens = existing + new purchase
+                        int totalTokens = totalExistingTokens + totalTokensToAdd;
+                        Console.WriteLine($"[StripeController] Merging tokens: Existing={totalExistingTokens}, New={totalTokensToAdd}, Total={totalTokens} across {linkedDeviceIds.Count} device(s)");
+                        
+                        // Distribute total tokens evenly across all linked devices
+                        int tokensPerDevice = totalTokens / linkedDeviceIds.Count;
+                        int remainder = totalTokens % linkedDeviceIds.Count;
+                        
+                        for (int i = 0; i < linkedDeviceIds.Count; i++)
                         {
-                            tokens.TokensRemaining += purchase.TokensGranted.Value;
+                            var linkedDeviceId = linkedDeviceIds[i];
+                            var tokens = await _dynamoService.GetUserTokensAsync(linkedDeviceId);
+                            if (tokens == null)
+                            {
+                                tokens = new UserTokens
+                                {
+                                    DeviceId = linkedDeviceId,
+                                    TokensRemaining = tokensPerDevice + (i < remainder ? 1 : 0) // Distribute remainder
+                                };
+                            }
+                            else
+                            {
+                                // Only update if not unlimited
+                                if (tokens.TokensRemaining < 999999)
+                                {
+                                    tokens.TokensRemaining = tokensPerDevice + (i < remainder ? 1 : 0);
+                                }
+                            }
+                            await _dynamoService.SaveUserTokensAsync(tokens);
+                            Console.WriteLine($"[StripeController] Set tokens for device {linkedDeviceId} to {tokens.TokensRemaining}");
                         }
-                        await _dynamoService.SaveUserTokensAsync(tokens);
-                        Console.WriteLine($"[StripeController] Granted {purchase.TokensGranted.Value} tokens. Total: {tokens.TokensRemaining}");
+                        Console.WriteLine($"[StripeController] Merged and distributed {totalTokens} tokens across {linkedDeviceIds.Count} device(s)");
                     }
 
                     // Save purchase record (may fail if table doesn't exist, but that's OK)
@@ -780,51 +833,108 @@ public class StripeController : ControllerBase
                 purchase.CustomerEmail = customerEmail;
                 purchase.CustomerName = customerName;
 
+                // AGGRESSIVE FIX: If customer has email, merge tokens across all devices linked to that email
+                List<string> linkedDeviceIds = new List<string> { request.DeviceId };
+                if (!string.IsNullOrEmpty(customerEmail))
+                {
+                    try
+                    {
+                        var allLinkedDevices = await _dynamoService.GetVisitorIdsByEmailAsync(customerEmail);
+                        if (allLinkedDevices.Any())
+                        {
+                            linkedDeviceIds = allLinkedDevices.Distinct().ToList();
+                            Console.WriteLine($"[StripeController] VerifyPayment - Found {linkedDeviceIds.Count} devices linked to email {customerEmail}: {string.Join(", ", linkedDeviceIds)}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[StripeController] VerifyPayment - Error getting linked devices: {ex.Message}");
+                    }
+                }
+                
                 // Grant tokens
                 if (purchase.IsUnlimited)
                 {
                     Console.WriteLine($"[StripeController] Granting unlimited access - DeviceId: {request.DeviceId}, ExpiresAt: {purchase.ExpiresAt}");
-                    var tokens = await _dynamoService.GetUserTokensAsync(request.DeviceId);
-                    if (tokens == null)
+                    
+                    // AGGRESSIVE FIX: Grant unlimited access to ALL devices linked to this email
+                    foreach (var linkedDeviceId in linkedDeviceIds)
                     {
-                        tokens = new UserTokens
+                        var tokens = await _dynamoService.GetUserTokensAsync(linkedDeviceId);
+                        if (tokens == null)
                         {
-                            DeviceId = request.DeviceId,
-                            TokensRemaining = 999999,
-                            ExpiresAt = purchase.ExpiresAt
-                        };
-                        Console.WriteLine($"[StripeController] Creating new UserTokens with 999999 tokens");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"[StripeController] Updating existing tokens from {tokens.TokensRemaining} to 999999");
-                        tokens.TokensRemaining = 999999;
-                        if (purchase.ExpiresAt.HasValue)
-                        {
-                            tokens.ExpiresAt = purchase.ExpiresAt;
+                            tokens = new UserTokens
+                            {
+                                DeviceId = linkedDeviceId,
+                                TokensRemaining = 999999,
+                                ExpiresAt = purchase.ExpiresAt
+                            };
+                            Console.WriteLine($"[StripeController] Creating new UserTokens for device {linkedDeviceId} with 999999 tokens");
                         }
+                        else
+                        {
+                            Console.WriteLine($"[StripeController] Updating existing tokens for device {linkedDeviceId} from {tokens.TokensRemaining} to 999999");
+                            tokens.TokensRemaining = 999999;
+                            if (purchase.ExpiresAt.HasValue)
+                            {
+                                tokens.ExpiresAt = purchase.ExpiresAt;
+                            }
+                        }
+                        await _dynamoService.SaveUserTokensAsync(tokens);
+                        Console.WriteLine($"[StripeController] Successfully saved tokens for device {linkedDeviceId} - TokensRemaining: {tokens.TokensRemaining}, ExpiresAt: {tokens.ExpiresAt}");
                     }
-                    await _dynamoService.SaveUserTokensAsync(tokens);
-                    Console.WriteLine($"[StripeController] Successfully saved tokens - TokensRemaining: {tokens.TokensRemaining}, ExpiresAt: {tokens.ExpiresAt}");
+                    Console.WriteLine($"[StripeController] Granted unlimited access to {linkedDeviceIds.Count} device(s)");
                 }
                 else if (purchase.TokensGranted.HasValue)
                 {
                     Console.WriteLine($"[StripeController] Granting {purchase.TokensGranted.Value} tokens - DeviceId: {request.DeviceId}");
-                    var tokens = await _dynamoService.GetUserTokensAsync(request.DeviceId);
-                    if (tokens == null)
+                    
+                    // AGGRESSIVE FIX: Sum tokens across all linked devices, then distribute evenly
+                    int totalTokensToAdd = purchase.TokensGranted.Value;
+                    int totalExistingTokens = 0;
+                    
+                    // First, calculate total existing tokens across all linked devices
+                    foreach (var linkedDeviceId in linkedDeviceIds)
                     {
-                        tokens = new UserTokens
+                        var existingTokens = await _dynamoService.GetUserTokensAsync(linkedDeviceId);
+                        if (existingTokens != null && existingTokens.TokensRemaining < 999999) // Don't count unlimited
                         {
-                            DeviceId = request.DeviceId,
-                            TokensRemaining = purchase.TokensGranted.Value
-                        };
+                            totalExistingTokens += existingTokens.TokensRemaining;
+                        }
                     }
-                    else
+                    
+                    // Total tokens = existing + new purchase
+                    int totalTokens = totalExistingTokens + totalTokensToAdd;
+                    Console.WriteLine($"[StripeController] VerifyPayment - Merging tokens: Existing={totalExistingTokens}, New={totalTokensToAdd}, Total={totalTokens} across {linkedDeviceIds.Count} device(s)");
+                    
+                    // Distribute total tokens evenly across all linked devices
+                    int tokensPerDevice = totalTokens / linkedDeviceIds.Count;
+                    int remainder = totalTokens % linkedDeviceIds.Count;
+                    
+                    for (int i = 0; i < linkedDeviceIds.Count; i++)
                     {
-                        tokens.TokensRemaining += purchase.TokensGranted.Value;
+                        var linkedDeviceId = linkedDeviceIds[i];
+                        var tokens = await _dynamoService.GetUserTokensAsync(linkedDeviceId);
+                        if (tokens == null)
+                        {
+                            tokens = new UserTokens
+                            {
+                                DeviceId = linkedDeviceId,
+                                TokensRemaining = tokensPerDevice + (i < remainder ? 1 : 0) // Distribute remainder
+                            };
+                        }
+                        else
+                        {
+                            // Only update if not unlimited
+                            if (tokens.TokensRemaining < 999999)
+                            {
+                                tokens.TokensRemaining = tokensPerDevice + (i < remainder ? 1 : 0);
+                            }
+                        }
+                        await _dynamoService.SaveUserTokensAsync(tokens);
+                        Console.WriteLine($"[StripeController] VerifyPayment - Set tokens for device {linkedDeviceId} to {tokens.TokensRemaining}");
                     }
-                    await _dynamoService.SaveUserTokensAsync(tokens);
-                    Console.WriteLine($"[StripeController] Successfully saved tokens - Total: {tokens.TokensRemaining}");
+                    Console.WriteLine($"[StripeController] VerifyPayment - Merged and distributed {totalTokens} tokens across {linkedDeviceIds.Count} device(s)");
                 }
 
                 // Try to save purchase (may fail if table doesn't exist, but that's OK)
