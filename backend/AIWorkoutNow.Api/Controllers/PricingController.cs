@@ -320,6 +320,14 @@ public class PricingController : ControllerBase
             var tokensRemaining = tokens?.TokensRemaining ?? 0;
             
             Console.WriteLine($"[PricingController] GetUserAccessStatus - DeviceId: {deviceId}, TokensRemaining: {tokensRemaining}, HasTokens: {tokens != null}");
+            if (tokens != null)
+            {
+                Console.WriteLine($"[PricingController] Token details - DeviceId: {tokens.DeviceId}, TokensRemaining: {tokens.TokensRemaining}, ExpiresAt: {tokens.ExpiresAt}");
+            }
+            else
+            {
+                Console.WriteLine($"[PricingController] WARNING: No token record found for device {deviceId} - this might be why tokens are 0");
+            }
             if (tokens != null && tokens.ExpiresAt.HasValue)
             {
                 Console.WriteLine($"[PricingController] Token expires at: {tokens.ExpiresAt}");

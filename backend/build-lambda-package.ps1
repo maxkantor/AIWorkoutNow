@@ -65,10 +65,7 @@ try {
     Write-Host "   Size: $sizeMB MB"
     Write-Host ""
     Write-Host "🚀 To deploy:" -ForegroundColor Cyan
-    Write-Host "   aws lambda update-function-code \"
-    Write-Host "     --function-name aiworkoutnow-api \"
-    Write-Host "     --zip-file fileb://backend/lambda-deployment.zip \"
-    Write-Host "     --region us-east-1"
+    Write-Host "   aws lambda update-function-code --function-name aiworkoutnow-api --zip-file fileb://backend/lambda-deployment.zip --region us-east-1"
     Write-Host ""
     Write-Host "   Or use: ./deploy-backend.sh"
 }

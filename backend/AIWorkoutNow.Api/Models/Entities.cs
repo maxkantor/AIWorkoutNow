@@ -1,3 +1,6 @@
+using System.Text.Json.Serialization;
+using AIWorkoutNow.Api.Converters;
+
 namespace AIWorkoutNow.Api.Models;
 
 public class Workout
@@ -17,8 +20,13 @@ public class Workout
 public class Exercise
 {
     public string Name { get; set; } = string.Empty;
+    
+    [JsonConverter(typeof(FlexibleIntConverter))]
     public int? Sets { get; set; }
+    
+    [JsonConverter(typeof(FlexibleIntConverter))]
     public int? Reps { get; set; }
+    
     public string? Duration { get; set; }
     public string? Instructions { get; set; }
     public string? Rest { get; set; }
