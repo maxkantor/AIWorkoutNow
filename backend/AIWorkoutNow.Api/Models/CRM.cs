@@ -59,3 +59,26 @@ public class CustomerSummary
     public List<CustomerActivity>? RecentActivities { get; set; }
     public bool IsActive { get; set; } = true; // Default to active
 }
+
+// Admin-facing DTO for Customers list
+public class AdminCustomerSummary
+{
+    public string DeviceId { get; set; } = string.Empty;
+    public string? Email { get; set; }
+    public string? Name { get; set; }
+    public string Status { get; set; } = "Free"; // Free / Paid / Deactivated
+    public int RemainingTokens { get; set; }
+    public int GeneratedWorkouts { get; set; }
+    public int RemainingWorkouts { get; set; }
+    public int PurchasesCount { get; set; }
+    public decimal TotalSpent { get; set; }
+    public DateTime? LastActivity { get; set; }
+}
+
+// Admin-facing DTO for Customer detail view (extends summary + history)
+public class AdminCustomerDetails : AdminCustomerSummary
+{
+    public int FreeWorkoutsUsed { get; set; }
+    public int FreeWorkoutsRemaining { get; set; }
+    public List<CustomerActivity>? RecentActivities { get; set; }
+}

@@ -8,14 +8,15 @@ import {
   getCustomersByEmail,
   resetTokensByEmail,
   deleteCustomer,
-  CustomerSummary,
+  AdminCustomerDetails,
+  AdminCustomerSummary,
   CustomerActivity,
 } from '../services/api';
 import './AdminCustomerDetail.css';
 
 function AdminCustomerDetail() {
   const { deviceId } = useParams<{ deviceId: string }>();
-  const [customer, setCustomer] = useState<CustomerSummary | null>(null);
+  const [customer, setCustomer] = useState<AdminCustomerDetails | null>(null);
   const [activities, setActivities] = useState<CustomerActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,9 +25,31 @@ function AdminCustomerDetail() {
   const [newTokenCount, setNewTokenCount] = useState(0);
   const [resetReason, setResetReason] = useState('');
   const [resetting, setResetting] = useState(false);
-  const [linkedDevices, setLinkedDevices] = useState<any[]>([]);
+  const [linkedDevices, setLinkedDevices] = useState<AdminCustomerSummary[]>([]);
   const [loadingLinkedDevices, setLoadingLinkedDevices] = useState(false);
   const navigate = useNavigate();
+
+  const normalizeDetail = (c: AdminCustomerDetails): AdminCustomerDetails => {
+    const freeUsed = c.freeWorkoutsUsed ?? 0;
+    const freeRemaining = c.freeWorkoutsRemaining ?? Math.max(0, 3 - freeUsed);
+    const normalizedStatus = c.status || 'Free';
+    const isDeactivated = normalizedStatus === 'Deactivated';
+    const remainingTokens = isDeactivated ? 0 : (c.remainingTokens ?? 0);
+    const remainingWorkouts = isDeactivated
+      ? 0
+      : (c.remainingWorkouts ?? remainingTokens + freeRemaining);
+    return {
+      ...c,
+      status: normalizedStatus,
+      remainingTokens,
+      generatedWorkouts: c.generatedWorkouts ?? 0,
+      purchasesCount: c.purchasesCount ?? 0,
+      totalSpent: c.totalSpent ?? 0,
+      freeWorkoutsUsed: freeUsed,
+      freeWorkoutsRemaining: freeRemaining,
+      remainingWorkouts,
+    };
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
@@ -48,8 +71,8 @@ function AdminCustomerDetail() {
   // Set default token count when modal opens
   useEffect(() => {
     if (showResetModal && customer) {
-      console.log('[Reset] Modal opened, setting default token count to:', customer.tokensRemaining);
-      setNewTokenCount(customer.tokensRemaining);
+      console.log('[Reset] Modal opened, setting default token count to:', customer.remainingTokens);
+      setNewTokenCount(customer.remainingTokens);
     }
   }, [showResetModal, customer]);
 
@@ -59,9 +82,10 @@ function AdminCustomerDetail() {
         getCustomer(token, id),
         getCustomerActivities(token, id, 50),
       ]);
-      setCustomer(customerData);
+      const normalized = normalizeDetail(customerData);
+      setCustomer(normalized);
       setActivities(activitiesData);
-      setNewTokenCount(customerData.tokensRemaining);
+      setNewTokenCount(normalized.remainingTokens);
     } catch (err: any) {
       setError(err.message || 'Failed to load customer data');
       if (err.message?.includes('401') || err.message?.includes('unauthorized')) {
@@ -77,7 +101,19 @@ function AdminCustomerDetail() {
     try {
       setLoadingLinkedDevices(true);
       const data = await getCustomersByEmail(token, email);
-      setLinkedDevices(data.customers || []);
+      const normalized = (data.customers || []).map((c) => ({
+        ...c,
+        status: c.status || 'Free',
+        remainingTokens: (c.status || 'Free') === 'Deactivated' ? 0 : (c.remainingTokens ?? 0),
+        generatedWorkouts: c.generatedWorkouts ?? 0,
+        remainingWorkouts:
+          (c.status || 'Free') === 'Deactivated'
+            ? 0
+            : c.remainingWorkouts ?? (c.remainingTokens ?? 0),
+        purchasesCount: c.purchasesCount ?? 0,
+        totalSpent: c.totalSpent ?? 0,
+      }));
+      setLinkedDevices(normalized);
     } catch (err: any) {
       // Silently fail - email might not have linked devices
       setLinkedDevices([]);
@@ -120,7 +156,7 @@ function AdminCustomerDetail() {
 
     console.log('[Reset] Starting reset for device:', deviceId);
     console.log('[Reset] New token count:', tokenCountNum);
-    console.log('[Reset] Previous count:', customer.tokensRemaining);
+    console.log('[Reset] Previous count:', customer.remainingTokens);
     
     setResetting(true);
     setError(null);
@@ -131,7 +167,7 @@ function AdminCustomerDetail() {
         token,
         deviceId,
         tokenCountNum,
-        customer.tokensRemaining,
+        customer.remainingTokens,
         resetReason
       );
       
@@ -295,9 +331,9 @@ function AdminCustomerDetail() {
                 <span className="value">{customer.name || 'Not provided'}</span>
               </div>
               <div className="info-row">
-                <span className="label">User Type:</span>
-                <span className={`badge ${customer.isPaidUser ? 'badge-paid' : 'badge-free'}`}>
-                  {customer.isPaidUser ? 'Paid User' : 'Free User'}
+                <span className="label">Status:</span>
+                <span className={`badge ${customer.status === 'Paid' ? 'badge-paid' : customer.status === 'Deactivated' ? 'badge-inactive' : 'badge-free'}`}>
+                  {customer.status}
                 </span>
               </div>
             </div>
@@ -306,15 +342,15 @@ function AdminCustomerDetail() {
               <h3>Account Stats</h3>
               <div className="info-row">
                 <span className="label">💪Remaining Workouts:</span>
-                <span className="value highlight">{customer.tokensRemaining}</span>
+                <span className="value highlight">{customer.remainingWorkouts}</span>
               </div>
               <div className="info-row">
-                <span className="label">Total Workouts:</span>
-                <span className="value">{customer.totalWorkouts}</span>
+                <span className="label">Generated Workouts:</span>
+                <span className="value">{customer.generatedWorkouts}</span>
               </div>
               <div className="info-row">
                 <span className="label">Total Purchases:</span>
-                <span className="value">{customer.totalPurchases}</span>
+                <span className="value">{customer.purchasesCount}</span>
               </div>
               <div className="info-row">
                 <span className="label">Total Spent:</span>
@@ -324,14 +360,6 @@ function AdminCustomerDetail() {
 
             <div className="info-card">
               <h3>Activity Timeline</h3>
-              <div className="info-row">
-                <span className="label">First Seen:</span>
-                <span className="value">
-                  {customer.firstSeen
-                    ? new Date(customer.firstSeen).toLocaleString()
-                    : 'Unknown'}
-                </span>
-              </div>
               <div className="info-row">
                 <span className="label">Last Activity:</span>
                 <span className="value">
@@ -400,7 +428,7 @@ function AdminCustomerDetail() {
               }
             }}>
               <div className="form-group">
-                <label>Current 💪Remaining Workouts: {customer.tokensRemaining}</label>
+                <label>Current 💪Remaining Workouts: {customer.remainingWorkouts}</label>
               </div>
               <div className="form-group">
                 <label>New Workout Count:</label>
@@ -479,7 +507,7 @@ function AdminCustomerDetail() {
                 <ul style={{ marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
                   {linkedDevices.map((device: any) => (
                     <li key={device.deviceId}>
-                      {device.deviceId.substring(0, 12)}... - {device.tokensRemaining} workouts
+                      {device.deviceId.substring(0, 12)}... - {device.remainingWorkouts} workouts
                     </li>
                   ))}
                 </ul>

@@ -360,10 +360,11 @@ public class AdminController : ControllerBase
                         deviceId = summary.DeviceId,
                         email = summary.Email,
                         name = summary.Name,
-                        tokensRemaining = summary.TokensRemaining,
-                        isPaidUser = summary.IsPaidUser,
-                        totalWorkouts = summary.TotalWorkouts,
-                        totalPurchases = summary.TotalPurchases,
+                        status = summary.Status,
+                        remainingTokens = summary.RemainingTokens,
+                        generatedWorkouts = summary.GeneratedWorkouts,
+                        remainingWorkouts = summary.RemainingWorkouts,
+                        purchasesCount = summary.PurchasesCount,
                         totalSpent = summary.TotalSpent,
                         lastActivity = summary.LastActivity
                     });

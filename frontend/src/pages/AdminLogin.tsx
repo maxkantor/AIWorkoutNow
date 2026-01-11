@@ -1,37 +1,50 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { adminLogin } from '../services/api';
 import './AdminLogin.css';
 
 function AdminLogin() {
-  // Load cached credentials from localStorage
-  const [email, setEmail] = useState(() => {
-    const cached = localStorage.getItem('admin_email');
-    return cached || 'admin@aiworkoutnow.com';
-  });
-  const [password, setPassword] = useState(() => {
-    const cached = localStorage.getItem('admin_password');
-    return cached || '';
-  });
+  const [email, setEmail] = useState(() => localStorage.getItem('admin_email') || '');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberEmail, setRememberEmail] = useState(() => !!localStorage.getItem('admin_email'));
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!rememberEmail) {
+      localStorage.removeItem('admin_email');
+      return;
+    }
+    localStorage.setItem('admin_email', email);
+  }, [email, rememberEmail]);
+
+  const validateEmail = (val: string) => /\S+@\S+\.\S+/.test(val.trim());
+  const isEmailValid = validateEmail(email);
+  const isFormValid = isEmailValid && password.trim().length > 0 && !loading;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (!isFormValid) {
+      setError('Invalid credentials. Please try again.');
+      return;
+    }
     setLoading(true);
-
     try {
-      const token = await adminLogin(email, password);
+      const token = await adminLogin(email.trim(), password);
       localStorage.setItem('admin_token', token);
-      // Cache credentials for next time
-      localStorage.setItem('admin_email', email);
-      localStorage.setItem('admin_password', password);
+      if (rememberEmail) {
+        localStorage.setItem('admin_email', email.trim());
+      } else {
+        localStorage.removeItem('admin_email');
+      }
       navigate('/admin/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      setError('Invalid credentials. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -40,87 +53,101 @@ function AdminLogin() {
   return (
     <>
       <Helmet>
-        <title>Admin Login - AIWorkoutNow</title>
+        <title>Admin CRM - Secure Sign-In</title>
       </Helmet>
-      
-      <div className="admin-login-container">
-        <div className="admin-login-wrapper">
-          <div className="admin-login-card">
-            <div className="admin-login-header">
-              <div className="header-icons">
-                <div className="icon-person">👤</div>
-                <div className="icon-shield">🛡️</div>
-              </div>
-              <h1>Admin Login</h1>
-              <p>Enter your credentials to access the admin dashboard</p>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="admin-login-form">
-              <div className="form-group">
-                <label htmlFor="username">
-                  <span className="label-icon">👤</span>
-                  Username
-                </label>
-                <div className="input-wrapper">
-                  <input
-                    type="email"
-                    id="username"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="form-input"
-                    placeholder="admin"
-                    required
-                    autoComplete="username"
-                  />
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="password">
-                  <span className="label-icon lock-icon">🔒</span>
-                  Password
-                </label>
-                <div className="input-wrapper">
-                  <input
-                    type="password"
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="form-input"
-                    placeholder="Enter password"
-                    required
-                    autoComplete="current-password"
-                  />
-                </div>
-              </div>
-              
-              {error && (
-                <div className="error-message">
-                  <span className="error-icon">⚠️</span>
-                  <span>{error}</span>
-                </div>
-              )}
-              
-              <button 
-                type="submit" 
-                className="login-button" 
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <span className="spinner"></span>
-                    <span>Signing in...</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="button-icon">🔒</span>
-                    <span className="button-text">Sign in</span>
-                  </>
-                )}
-              </button>
-            </form>
+      <div className="admin-login-page">
+        <div className="admin-login-card">
+          <div className="admin-login-header">
+            <div className="lock-circle" aria-hidden="true">🔒</div>
+            <h1>Admin CRM</h1>
+            <p>Secure sign-in to manage plans, purchases, tokens, and content.</p>
           </div>
+
+          <form className="admin-login-form" onSubmit={handleSubmit} noValidate>
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
+              <div className={`input-shell ${email && !isEmailValid ? 'has-error' : ''}`}>
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="username"
+                  aria-label="Admin email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              {email && !isEmailValid && <div className="field-error">Enter a valid email.</div>}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <div className="input-shell password-shell">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  aria-label="Admin password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className="toggle-password"
+                  onClick={() => setShowPassword((s) => !s)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <label className="remember">
+                <input
+                  type="checkbox"
+                  checked={rememberEmail}
+                  onChange={(e) => setRememberEmail(e.target.checked)}
+                />
+                <span>Remember me</span>
+              </label>
+              <button type="button" className="link-button" onClick={() => setShowForgot(true)}>
+                Forgot password?
+              </button>
+            </div>
+
+            {error && (
+              <div className="error-banner" role="alert">
+                Invalid credentials. Please try again.
+              </div>
+            )}
+
+            <button type="submit" className="login-button" disabled={!isFormValid}>
+              {loading ? (
+                <>
+                  <span className="spinner" aria-hidden="true" />
+                  <span>Signing in…</span>
+                </>
+              ) : (
+                <span>Sign in to Admin CRM</span>
+              )}
+            </button>
+            <div className="subnote">Authorized admins only.</div>
+          </form>
         </div>
+
+        {showForgot && (
+          <div className="modal-backdrop" role="dialog" aria-modal="true">
+            <div className="modal">
+              <h2>Reset access</h2>
+              <p>Contact the site owner to reset admin access.</p>
+              <button className="modal-close" onClick={() => setShowForgot(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

@@ -373,20 +373,24 @@ export async function createCheckoutSession(deviceId: string, planId: string): P
   }
 }
 
-// CRM Types
-export interface CustomerSummary {
+// CRM Types (admin contract)
+export interface AdminCustomerSummary {
   deviceId: string;
-  isPaidUser: boolean;
-  tokensRemaining: number;
-  totalWorkouts: number;
-  totalPurchases: number;
-  totalSpent: number;
-  lastActivity?: string;
-  freeWorkoutsUsed: number;
-  freeWorkoutsRemaining?: number;
   email?: string;
   name?: string;
-  firstSeen?: string;
+  status: 'Free' | 'Paid' | 'Deactivated' | string;
+  remainingTokens: number;
+  generatedWorkouts: number;
+  remainingWorkouts: number;
+  purchasesCount: number;
+  totalSpent: number;
+  lastActivity?: string;
+}
+
+export interface AdminCustomerDetails extends AdminCustomerSummary {
+  freeWorkoutsUsed: number;
+  freeWorkoutsRemaining: number;
+  recentActivities?: CustomerActivity[];
 }
 
 export interface CustomerActivity {
@@ -440,7 +444,7 @@ export interface StripePurchase {
 }
 
 // CRM API Functions
-export async function getAllCustomers(token: string): Promise<CustomerSummary[]> {
+export async function getAllCustomers(token: string): Promise<AdminCustomerSummary[]> {
   const response = await fetch(`${API_BASE_URL}/admin/customers`, {
     method: 'GET',
     headers: {
@@ -456,7 +460,7 @@ export async function getAllCustomers(token: string): Promise<CustomerSummary[]>
   return response.json();
 }
 
-export async function getCustomer(token: string, deviceId: string): Promise<CustomerSummary> {
+export async function getCustomer(token: string, deviceId: string): Promise<AdminCustomerDetails> {
   const response = await fetch(`${API_BASE_URL}/admin/customers/${deviceId}`, {
     method: 'GET',
     headers: {
@@ -524,7 +528,7 @@ export async function resetUserTokens(token: string, deviceId: string, newTokenC
   console.log('[API] Reset success:', result);
 }
 
-export async function getCustomersByEmail(token: string, email: string): Promise<{ email: string; deviceIds: string[]; customers: any[] }> {
+export async function getCustomersByEmail(token: string, email: string): Promise<{ email: string; deviceIds: string[]; customers: AdminCustomerSummary[] }> {
   const response = await fetch(`${API_BASE_URL}/admin/customers/by-email/${encodeURIComponent(email)}`, {
     method: 'GET',
     headers: {

@@ -30,9 +30,9 @@ public interface IDynamoDBService
     Task SaveCustomerActivityAsync(CustomerActivity activity);
     Task<List<CustomerActivity>> GetCustomerActivitiesAsync(string deviceId, int limit = 50);
     Task<List<CustomerActivity>> GetAllActivitiesAsync(int limit = 100);
-    Task<List<CustomerSummary>> GetAllCustomersAsync();
+    Task<List<AdminCustomerSummary>> GetAllCustomersAsync();
     Task<AnalyticsData> GetAnalyticsDataAsync(DateTime startDate, DateTime endDate, string period);
-    Task<CustomerSummary?> GetCustomerSummaryAsync(string deviceId);
+    Task<AdminCustomerDetails?> GetCustomerSummaryAsync(string deviceId);
     Task ResetUserTokensAsync(string deviceId, int newTokenCount);
     
     // Pricing Plan Methods

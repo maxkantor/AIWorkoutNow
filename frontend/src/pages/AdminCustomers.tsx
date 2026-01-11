@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { getAllCustomers, deleteCustomer, CustomerSummary } from '../services/api';
+import { getAllCustomers, deleteCustomer, AdminCustomerSummary } from '../services/api';
 import './AdminCustomers.css';
 
 function AdminCustomers() {
-  const [customers, setCustomers] = useState<CustomerSummary[]>([]);
+  const [customers, setCustomers] = useState<AdminCustomerSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,7 +24,19 @@ function AdminCustomers() {
   const loadCustomers = async (token: string) => {
     try {
       const data = await getAllCustomers(token);
-      setCustomers(data);
+      const normalized = data.map((c) => ({
+        ...c,
+        status: c.status || 'Free',
+        remainingTokens: (c.status || 'Free') === 'Deactivated' ? 0 : (c.remainingTokens ?? 0),
+        generatedWorkouts: c.generatedWorkouts ?? 0,
+        remainingWorkouts:
+          (c.status || 'Free') === 'Deactivated'
+            ? 0
+            : c.remainingWorkouts ?? (c.remainingTokens ?? 0),
+        purchasesCount: c.purchasesCount ?? 0,
+        totalSpent: c.totalSpent ?? 0,
+      }));
+      setCustomers(normalized);
     } catch (err: any) {
       setError(err.message || 'Failed to load customers');
       if (err.message?.includes('401') || err.message?.includes('unauthorized')) {
@@ -101,16 +113,17 @@ function AdminCustomers() {
             <table>
               <thead>
                 <tr>
-                  <th>Device</th>
-                  <th>Email</th>
-                  <th>Name</th>
-                  <th>Status</th>
-                  <th>Tokens</th>
-                  <th>Workouts</th>
-                  <th>Purchases</th>
-                  <th>Total Spent</th>
-                  <th>Last Activity</th>
-                  <th>Actions</th>
+                  <th>DEVICE</th>
+                  <th>EMAIL</th>
+                  <th>NAME</th>
+                  <th>STATUS</th>
+                  <th>TOKENS</th>
+                  <th>GENERATED WORKOUTS</th>
+                  <th>REMAINING WORKOUTS</th>
+                  <th>PURCHASES</th>
+                  <th>TOTAL SPENT</th>
+                  <th>LAST ACTIVITY</th>
+                  <th>ACTIONS</th>
                 </tr>
               </thead>
               <tbody>
@@ -120,20 +133,21 @@ function AdminCustomers() {
                   </tr>
                 ) : (
                   filteredCustomers.map((customer) => {
-                    const isPaid = customer.isPaidUser || (customer.tokensRemaining ?? 0) > 0 || (customer.totalPurchases ?? 0) > 0;
+                    const status = customer.status || 'Free';
                     return (
                       <tr key={customer.deviceId}>
                         <td className="device-id">{customer.deviceId.substring(0, 8)}...</td>
                         <td>{customer.email || '-'}</td>
                         <td>{customer.name || '-'}</td>
                         <td>
-                          <span className={`badge ${isPaid ? 'badge-paid' : 'badge-free'}`}>
-                            {isPaid ? 'Paid' : 'Free'}
+                          <span className={`badge ${status === 'Paid' ? 'badge-paid' : status === 'Deactivated' ? 'badge-inactive' : 'badge-free'}`}>
+                            {status}
                           </span>
                         </td>
-                        <td className="numeric">{customer.tokensRemaining}</td>
-                        <td className="numeric">{customer.totalWorkouts}</td>
-                        <td className="numeric">{customer.totalPurchases}</td>
+                        <td className="numeric">{customer.remainingTokens}</td>
+                        <td className="numeric">{customer.generatedWorkouts}</td>
+                        <td className="numeric">{customer.remainingWorkouts}</td>
+                        <td className="numeric">{customer.purchasesCount}</td>
                         <td className="numeric">${customer.totalSpent.toFixed(2)}</td>
                         <td>
                           {customer.lastActivity

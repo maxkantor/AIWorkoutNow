@@ -721,98 +721,95 @@ public class DynamoDBService : IDynamoDBService
         }).OrderByDescending(a => a.Timestamp).Take(limit).ToList();
     }
 
-    public async Task<List<CustomerSummary>> GetAllCustomersAsync()
+    public async Task<List<AdminCustomerSummary>> GetAllCustomersAsync()
     {
-        var customers = new Dictionary<string, CustomerSummary>();
-        
-        // Get all device IDs from anonymous usage and aggregate free workout counts
+        var summaries = new Dictionary<string, AdminCustomerSummary>();
+        var freeUsageCounts = new Dictionary<string, int>();
+        var freeRemaining = new Dictionary<string, int>();
+        var lastActivityMap = new Dictionary<string, DateTime>();
+        var activeMap = new Dictionary<string, bool>();
+        var planCache = new Dictionary<string, PricingPlan?>();
+
+        AdminCustomerSummary Ensure(string deviceId)
+        {
+            if (!summaries.ContainsKey(deviceId))
+            {
+                summaries[deviceId] = new AdminCustomerSummary
+                {
+                    DeviceId = deviceId,
+                    Status = "Free",
+                    RemainingTokens = 0,
+                    GeneratedWorkouts = 0,
+                    RemainingWorkouts = 3,
+                    PurchasesCount = 0,
+                    TotalSpent = 0
+                };
+            }
+            return summaries[deviceId];
+        }
+
+        void UpdateLastActivity(string deviceId, DateTime timestamp)
+        {
+            if (!lastActivityMap.ContainsKey(deviceId) || timestamp > lastActivityMap[deviceId])
+            {
+                lastActivityMap[deviceId] = timestamp;
+            }
+        }
+
+        int GetFreeRemaining(string deviceId)
+        {
+            if (freeRemaining.TryGetValue(deviceId, out var remaining))
+            {
+                return remaining;
+            }
+            return 3;
+        }
+
+        // Free usage (anonymous usage -> free workouts)
         var freeUsersResponse = await _dynamoDB.ScanAsync(new ScanRequest
         {
             TableName = _anonymousUsageTable
         });
-        
-        var freeUsageCounts = new Dictionary<string, int>();
+
         foreach (var item in freeUsersResponse.Items)
         {
             var deviceId = item["DeviceId"].S;
             var count = item.ContainsKey("Count") ? int.Parse(item["Count"].N) : 1;
+
             if (!freeUsageCounts.ContainsKey(deviceId))
             {
                 freeUsageCounts[deviceId] = 0;
             }
             freeUsageCounts[deviceId] += count;
-            
-            if (!customers.ContainsKey(deviceId))
-            {
-                var used = freeUsageCounts[deviceId];
-                customers[deviceId] = new CustomerSummary
-                {
-                    DeviceId = deviceId,
-                    IsPaidUser = false,
-                    TokensRemaining = 0,
-                    TotalWorkouts = 0,
-                    TotalPurchases = 0,
-                    TotalSpent = 0,
-                    FreeWorkoutsUsed = used,
-                    FreeWorkoutsRemaining = Math.Max(0, 3 - used)
-                };
-            }
-            else
-            {
-                // If customer already exists, update counts
-                var used = freeUsageCounts[deviceId];
-                customers[deviceId].FreeWorkoutsUsed = used;
-                customers[deviceId].FreeWorkoutsRemaining = Math.Max(0, 3 - used);
-            }
+
+            var used = freeUsageCounts[deviceId];
+            var remaining = Math.Max(0, 3 - used);
+            freeRemaining[deviceId] = remaining;
+            Ensure(deviceId);
         }
 
-        // Get all paid users
+        // Token balances (source of truth for remainingTokens)
         var paidUsersResponse = await _dynamoDB.ScanAsync(new ScanRequest
         {
             TableName = _userTokensTable
         });
-        
+
         foreach (var item in paidUsersResponse.Items)
         {
             var deviceId = item["DeviceId"].S;
             var tokensRemaining = int.Parse(item["TokensRemaining"].N);
-            var isActive = item.ContainsKey("IsActive") ? item["IsActive"].BOOL : true; // Default to active
-            
-            // Skip inactive customers
-            if (!isActive) continue;
-            
-            var freeUsed = freeUsageCounts.ContainsKey(deviceId) ? freeUsageCounts[deviceId] : 0;
-            var freeRemaining = Math.Max(0, 3 - freeUsed);
-            
-            if (!customers.ContainsKey(deviceId))
-            {
-                customers[deviceId] = new CustomerSummary
-                {
-                    DeviceId = deviceId,
-                    IsPaidUser = true,
-                    TokensRemaining = tokensRemaining,
-                    TotalWorkouts = 0,
-                    TotalPurchases = 0,
-                    TotalSpent = 0,
-                    IsActive = true,
-                    FreeWorkoutsUsed = freeUsed,
-                    FreeWorkoutsRemaining = freeRemaining
-                };
-            }
-            else
-            {
-                customers[deviceId].IsPaidUser = true;
-                customers[deviceId].TokensRemaining = tokensRemaining;
-                customers[deviceId].IsActive = true;
-                customers[deviceId].FreeWorkoutsUsed = freeUsed;
-                customers[deviceId].FreeWorkoutsRemaining = freeRemaining;
-            }
+            var isActive = item.ContainsKey("IsActive") ? item["IsActive"].BOOL : true;
+            activeMap[deviceId] = isActive;
+
+            var summary = Ensure(deviceId);
+            summary.RemainingTokens = isActive ? tokensRemaining : 0;
+            // status finalized later after purchases aggregation
         }
 
-        // AGGRESSIVE FIX: Get workout counts from CustomerActivities (more accurate)
+        // Workout generation count (lifetime)
         var activitiesTablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
         var activitiesTable = $"{activitiesTablePrefix}-CustomerActivities";
-        
+
         try
         {
             var activitiesResponse = await _dynamoDB.ScanAsync(new ScanRequest
@@ -823,86 +820,82 @@ public class DynamoDBService : IDynamoDBService
                 {
                     { ":workoutType", new AttributeValue { S = "workout_generated" } }
                 },
-                Limit = 10000 // Get all workout activities
+                Limit = 20000
             });
-            
-            // Count workouts per device
+
             foreach (var item in activitiesResponse.Items)
             {
                 var deviceId = item["DeviceId"].S;
-                if (customers.ContainsKey(deviceId))
-                {
-                    customers[deviceId].TotalWorkouts++;
-                }
+                var timestamp = item.ContainsKey("Timestamp")
+                    ? DateTime.Parse(item["Timestamp"].S)
+                    : DateTime.UtcNow;
+
+                var summary = Ensure(deviceId);
+                summary.GeneratedWorkouts += 1;
+                UpdateLastActivity(deviceId, timestamp);
             }
         }
         catch
         {
-            // Activities table might not exist - skip workout counting
             Console.WriteLine("[DynamoDBService] CustomerActivities table not found, skipping workout counts");
         }
 
-        // AGGRESSIVE FIX: Get purchase data from UserPurchases table (not StripePurchases)
+        // Purchases aggregation
         var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
         var purchasesTable = $"{tablePrefix}-UserPurchases";
-        
+
         try
         {
             var purchasesResponse = await _dynamoDB.ScanAsync(new ScanRequest
             {
                 TableName = purchasesTable,
-                Limit = 5000 // Get all purchases
+                Limit = 5000
             });
-            
+
             Console.WriteLine($"[DynamoDBService] Found {purchasesResponse.Items.Count} purchases in UserPurchases table");
-            
+
             foreach (var item in purchasesResponse.Items)
             {
                 try
                 {
                     var deviceId = item["DeviceId"].S;
                     var status = item["Status"].S;
-                    
-                    // Only count completed purchases
+                    var purchasedAt = item.ContainsKey("PurchasedAt")
+                        ? DateTime.Parse(item["PurchasedAt"].S)
+                        : DateTime.UtcNow;
+
                     if (status != "completed") continue;
-                    
-                    if (!customers.ContainsKey(deviceId))
+
+                    var summary = Ensure(deviceId);
+                    summary.PurchasesCount += 1;
+
+                    var planId = item.ContainsKey("PlanId") ? item["PlanId"].S : string.Empty;
+                    if (!string.IsNullOrEmpty(planId))
                     {
-                        customers[deviceId] = new CustomerSummary
+                        if (!planCache.ContainsKey(planId))
                         {
-                            DeviceId = deviceId,
-                            IsPaidUser = false,
-                            TokensRemaining = 0,
-                            TotalWorkouts = 0,
-                            TotalPurchases = 0,
-                            TotalSpent = 0
-                        };
+                            planCache[planId] = await GetPricingPlanAsync(planId);
+                        }
+
+                        var plan = planCache[planId];
+                        if (plan != null)
+                        {
+                            summary.TotalSpent += plan.Price;
+                        }
                     }
-                    
-                    customers[deviceId].TotalPurchases++;
-                    
-                    // Get plan details to calculate amount
-                    var planId = item["PlanId"].S;
-                    var plan = await GetPricingPlanAsync(planId);
-                    if (plan != null)
-                    {
-                        customers[deviceId].TotalSpent += plan.Price;
-                    }
-                    
-                    // Try to get customer email/name from Stripe session metadata if available
-                    // (We'll enhance this later to fetch from Stripe API if needed)
-                    if (string.IsNullOrEmpty(customers[deviceId].Email) && item.ContainsKey("CustomerEmail"))
-                        customers[deviceId].Email = item["CustomerEmail"].S;
-                    if (string.IsNullOrEmpty(customers[deviceId].Name) && item.ContainsKey("CustomerName"))
-                        customers[deviceId].Name = item["CustomerName"].S;
+
+                    if (string.IsNullOrEmpty(summary.Email) && item.ContainsKey("CustomerEmail"))
+                        summary.Email = item["CustomerEmail"].S;
+                    if (string.IsNullOrEmpty(summary.Name) && item.ContainsKey("CustomerName"))
+                        summary.Name = item["CustomerName"].S;
+
+                    UpdateLastActivity(deviceId, purchasedAt);
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"[DynamoDBService] Error processing purchase item: {ex.Message}");
                 }
             }
-            
-            Console.WriteLine($"[DynamoDBService] Processed purchases for {customers.Count} customers");
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
@@ -913,154 +906,73 @@ public class DynamoDBService : IDynamoDBService
             Console.WriteLine($"[DynamoDBService] Error getting purchases: {ex.Message}");
         }
 
-        // AGGRESSIVE FIX: consolidate customers by email to avoid duplicates and ensure totals align with homepage
-        var consolidated = new List<CustomerSummary>();
-        var byEmail = customers.Values
-            .Where(c => !string.IsNullOrEmpty(c.Email))
-            .GroupBy(c => c.Email!.ToLowerInvariant())
+        // Finalize derived fields and status
+        foreach (var summary in summaries.Values)
+        {
+            var isActive = !activeMap.ContainsKey(summary.DeviceId) || activeMap[summary.DeviceId];
+            var freeRem = GetFreeRemaining(summary.DeviceId);
+            summary.RemainingWorkouts = isActive
+                ? Math.Max(0, summary.RemainingTokens) + Math.Max(0, freeRem)
+                : 0;
+            summary.RemainingTokens = isActive ? summary.RemainingTokens : 0;
+
+            var isPaid = summary.RemainingTokens > 0 || summary.PurchasesCount > 0;
+            summary.Status = isActive ? (isPaid ? "Paid" : "Free") : "Deactivated";
+
+            if (lastActivityMap.TryGetValue(summary.DeviceId, out var last))
+            {
+                summary.LastActivity = last;
+            }
+        }
+
+        return summaries.Values
+            .OrderByDescending(c => c.LastActivity ?? DateTime.MinValue)
             .ToList();
-
-        var usedDeviceIds = new HashSet<string>();
-
-        // Consolidate by email
-        foreach (var group in byEmail)
-        {
-            var list = group.ToList();
-            var primary = list
-                .OrderByDescending(c => c.TokensRemaining >= 999999)
-                .ThenByDescending(c => c.TokensRemaining)
-                .ThenByDescending(c => c.TotalSpent)
-                .First();
-
-            var allTokensUnlimited = list.Any(c => c.TokensRemaining >= 999999);
-            var summedTokens = allTokensUnlimited ? 999999 : list.Sum(c => c.TokensRemaining);
-            var totalWorkouts = list.Sum(c => c.TotalWorkouts);
-            var totalPurchases = list.Sum(c => c.TotalPurchases);
-            var totalSpent = list.Sum(c => c.TotalSpent);
-            var freeUsed = list.Min(c => c.FreeWorkoutsUsed);
-            var freeRemaining = Math.Max(0, 3 - freeUsed);
-            var firstSeen = list.Where(c => c.FirstSeen.HasValue).Select(c => c.FirstSeen!.Value).DefaultIfEmpty(primary.FirstSeen ?? DateTime.UtcNow).Min();
-            var lastActivity = list.Where(c => c.LastActivity.HasValue).Select(c => c.LastActivity!.Value).DefaultIfEmpty(primary.LastActivity ?? DateTime.UtcNow).Max();
-
-            primary.TokensRemaining = summedTokens;
-            primary.TotalWorkouts = totalWorkouts;
-            primary.TotalPurchases = totalPurchases;
-            primary.TotalSpent = totalSpent;
-            primary.FreeWorkoutsUsed = freeUsed;
-            primary.FreeWorkoutsRemaining = freeRemaining;
-            primary.FirstSeen = firstSeen;
-            primary.LastActivity = lastActivity;
-
-            consolidated.Add(primary);
-            foreach (var c in list)
-            {
-                usedDeviceIds.Add(c.DeviceId);
-            }
-        }
-
-        // Add entries without email (or not yet consolidated)
-        foreach (var c in customers.Values)
-        {
-            if (!usedDeviceIds.Contains(c.DeviceId))
-            {
-                consolidated.Add(c);
-            }
-        }
-
-        return consolidated.OrderByDescending(c => c.LastActivity ?? c.FirstSeen).ToList();
     }
 
-    public async Task<CustomerSummary?> GetCustomerSummaryAsync(string deviceId)
+    public async Task<AdminCustomerDetails?> GetCustomerSummaryAsync(string deviceId)
     {
-        var summary = new CustomerSummary
+        var summaries = await GetAllCustomersAsync();
+        var summary = summaries.FirstOrDefault(c => c.DeviceId == deviceId);
+        if (summary == null) return null;
+
+        var details = new AdminCustomerDetails
         {
-            DeviceId = deviceId,
-            IsPaidUser = false,
-            TokensRemaining = 0,
-            TotalWorkouts = 0,
-            TotalPurchases = 0,
-            TotalSpent = 0,
-            FreeWorkoutsUsed = 0,
-            FreeWorkoutsRemaining = 3
+            DeviceId = summary.DeviceId,
+            Email = summary.Email,
+            Name = summary.Name,
+            Status = summary.Status,
+            RemainingTokens = summary.RemainingTokens,
+            GeneratedWorkouts = summary.GeneratedWorkouts,
+            RemainingWorkouts = summary.RemainingWorkouts,
+            PurchasesCount = summary.PurchasesCount,
+            TotalSpent = summary.TotalSpent,
+            LastActivity = summary.LastActivity
         };
 
-        // Check if paid user
-        var tokens = await GetUserTokensAsync(deviceId);
-        if (tokens != null)
-        {
-            summary.IsPaidUser = true;
-            // CRITICAL: Use the exact same logic as GetUserAccessStatus
-            // If tokens are >= 999999, they represent unlimited, but we still show the count
-            // The frontend will handle displaying "Unlimited" vs the actual number
-            summary.TokensRemaining = tokens.TokensRemaining;
-            summary.IsActive = tokens.IsActive; // Set IsActive from tokens
-            
-            // Log for debugging token count discrepancies
-            Console.WriteLine($"[DynamoDBService] GetCustomerSummaryAsync - DeviceId: {deviceId}, TokensRemaining: {tokens.TokensRemaining}, IsActive: {tokens.IsActive}");
-        }
-        else
-        {
-            // If no tokens record, customer is active by default (free user)
-            summary.IsActive = true;
-        }
-
-        // AGGRESSIVE FIX: Get purchases from UserPurchases table and calculate totals
-        var purchases = await GetUserPurchasesByDeviceIdAsync(deviceId);
-        var completedPurchases = purchases.Where(p => p.Status == "completed").ToList();
-        summary.TotalPurchases = completedPurchases.Count;
-        
-        // Calculate total spent from plan prices
-        decimal totalSpent = 0;
-        foreach (var purchase in completedPurchases)
-        {
-            var plan = await GetPricingPlanAsync(purchase.PlanId);
-            if (plan != null)
-            {
-                totalSpent += plan.Price;
-            }
-        }
-        summary.TotalSpent = totalSpent;
-        
-        // CRITICAL FIX: Get customer email/name from purchases (check all purchases, not just completed)
-        if (purchases.Any())
-        {
-            // Find first purchase with customer data
-            var purchaseWithCustomerData = purchases
-                .FirstOrDefault(p => !string.IsNullOrEmpty(p.CustomerEmail) || !string.IsNullOrEmpty(p.CustomerName));
-            
-            if (purchaseWithCustomerData != null)
-            {
-                summary.Email = purchaseWithCustomerData.CustomerEmail;
-                summary.Name = purchaseWithCustomerData.CustomerName;
-                Console.WriteLine($"[DynamoDBService] Found customer data for {deviceId}: Email={summary.Email}, Name={summary.Name}");
-            }
-        }
-
-        // Get activities and count workouts
-        var activities = await GetCustomerActivitiesAsync(deviceId, 100);
-        summary.RecentActivities = activities.Take(10).ToList();
-        
-        // Count workouts from activities
-        summary.TotalWorkouts = activities.Count(a => a.ActivityType == "workout_generated");
-        
-        if (activities.Any())
-        {
-            summary.LastActivity = activities.First().Timestamp;
-            summary.FirstSeen = activities.Last().Timestamp;
-        }
-
-        // Free workout usage (align with homepage logic)
         try
         {
-            summary.FreeWorkoutsUsed = await GetTotalFreeWorkoutsAsync(deviceId);
-            summary.FreeWorkoutsRemaining = Math.Max(0, 3 - summary.FreeWorkoutsUsed);
+            details.FreeWorkoutsUsed = await GetTotalFreeWorkoutsAsync(deviceId);
+            details.FreeWorkoutsRemaining = Math.Max(0, 3 - details.FreeWorkoutsUsed);
+            details.RemainingWorkouts = Math.Max(0, details.RemainingTokens) + details.FreeWorkoutsRemaining;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[DynamoDBService] Error counting free workouts for {deviceId}: {ex.Message}");
         }
 
-        return summary;
+        var activities = await GetCustomerActivitiesAsync(deviceId, 50);
+        details.RecentActivities = activities;
+        if (activities.Any())
+        {
+            var latest = activities.First().Timestamp;
+            if (!details.LastActivity.HasValue || latest > details.LastActivity.Value)
+            {
+                details.LastActivity = latest;
+            }
+        }
+
+        return details;
     }
 
     public async Task ResetUserTokensAsync(string deviceId, int newTokenCount)
@@ -2143,10 +2055,10 @@ public class DynamoDBService : IDynamoDBService
             }
 
             var allCustomers = await GetAllCustomersAsync();
-            var newUsers = allCustomers.Count(c => 
-                c.FirstSeen.HasValue && 
-                c.FirstSeen.Value >= startDate && 
-                c.FirstSeen.Value <= endDate);
+            var newUsers = allCustomers.Count(c =>
+                c.LastActivity.HasValue &&
+                c.LastActivity.Value >= startDate &&
+                c.LastActivity.Value <= endDate);
 
             // Revenue metrics (calculate first)
             decimal totalRevenue = 0;
