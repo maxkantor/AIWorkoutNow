@@ -492,52 +492,26 @@ public class StripeController : ControllerBase
                     }
                     else if (purchase.TokensGranted.HasValue)
                     {
-                        // AGGRESSIVE FIX: Sum tokens across all linked devices, then distribute evenly
-                        int totalTokensToAdd = purchase.TokensGranted.Value;
-                        int totalExistingTokens = 0;
-                        
-                        // First, calculate total existing tokens across all linked devices
-                        foreach (var linkedDeviceId in linkedDeviceIds)
+                        // AGGRESSIVE FIX: Add all purchased tokens to the current deviceId (no dilution across linked devices)
+                        int tokensToAdd = purchase.TokensGranted.Value;
+                        var currentTokens = await _dynamoService.GetUserTokensAsync(deviceId);
+                        if (currentTokens == null)
                         {
-                            var existingTokens = await _dynamoService.GetUserTokensAsync(linkedDeviceId);
-                            if (existingTokens != null && existingTokens.TokensRemaining < 999999) // Don't count unlimited
+                            currentTokens = new UserTokens
                             {
-                                totalExistingTokens += existingTokens.TokensRemaining;
-                            }
+                                DeviceId = deviceId,
+                                TokensRemaining = 0
+                            };
                         }
-                        
-                        // Total tokens = existing + new purchase
-                        int totalTokens = totalExistingTokens + totalTokensToAdd;
-                        Console.WriteLine($"[StripeController] Merging tokens: Existing={totalExistingTokens}, New={totalTokensToAdd}, Total={totalTokens} across {linkedDeviceIds.Count} device(s)");
-                        
-                        // Distribute total tokens evenly across all linked devices
-                        int tokensPerDevice = totalTokens / linkedDeviceIds.Count;
-                        int remainder = totalTokens % linkedDeviceIds.Count;
-                        
-                        for (int i = 0; i < linkedDeviceIds.Count; i++)
+
+                        if (currentTokens.TokensRemaining < 999999)
                         {
-                            var linkedDeviceId = linkedDeviceIds[i];
-                            var tokens = await _dynamoService.GetUserTokensAsync(linkedDeviceId);
-                            if (tokens == null)
-                            {
-                                tokens = new UserTokens
-                                {
-                                    DeviceId = linkedDeviceId,
-                                    TokensRemaining = tokensPerDevice + (i < remainder ? 1 : 0) // Distribute remainder
-                                };
-                            }
-                            else
-                            {
-                                // Only update if not unlimited
-                                if (tokens.TokensRemaining < 999999)
-                                {
-                                    tokens.TokensRemaining = tokensPerDevice + (i < remainder ? 1 : 0);
-                                }
-                            }
-                            await _dynamoService.SaveUserTokensAsync(tokens);
-                            Console.WriteLine($"[StripeController] Set tokens for device {linkedDeviceId} to {tokens.TokensRemaining}");
+                            var newBalance = currentTokens.TokensRemaining + tokensToAdd;
+                            currentTokens.TokensRemaining = Math.Min(newBalance, 999998); // leave headroom for unlimited sentinel
                         }
-                        Console.WriteLine($"[StripeController] Merged and distributed {totalTokens} tokens across {linkedDeviceIds.Count} device(s)");
+
+                        await _dynamoService.SaveUserTokensAsync(currentTokens);
+                        Console.WriteLine($"[StripeController] Added {tokensToAdd} tokens to device {deviceId}. New balance: {currentTokens.TokensRemaining}");
                     }
 
                     // Save purchase record (may fail if table doesn't exist, but that's OK)
@@ -889,52 +863,51 @@ public class StripeController : ControllerBase
                 {
                     Console.WriteLine($"[StripeController] Granting {purchase.TokensGranted.Value} tokens - DeviceId: {request.DeviceId}");
                     
-                    // AGGRESSIVE FIX: Sum tokens across all linked devices, then distribute evenly
-                    int totalTokensToAdd = purchase.TokensGranted.Value;
+                    // AGGRESSIVE FIX: Merge all tokens and set the FULL merged total on every linked device
+                    int tokensToAdd = purchase.TokensGranted.Value;
                     int totalExistingTokens = 0;
-                    
-                    // First, calculate total existing tokens across all linked devices
+                    bool hasUnlimited = false;
+
                     foreach (var linkedDeviceId in linkedDeviceIds)
                     {
                         var existingTokens = await _dynamoService.GetUserTokensAsync(linkedDeviceId);
-                        if (existingTokens != null && existingTokens.TokensRemaining < 999999) // Don't count unlimited
+                        if (existingTokens != null)
                         {
+                            if (existingTokens.TokensRemaining >= 999999)
+                            {
+                                hasUnlimited = true;
+                                break;
+                            }
                             totalExistingTokens += existingTokens.TokensRemaining;
                         }
                     }
-                    
-                    // Total tokens = existing + new purchase
-                    int totalTokens = totalExistingTokens + totalTokensToAdd;
-                    Console.WriteLine($"[StripeController] VerifyPayment - Merging tokens: Existing={totalExistingTokens}, New={totalTokensToAdd}, Total={totalTokens} across {linkedDeviceIds.Count} device(s)");
-                    
-                    // Distribute total tokens evenly across all linked devices
-                    int tokensPerDevice = totalTokens / linkedDeviceIds.Count;
-                    int remainder = totalTokens % linkedDeviceIds.Count;
-                    
-                    for (int i = 0; i < linkedDeviceIds.Count; i++)
+
+                    int mergedTotal = hasUnlimited ? 999999 : Math.Min(999998, totalExistingTokens + tokensToAdd);
+                    Console.WriteLine($"[StripeController] VerifyPayment - Merged tokens (full copy): Existing={totalExistingTokens}, New={tokensToAdd}, MergedTotal={mergedTotal} across {linkedDeviceIds.Count} device(s)");
+
+                    foreach (var linkedDeviceId in linkedDeviceIds)
                     {
-                        var linkedDeviceId = linkedDeviceIds[i];
                         var tokens = await _dynamoService.GetUserTokensAsync(linkedDeviceId);
                         if (tokens == null)
                         {
                             tokens = new UserTokens
                             {
                                 DeviceId = linkedDeviceId,
-                                TokensRemaining = tokensPerDevice + (i < remainder ? 1 : 0) // Distribute remainder
+                                TokensRemaining = mergedTotal
                             };
                         }
                         else
                         {
-                            // Only update if not unlimited
                             if (tokens.TokensRemaining < 999999)
                             {
-                                tokens.TokensRemaining = tokensPerDevice + (i < remainder ? 1 : 0);
+                                tokens.TokensRemaining = mergedTotal;
                             }
+                            // If already unlimited, leave as-is
                         }
                         await _dynamoService.SaveUserTokensAsync(tokens);
                         Console.WriteLine($"[StripeController] VerifyPayment - Set tokens for device {linkedDeviceId} to {tokens.TokensRemaining}");
                     }
-                    Console.WriteLine($"[StripeController] VerifyPayment - Merged and distributed {totalTokens} tokens across {linkedDeviceIds.Count} device(s)");
+                    Console.WriteLine($"[StripeController] VerifyPayment - Applied merged total {mergedTotal} tokens to all linked devices");
                 }
 
                 // Try to save purchase (may fail if table doesn't exist, but that's OK)
