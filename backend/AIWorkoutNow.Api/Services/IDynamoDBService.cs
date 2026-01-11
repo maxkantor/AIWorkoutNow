@@ -10,6 +10,7 @@ public interface IDynamoDBService
     Task IncrementAnonymousUsageAsync(string deviceId, string date);
     Task SaveUserTokensAsync(UserTokens tokens);
     Task<UserTokens?> GetUserTokensAsync(string deviceId);
+    Task<UserTokens> ReconcileTokensAsync(string deviceId);
     Task SaveProgressLogAsync(ProgressLog log);
     Task<List<ProgressLog>> GetProgressLogsAsync(string deviceId);
     Task SaveAdminUserAsync(AdminUser admin);
