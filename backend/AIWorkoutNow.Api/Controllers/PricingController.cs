@@ -349,9 +349,30 @@ public class PricingController : ControllerBase
                 }
                 else
                 {
-                    var purchasedTokens = completed
-                        .Where(p => p.TokensGranted.HasValue)
-                        .Sum(p => p.TokensGranted!.Value);
+                    var purchasedTokens = 0;
+                    foreach (var p in completed)
+                    {
+                        if (p.TokensGranted.HasValue)
+                        {
+                            purchasedTokens += p.TokensGranted.Value;
+                            continue;
+                        }
+
+                        // Backfill tokensGranted from plan if missing
+                        try
+                        {
+                            var plan = await _dynamoService.GetPricingPlanAsync(p.PlanId);
+                            if (plan?.TokenCount != null)
+                            {
+                                purchasedTokens += plan.TokenCount.Value;
+                                Console.WriteLine($"[PricingController] Backfilled TokensGranted from plan {p.PlanId} => {plan.TokenCount}");
+                            }
+                        }
+                        catch (Exception exPlan)
+                        {
+                            Console.WriteLine($"[PricingController] Plan lookup failed for {p.PlanId}: {exPlan.Message}");
+                        }
+                    }
 
                     if (purchasedTokens > tokensRemaining)
                     {
