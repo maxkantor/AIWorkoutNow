@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import WorkoutGenerator from '../components/WorkoutGenerator';
 import PricingPlans from '../components/PricingPlans';
-import PaywallModal from '../components/PaywallModal';
 import RestoreCredits from '../components/RestoreCredits';
 import { getDeviceId, setTokenBalance as updateTokenStorage } from '../utils/storage';
 import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus } from '../services/api';
@@ -16,7 +15,6 @@ function Home() {
   const [tokenBalance, setTokenBalance] = useState<number | null>(null);
   const [freeWorkoutsRemaining, setFreeWorkoutsRemaining] = useState<number>(3);
   const [accessStatus, setAccessStatus] = useState<UserAccessStatus | null>(null);
-  const [showPaywall, setShowPaywall] = useState(false);
   const [showRestoreCredits, setShowRestoreCredits] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
   const { setHeroContent } = useHeroContext();
@@ -126,17 +124,8 @@ function Home() {
                          !accessStatus?.hasUnlimitedAccess &&
                          (accessStatus?.freeWorkoutsRemaining ?? 0) > 0;
       
-      if (isFreeUser && (accessStatus?.freeWorkoutsRemaining ?? 0) <= 0 && !accessStatus?.hasUnlimitedAccess) {
-        setShowPaywall(true);
-        setLoading(false);
-        return;
-      }
-      
-      if (!isFreeUser && (accessStatus?.tokensRemaining ?? 0) <= 0 && !accessStatus?.hasUnlimitedAccess) {
-        setShowPaywall(true);
-        setLoading(false);
-        return;
-      }
+      // Don't block workout generation - let the API handle it
+      // The paywall will show after if needed, but don't prevent generation
       
       const result = await generateWorkout(preferences, deviceId, isFreeUser);
       setWorkout(result);
@@ -160,18 +149,12 @@ function Home() {
       const errorMessage = err.message || 'Failed to generate workout. Please try again.';
       setError(errorMessage);
       
-      if (errorMessage.includes('3 free workouts') || err.response?.data?.code === 'FREE_TIER_EXHAUSTED') {
-        setShowPaywall(true);
-      }
+      // Paywall removed - errors will be shown in the error message
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePurchaseComplete = () => {
-    checkAccessStatus();
-    setShowPaywall(false);
-  };
 
   const canGenerate = accessStatus?.canGenerateWorkout ?? (freeWorkoutsRemaining > 0);
 
@@ -404,11 +387,7 @@ function Home() {
       </div>
       </main>
 
-      <PaywallModal
-        isOpen={showPaywall}
-        onClose={() => setShowPaywall(false)}
-        onPurchaseComplete={handlePurchaseComplete}
-      />
+      {/* Paywall removed - user doesn't want this screen */}
     </>
   );
 }
