@@ -490,12 +490,34 @@ public class StripeController : ControllerBase
                         }
                         Console.WriteLine($"[StripeController] Granted unlimited access to {linkedDeviceIds.Count} device(s) until {purchase.ExpiresAt} (purchased on {purchase.PurchasedAt})");
                     }
-                    else if (purchase.TokensGranted.HasValue)
+                    else
                     {
-                        // AGGRESSIVE FIX: Add all purchased tokens to the current deviceId (no dilution across linked devices)
-                        int tokensToAdd = purchase.TokensGranted.Value;
-                        var newBalance = await _dynamoService.IncrementUserTokensAsync(deviceId, tokensToAdd);
-                        Console.WriteLine($"[StripeController] Added {tokensToAdd} tokens to device {deviceId}. New balance: {newBalance}");
+                        // Ensure TokensGranted is populated from plan if missing
+                        if (!purchase.TokensGranted.HasValue)
+                        {
+                            var planLookup = await _dynamoService.GetPricingPlanAsync(planId ?? string.Empty);
+                            if (planLookup?.TokenCount != null)
+                            {
+                                purchase.TokensGranted = planLookup.TokenCount;
+                                Console.WriteLine($"[StripeController] Backfilled TokensGranted from plan {planId} => {planLookup.TokenCount}");
+                            }
+                        }
+
+                        if (purchase.TokensGranted.HasValue)
+                        {
+                            // AGGRESSIVE FIX: Add all purchased tokens to the current deviceId (no dilution across linked devices)
+                            int tokensToAdd = purchase.TokensGranted.Value;
+                            // Capture before/after for proof
+                            var beforeTokens = await _dynamoService.GetUserTokensAsync(deviceId);
+                            Console.WriteLine($"[StripeController] Before increment - Device: {deviceId}, TokensRemaining: {beforeTokens?.TokensRemaining}");
+                            var newBalance = await _dynamoService.IncrementUserTokensAsync(deviceId, tokensToAdd);
+                            var afterTokens = await _dynamoService.GetUserTokensAsync(deviceId);
+                            Console.WriteLine($"[StripeController] Added {tokensToAdd} tokens to device {deviceId}. New balance (return): {newBalance}, DB after: {afterTokens?.TokensRemaining}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[StripeController] WARNING: TokensGranted is missing for purchase {purchase.PurchaseId}, tokens will not be added.");
+                        }
                     }
 
                     // Save purchase record (may fail if table doesn't exist, but that's OK)
@@ -791,6 +813,13 @@ public class StripeController : ControllerBase
                 purchase.CustomerEmail = customerEmail;
                 purchase.CustomerName = customerName;
 
+                // Idempotency: if already completed for this payment intent, skip double-grant
+                if (purchase.Status == "completed" && !string.IsNullOrEmpty(purchase.StripePaymentIntentId) && purchase.StripePaymentIntentId == paymentIntentId)
+                {
+                    Console.WriteLine($"[StripeController] VerifyPayment - Purchase {purchase.PurchaseId} already completed for paymentIntent {paymentIntentId}, skipping token grant.");
+                    return Ok(new { message = "Payment already processed" });
+                }
+
                 // AGGRESSIVE FIX: If customer has email, merge tokens across all devices linked to that email
                 List<string> linkedDeviceIds = new List<string> { request.DeviceId };
                 if (!string.IsNullOrEmpty(customerEmail))
@@ -843,14 +872,35 @@ public class StripeController : ControllerBase
                     }
                     Console.WriteLine($"[StripeController] Granted unlimited access to {linkedDeviceIds.Count} device(s)");
                 }
-                else if (purchase.TokensGranted.HasValue)
+                else
                 {
-                    Console.WriteLine($"[StripeController] Granting {purchase.TokensGranted.Value} tokens - DeviceId: {request.DeviceId}");
-                    
-                    // Add purchased tokens to CURRENT device only (no cross-device merge)
-                    int tokensToAdd = purchase.TokensGranted.Value;
-                    var newBalance = await _dynamoService.IncrementUserTokensAsync(request.DeviceId, tokensToAdd);
-                    Console.WriteLine($"[StripeController] VerifyPayment - Added {tokensToAdd} tokens to device {request.DeviceId}. New balance: {newBalance}");
+                    // Ensure TokensGranted is populated from plan if missing
+                    if (!purchase.TokensGranted.HasValue)
+                    {
+                        var planLookup = await _dynamoService.GetPricingPlanAsync(planId ?? string.Empty);
+                        if (planLookup?.TokenCount != null)
+                        {
+                            purchase.TokensGranted = planLookup.TokenCount;
+                            Console.WriteLine($"[StripeController] VerifyPayment - Backfilled TokensGranted from plan {planId} => {planLookup.TokenCount}");
+                        }
+                    }
+
+                    if (purchase.TokensGranted.HasValue)
+                    {
+                        Console.WriteLine($"[StripeController] Granting {purchase.TokensGranted.Value} tokens - DeviceId: {request.DeviceId}");
+                        
+                        // Add purchased tokens to CURRENT device only (no cross-device merge)
+                        int tokensToAdd = purchase.TokensGranted.Value;
+                        var beforeTokens = await _dynamoService.GetUserTokensAsync(request.DeviceId);
+                        Console.WriteLine($"[StripeController] VerifyPayment - Before increment Device {request.DeviceId}, Tokens: {beforeTokens?.TokensRemaining}");
+                        var newBalance = await _dynamoService.IncrementUserTokensAsync(request.DeviceId, tokensToAdd);
+                        var afterTokens = await _dynamoService.GetUserTokensAsync(request.DeviceId);
+                        Console.WriteLine($"[StripeController] VerifyPayment - Added {tokensToAdd} tokens to device {request.DeviceId}. New balance (return): {newBalance}, DB after: {afterTokens?.TokensRemaining}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[StripeController] VerifyPayment - WARNING: TokensGranted missing for purchase {purchase.PurchaseId}, tokens not granted.");
+                    }
                 }
 
                 // Try to save purchase (may fail if table doesn't exist, but that's OK)

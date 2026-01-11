@@ -135,6 +135,17 @@ public class DynamoDBService : IDynamoDBService
     {
         if (tokensToAdd == 0) return (await GetUserTokensAsync(deviceId))?.TokensRemaining ?? 0;
 
+        int? previous = null;
+        try
+        {
+            previous = (await GetUserTokensAsync(deviceId))?.TokensRemaining;
+            Console.WriteLine($"[DynamoDBService] IncrementUserTokensAsync start - Device: {deviceId}, Prev: {previous}, Delta: {tokensToAdd}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] IncrementUserTokensAsync could not read previous balance for {deviceId}: {ex.Message}");
+        }
+
         try
         {
             var response = await _dynamoDB.UpdateItemAsync(new UpdateItemRequest
@@ -155,7 +166,9 @@ public class DynamoDBService : IDynamoDBService
 
             if (response.Attributes != null && response.Attributes.ContainsKey("TokensRemaining"))
             {
-                return int.Parse(response.Attributes["TokensRemaining"].N);
+                var newValue = int.Parse(response.Attributes["TokensRemaining"].N);
+                Console.WriteLine($"[DynamoDBService] IncrementUserTokensAsync success - Device: {deviceId}, Prev: {previous}, Delta: {tokensToAdd}, New: {newValue}");
+                return newValue;
             }
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
