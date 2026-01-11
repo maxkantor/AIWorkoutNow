@@ -134,7 +134,13 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = fals
         )}
 
         <button type="submit" className="btn" disabled={disabled || loading}>
-          {loading ? 'Generating Workout...' : 'Generate AI Workout'}
+          {loading ? (
+            <span>
+              <span className="exercising-emoji">🏋️</span> Generating Workout...
+            </span>
+          ) : (
+            'Generate AI Workout'
+          )}
         </button>
       </form>
 

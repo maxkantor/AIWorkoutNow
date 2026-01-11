@@ -36,6 +36,21 @@
   margin-bottom: 1rem;
 }
 
+.exercising-emoji {
+  display: inline-block;
+  animation: bounce 1s infinite;
+  margin-right: 0.5rem;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
 @media (max-width: 768px) {
   .workout-form {
     padding: 1.5rem;

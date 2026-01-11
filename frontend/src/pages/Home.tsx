@@ -124,8 +124,18 @@ function Home() {
                          !accessStatus?.hasUnlimitedAccess &&
                          (accessStatus?.freeWorkoutsRemaining ?? 0) > 0;
       
-      // Don't block workout generation - let the API handle it
-      // The paywall will show after if needed, but don't prevent generation
+      // If no workouts remaining, just return without generating
+      if (isFreeUser && (accessStatus?.freeWorkoutsRemaining ?? 0) <= 0 && !accessStatus?.hasUnlimitedAccess) {
+        setError('No free workouts remaining. Please purchase more workouts to continue.');
+        setLoading(false);
+        return;
+      }
+      
+      if (!isFreeUser && (accessStatus?.tokensRemaining ?? 0) <= 0 && !accessStatus?.hasUnlimitedAccess) {
+        setError('No workouts remaining. Please purchase more workouts to continue.');
+        setLoading(false);
+        return;
+      }
       
       const result = await generateWorkout(preferences, deviceId, isFreeUser);
       setWorkout(result);
@@ -149,14 +159,16 @@ function Home() {
       const errorMessage = err.message || 'Failed to generate workout. Please try again.';
       setError(errorMessage);
       
-      // Paywall removed - errors will be shown in the error message
+      // Error already set above
     } finally {
       setLoading(false);
     }
   };
 
 
-  const canGenerate = accessStatus?.canGenerateWorkout ?? (freeWorkoutsRemaining > 0);
+  // Disable button if no workouts remaining (free or paid)
+  const canGenerate = accessStatus?.canGenerateWorkout ?? 
+    (freeWorkoutsRemaining > 0 || (accessStatus?.tokensRemaining ?? 0) > 0 || accessStatus?.hasUnlimitedAccess === true);
 
   return (
     <>
@@ -386,8 +398,6 @@ function Home() {
         </div>
       </div>
       </main>
-
-      {/* Paywall removed - user doesn't want this screen */}
     </>
   );
 }
