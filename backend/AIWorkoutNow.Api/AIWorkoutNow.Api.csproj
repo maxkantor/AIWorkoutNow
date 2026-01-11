@@ -6,7 +6,6 @@
     <Nullable>enable</Nullable>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <AWSProjectType>Lambda</AWSProjectType>
-    <RuntimeIdentifier>linux-arm64</RuntimeIdentifier>
     <OutputType>Exe</OutputType>
     <AssemblyName>AIWorkoutNow.Api</AssemblyName>
     <InvariantGlobalization>true</InvariantGlobalization>
