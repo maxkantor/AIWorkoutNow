@@ -814,7 +814,8 @@ public class StripeController : ControllerBase
                 purchase.CustomerName = customerName;
 
                 // Idempotency: if already completed for this payment intent, skip double-grant
-                if (purchase.Status == "completed" && !string.IsNullOrEmpty(purchase.StripePaymentIntentId) && purchase.StripePaymentIntentId == paymentIntentId)
+                var paymentIntentId = purchase.StripePaymentIntentId ?? string.Empty;
+                if (purchase.Status == "completed" && !string.IsNullOrEmpty(paymentIntentId) && purchase.StripePaymentIntentId == paymentIntentId)
                 {
                     Console.WriteLine($"[StripeController] VerifyPayment - Purchase {purchase.PurchaseId} already completed for paymentIntent {paymentIntentId}, skipping token grant.");
                     return Ok(new { message = "Payment already processed" });

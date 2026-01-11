@@ -2097,9 +2097,11 @@ public class DynamoDBService : IDynamoDBService
 
             var allCustomers = await GetAllCustomersAsync();
             var newUsers = allCustomers.Count(c =>
-                c.LastActivity.HasValue &&
-                c.LastActivity.Value >= startDate &&
-                c.LastActivity.Value <= endDate);
+            {
+                if (string.IsNullOrEmpty(c.LastActivityIso)) return false;
+                if (!DateTime.TryParse(c.LastActivityIso, out var dt)) return false;
+                return dt >= startDate && dt <= endDate;
+            });
 
             // Revenue metrics (calculate first)
             decimal totalRevenue = 0;
