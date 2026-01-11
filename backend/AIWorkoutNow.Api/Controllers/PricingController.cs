@@ -367,10 +367,18 @@ public class PricingController : ControllerBase
                                 purchasedTokens += plan.TokenCount.Value;
                                 Console.WriteLine($"[PricingController] Backfilled TokensGranted from plan {p.PlanId} => {plan.TokenCount}");
                             }
+                            else
+                            {
+                                // Fallback to default 10 if plan not found to avoid zeroing purchases
+                                purchasedTokens += 10;
+                                Console.WriteLine($"[PricingController] Plan {p.PlanId} missing TokenCount, defaulting TokensGranted to 10");
+                            }
                         }
                         catch (Exception exPlan)
                         {
-                            Console.WriteLine($"[PricingController] Plan lookup failed for {p.PlanId}: {exPlan.Message}");
+                            // Fallback to default 10 if plan lookup fails
+                            purchasedTokens += 10;
+                            Console.WriteLine($"[PricingController] Plan lookup failed for {p.PlanId}: {exPlan.Message}. Defaulting TokensGranted to 10");
                         }
                     }
 
