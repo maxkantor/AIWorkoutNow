@@ -94,11 +94,11 @@ public class PricingController : ControllerBase
                     },
                     new PricingPlan
                     {
-                        PlanId = "default-25-workouts",
-                        Name = "25 Workouts",
+                        PlanId = "default-30-workouts",
+                        Name = "30 Workouts",
                         Price = 3.99m,
                         Currency = "USD",
-                        TokenCount = 25,
+                        TokenCount = 30,
                         IsUnlimited = false,
                         DisplayOrder = 2,
                         IsRecommended = true,
@@ -109,12 +109,12 @@ public class PricingController : ControllerBase
                     },
                     new PricingPlan
                     {
-                        PlanId = "default-unlimited-access",
-                        Name = "Unlimited Access",
-                        Price = 9.99m,
+                        PlanId = "default-100-workouts",
+                        Name = "100 Workouts",
+                        Price = 7.99m,
                         Currency = "USD",
-                        IsUnlimited = true,
-                        UnlimitedDays = 365,
+                        TokenCount = 100,
+                        IsUnlimited = false,
                         DisplayOrder = 3,
                         IsRecommended = false,
                         IsActive = true,
@@ -143,7 +143,9 @@ public class PricingController : ControllerBase
                         if (realPlans != null && realPlans.Count > 0)
                         {
                             // CRITICAL FIX: Only update cache with ACTIVE plans
-                            var activePlans = realPlans.Where(p => p.IsActive).ToList();
+                            var activePlans = realPlans
+                                .Where(p => p.IsActive && !p.IsUnlimited)
+                                .ToList();
                             if (activePlans.Count > 0)
                             {
                                 lock (_cacheLock)
@@ -192,11 +194,11 @@ public class PricingController : ControllerBase
                     },
                     new PricingPlan
                     {
-                        PlanId = "default-25-workouts",
-                        Name = "25 Workouts",
+                        PlanId = "default-30-workouts",
+                        Name = "30 Workouts",
                         Price = 3.99m,
                         Currency = "USD",
-                        TokenCount = 25,
+                        TokenCount = 30,
                         IsUnlimited = false,
                         DisplayOrder = 2,
                         IsRecommended = true,
@@ -207,12 +209,12 @@ public class PricingController : ControllerBase
                     },
                     new PricingPlan
                     {
-                        PlanId = "default-unlimited-access",
-                        Name = "Unlimited Access",
-                        Price = 9.99m,
+                        PlanId = "default-100-workouts",
+                        Name = "100 Workouts",
+                        Price = 7.99m,
                         Currency = "USD",
-                        IsUnlimited = true,
-                        UnlimitedDays = 365,
+                        TokenCount = 100,
+                        IsUnlimited = false,
                         DisplayOrder = 3,
                         IsRecommended = false,
                         IsActive = true,
@@ -255,11 +257,11 @@ public class PricingController : ControllerBase
                 },
                 new PricingPlan
                 {
-                    PlanId = "default-25-workouts",
-                    Name = "25 Workouts",
+                        PlanId = "default-30-workouts",
+                        Name = "30 Workouts",
                     Price = 3.99m,
                     Currency = "USD",
-                    TokenCount = 25,
+                        TokenCount = 30,
                     IsUnlimited = false,
                     DisplayOrder = 2,
                     IsRecommended = true,
@@ -270,17 +272,17 @@ public class PricingController : ControllerBase
                 },
                 new PricingPlan
                 {
-                    PlanId = "default-unlimited-access",
-                    Name = "Unlimited Access",
-                    Price = 9.99m,
-                    Currency = "USD",
-                    IsUnlimited = true,
-                    UnlimitedDays = 365,
-                    DisplayOrder = 3,
-                    IsRecommended = false,
-                    IsActive = true,
-                    StripePriceId = "",
-                    CreatedAt = DateTime.UtcNow
+                        PlanId = "default-100-workouts",
+                        Name = "100 Workouts",
+                        Price = 7.99m,
+                        Currency = "USD",
+                        TokenCount = 100,
+                        IsUnlimited = false,
+                        DisplayOrder = 3,
+                        IsRecommended = false,
+                        IsActive = true,
+                        StripePriceId = "",
+                        CreatedAt = DateTime.UtcNow
                 }
             };
             return Ok(defaultPlans);
