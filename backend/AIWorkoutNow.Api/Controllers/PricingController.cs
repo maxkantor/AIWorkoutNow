@@ -578,6 +578,62 @@ public class PricingController : ControllerBase
                                                     // Break after first match
                                                     break;
                                                 }
+                                                else
+                                                {
+                                                    // Non-unlimited: grant tokens even if purchases table is missing
+                                                    var tokenGrant = 10;
+                                                    if (plan != null && plan.TokenCount.HasValue && plan.TokenCount.Value > 0)
+                                                    {
+                                                        tokenGrant = plan.TokenCount.Value;
+                                                    }
+                                                    else
+                                                    {
+                                                        Console.WriteLine($"[PricingController] Plan {planId ?? "unknown"} missing TokenCount or plan lookup failed; defaulting token grant to 10");
+                                                    }
+
+                                                    var newBalance = await _dynamoService.IncrementUserTokensAsync(deviceId, tokenGrant);
+                                                    tokensRemaining = newBalance;
+                                                    if (tokens == null)
+                                                    {
+                                                        tokens = new UserTokens
+                                                        {
+                                                            DeviceId = deviceId,
+                                                            TokensRemaining = newBalance,
+                                                            ExpiresAt = null
+                                                        };
+                                                    }
+                                                    else
+                                                    {
+                                                        tokens.TokensRemaining = newBalance;
+                                                    }
+
+                                                    // Persist purchase record so future reconciliations work once the table exists
+                                                    try
+                                                    {
+                                                        var purchase = new UserPurchase
+                                                        {
+                                                            PurchaseId = Guid.NewGuid().ToString(),
+                                                            DeviceId = deviceId,
+                                                            PlanId = planId ?? "",
+                                                            StripeSessionId = sessionId ?? "",
+                                                            StripePaymentIntentId = "",
+                                                            Status = "completed",
+                                                            PurchasedAt = DateTime.UtcNow,
+                                                            ExpiresAt = null,
+                                                            IsUnlimited = false,
+                                                            TokensGranted = tokenGrant
+                                                        };
+                                                        await _dynamoService.SaveUserPurchaseAsync(purchase);
+                                                        Console.WriteLine($"[PricingController] Created token purchase record: {purchase.PurchaseId} (+{tokenGrant}, new balance {newBalance})");
+                                                    }
+                                                    catch (Exception purchaseEx)
+                                                    {
+                                                        Console.WriteLine($"[PricingController] Error creating token purchase record (non-critical): {purchaseEx.Message}");
+                                                    }
+
+                                                    // Break after first match
+                                                    break;
+                                                }
                                             }
                                         }
                                         catch (Exception ex)
