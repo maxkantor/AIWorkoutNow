@@ -158,7 +158,7 @@ public class DynamoDBService : IDynamoDBService
                 {
                     { "DeviceId", new AttributeValue { S = deviceId } }
                 },
-                UpdateExpression = "ADD TokensRemaining :delta SET IsActive = :true",
+                UpdateExpression = "ADD TokensRemaining :delta, TotalWorkouts :delta SET IsActive = :true",
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
                     { ":delta", new AttributeValue { N = tokensToAdd.ToString() } },
