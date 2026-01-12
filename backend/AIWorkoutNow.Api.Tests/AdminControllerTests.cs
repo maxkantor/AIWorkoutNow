@@ -65,18 +65,17 @@ public class AdminControllerTests
             Reason = "Test reset"
         };
 
-        var existingTokens = new UserTokens
+        var balance = new BalanceDto
         {
             DeviceId = deviceId,
-            TokensRemaining = 5
+            PaidWorkoutsRemaining = 10,
+            RemainingWorkouts = 10,
+            TotalWorkouts = 10,
+            FreeWorkoutsRemaining = 0
         };
 
-        _mockDynamoService.Setup(x => x.GetUserTokensAsync(deviceId))
-            .ReturnsAsync(existingTokens);
-        _mockDynamoService.Setup(x => x.ResetUserTokensAsync(deviceId, request.NewTokenCount))
-            .Returns(Task.CompletedTask);
-        _mockDynamoService.Setup(x => x.SaveCustomerActivityAsync(It.IsAny<CustomerActivity>()))
-            .Returns(Task.CompletedTask);
+        _mockDynamoService.Setup(x => x.ResetBalanceAsync(deviceId, request.NewTokenCount, request.Reason))
+            .ReturnsAsync(balance);
 
         // Act
         var result = await _controller.ResetTokens(deviceId, request);
@@ -84,16 +83,12 @@ public class AdminControllerTests
         // Assert
         var okResult = Assert.IsAssignableFrom<ObjectResult>(result);
         Assert.True(okResult.StatusCode is null or 200);
-        var message = GetProp<string>(okResult.Value!, "message");
-        var newTokenCount = GetProp<int?>(okResult.Value!, "newTokenCount");
-        Assert.Equal("Tokens reset successfully", message);
-        Assert.Equal(10, newTokenCount);
+        var returnedBalance = Assert.IsAssignableFrom<BalanceDto>(okResult.Value);
+        Assert.Equal(10, returnedBalance.PaidWorkoutsRemaining);
+        Assert.Equal(10, returnedBalance.RemainingWorkouts);
+        Assert.Equal(10, returnedBalance.TotalWorkouts);
 
-        _mockDynamoService.Verify(x => x.ResetUserTokensAsync(deviceId, 10), Times.Once);
-        _mockDynamoService.Verify(x => x.SaveCustomerActivityAsync(It.Is<CustomerActivity>(
-            a => a.ActivityType == "tokens_reset" && 
-                 a.Description.Contains("10") &&
-                 a.DeviceId == deviceId)), Times.Once);
+        _mockDynamoService.Verify(x => x.ResetBalanceAsync(deviceId, 10, "Test reset"), Times.Once);
     }
 
     [Fact]
@@ -116,10 +111,8 @@ public class AdminControllerTests
 
         _mockDynamoService.Setup(x => x.GetUserTokensAsync(deviceId))
             .ReturnsAsync(existingTokens);
-        _mockDynamoService.Setup(x => x.ResetUserTokensAsync(deviceId, request.NewTokenCount))
-            .Returns(Task.CompletedTask);
-        _mockDynamoService.Setup(x => x.SaveCustomerActivityAsync(It.IsAny<CustomerActivity>()))
-            .Returns(Task.CompletedTask);
+        _mockDynamoService.Setup(x => x.ResetBalanceAsync(deviceId, request.NewTokenCount, request.Reason))
+            .ReturnsAsync(new BalanceDto { DeviceId = deviceId, PaidWorkoutsRemaining = 20, RemainingWorkouts = 20, TotalWorkouts = 20, FreeWorkoutsRemaining = 0 });
 
         // Act
         var result = await _controller.ResetTokens(deviceId, request);
@@ -128,7 +121,7 @@ public class AdminControllerTests
         var okResult = Assert.IsAssignableFrom<ObjectResult>(result);
         Assert.True(okResult.StatusCode is null or 200);
         _mockDynamoService.Verify(x => x.GetUserTokensAsync(deviceId), Times.Once);
-        _mockDynamoService.Verify(x => x.ResetUserTokensAsync(deviceId, 20), Times.Once);
+        _mockDynamoService.Verify(x => x.ResetBalanceAsync(deviceId, 20, request.Reason), Times.Once);
     }
 
     [Fact]
@@ -142,7 +135,7 @@ public class AdminControllerTests
             PreviousTokenCount = 3
         };
 
-        _mockDynamoService.Setup(x => x.ResetUserTokensAsync(deviceId, request.NewTokenCount))
+        _mockDynamoService.Setup(x => x.ResetBalanceAsync(deviceId, request.NewTokenCount, request.Reason))
             .ThrowsAsync(new Exception("Database error"));
 
         // Act

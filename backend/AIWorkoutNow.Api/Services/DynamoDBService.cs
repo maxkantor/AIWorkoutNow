@@ -122,6 +122,7 @@ public class DynamoDBService : IDynamoDBService
         var document = new Document();
         document["DeviceId"] = tokens.DeviceId;
         document["TokensRemaining"] = tokens.TokensRemaining;
+        document["TotalWorkouts"] = tokens.TotalWorkouts;
         document["ExpiresAt"] = tokens.ExpiresAt?.ToString("O");
         document["IsActive"] = tokens.IsActive; // Save IsActive flag
 
@@ -212,6 +213,7 @@ public class DynamoDBService : IDynamoDBService
         {
             DeviceId = response.Item["DeviceId"].S,
             TokensRemaining = int.Parse(response.Item["TokensRemaining"].N),
+            TotalWorkouts = response.Item.ContainsKey("TotalWorkouts") ? int.Parse(response.Item["TotalWorkouts"].N) : int.Parse(response.Item["TokensRemaining"].N),
             IsActive = response.Item.ContainsKey("IsActive") ? response.Item["IsActive"].BOOL : true // Default to active if not set
         };
 
@@ -236,6 +238,7 @@ public class DynamoDBService : IDynamoDBService
         {
             DeviceId = deviceId,
             TokensRemaining = 0,
+            TotalWorkouts = 0,
             IsActive = true
         };
 
@@ -293,12 +296,149 @@ public class DynamoDBService : IDynamoDBService
         if (purchasedTokens > tokens.TokensRemaining)
         {
             tokens.TokensRemaining = purchasedTokens;
+            tokens.TotalWorkouts = purchasedTokens;
             tokens.ExpiresAt = null;
             tokens.IsActive = true;
             await SaveUserTokensAsync(tokens);
         }
 
         return tokens;
+    }
+
+    public async Task<BalanceDto> GetBalanceAsync(string deviceId)
+    {
+        // Reconcile tokens first
+        var tokens = await ReconcileTokensAsync(deviceId);
+
+        // Free workouts
+        var freeUsed = await GetTotalFreeWorkoutsAsync(deviceId);
+        var freeRemaining = Math.Max(0, 3 - freeUsed);
+
+        // Purchases
+        var purchases = await GetUserPurchasesByDeviceIdAsync(deviceId);
+        var completed = purchases.Where(p => p.Status == "completed").ToList();
+        var purchasesCount = completed.Count;
+        var totalSpentCents = 0;
+        foreach (var p in completed)
+        {
+            if (p.TokensGranted.HasValue && p.TokensGranted.Value > 0)
+            {
+                // If we later store AmountCents on purchase, use that; fallback: infer from plan
+            }
+            var plan = await GetPricingPlanAsync(p.PlanId);
+            if (plan != null)
+            {
+                totalSpentCents += (int)Math.Round(plan.Price * 100);
+            }
+        }
+
+        // Activities (generated workouts, last activity)
+        int generatedWorkouts = 0;
+        DateTime? lastActivity = null;
+        try
+        {
+            var prefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+            var activitiesTable = $"{prefix}-CustomerActivities";
+            var resp = await _dynamoDB.QueryAsync(new QueryRequest
+            {
+                TableName = activitiesTable,
+                KeyConditionExpression = "DeviceId = :deviceId",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    {":deviceId", new AttributeValue { S = deviceId } }
+                }
+            });
+
+            foreach (var item in resp.Items)
+            {
+                var type = item.ContainsKey("ActivityType") ? item["ActivityType"].S : "";
+                var ts = item.ContainsKey("Timestamp") ? DateTime.Parse(item["Timestamp"].S) : DateTime.UtcNow;
+                if (type == "workout_generated") generatedWorkouts += 1;
+                if (!lastActivity.HasValue || ts > lastActivity.Value) lastActivity = ts;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error reading activities for balance: {ex.Message}");
+        }
+
+        // For paid workflows, do not add free on top for the denominator: total = paid + free, remaining = paid + free
+        var remainingWorkouts = tokens.TokensRemaining + freeRemaining;
+        var totalWorkouts = tokens.TotalWorkouts > 0 ? tokens.TotalWorkouts + freeRemaining : remainingWorkouts;
+
+        var dto = new BalanceDto
+        {
+            DeviceId = deviceId,
+            PaidWorkoutsRemaining = tokens.TokensRemaining,
+            FreeWorkoutsRemaining = freeRemaining,
+            RemainingWorkouts = remainingWorkouts,
+            TotalWorkouts = totalWorkouts,
+            GeneratedWorkouts = generatedWorkouts,
+            PurchasesCount = purchasesCount,
+            TotalSpentCents = totalSpentCents,
+            HasUnlimitedAccess = tokens.TokensRemaining >= 999999,
+            UnlimitedExpiresAt = tokens.ExpiresAt,
+            LastActivityIso = lastActivity?.ToUniversalTime().ToString("o")
+        };
+        return dto;
+    }
+
+    public async Task<BalanceDto> ResetBalanceAsync(string deviceId, int newCount, string? reason = null)
+    {
+        // Reset tokens to exact count, clear unlimited, set totalWorkouts to newCount
+        var tokens = await GetUserTokensAsync(deviceId) ?? new UserTokens { DeviceId = deviceId };
+        tokens.TokensRemaining = newCount;
+        tokens.TotalWorkouts = newCount;
+        tokens.IsActive = true;
+        tokens.ExpiresAt = null;
+        await SaveUserTokensAsync(tokens);
+
+        // Reset free usage: delete anonymous usage rows
+        try
+        {
+            var usageResponse = await _dynamoDB.QueryAsync(new QueryRequest
+            {
+                TableName = _anonymousUsageTable,
+                KeyConditionExpression = "DeviceId = :deviceId",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    { ":deviceId", new AttributeValue { S = deviceId } }
+                }
+            });
+
+            foreach (var item in usageResponse.Items)
+            {
+                await _dynamoDB.DeleteItemAsync(new DeleteItemRequest
+                {
+                    TableName = _anonymousUsageTable,
+                    Key = new Dictionary<string, AttributeValue>
+                    {
+                        { "DeviceId", new AttributeValue { S = deviceId } },
+                        { "Date", item["Date"] }
+                    }
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error resetting free workouts for {deviceId}: {ex.Message}");
+        }
+
+        // Log activity
+        await SaveCustomerActivityAsync(new CustomerActivity
+        {
+            DeviceId = deviceId,
+            ActivityType = "tokens_reset",
+            Description = $"Tokens reset to {newCount} by admin",
+            Details = new Dictionary<string, object>
+            {
+                { "newCount", newCount },
+                { "reason", reason ?? "Admin reset" }
+            }
+        });
+
+        // Return updated balance
+        return await GetBalanceAsync(deviceId);
     }
 
     public async Task SaveProgressLogAsync(ProgressLog log)
@@ -1112,6 +1252,7 @@ public class DynamoDBService : IDynamoDBService
         {
             var freeRem = GetFreeRemaining(summary.DeviceId);
             summary.RemainingWorkouts = Math.Max(0, summary.RemainingTokens) + freeRem;
+            summary.TotalWorkouts = summary.RemainingWorkouts;
             summary.TotalSpentFormatted = FormatCurrency(summary.TotalSpentCents);
 
             var isActive = !summary.IsDeactivated;
@@ -1231,6 +1372,7 @@ public class DynamoDBService : IDynamoDBService
             {
                 DeviceId = deviceId,
                 TokensRemaining = newTokenCount,
+                TotalWorkouts = newTokenCount,
                 ExpiresAt = null, // No expiration for non-unlimited tokens
                 IsActive = true
             };
@@ -1238,6 +1380,7 @@ public class DynamoDBService : IDynamoDBService
         else
         {
             tokens.TokensRemaining = newTokenCount;
+            tokens.TotalWorkouts = newTokenCount;
             tokens.IsActive = true;
             // CRITICAL FIX: If resetting from unlimited (999999) to a lower number, clear expiration
             // This ensures the system doesn't still think it's unlimited

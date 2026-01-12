@@ -26,150 +26,85 @@ public class PricingControllerTests
     }
 
     [Fact]
-    public async Task GetUserAccessStatus_WithAdminResetTokens_ReturnsTokensImmediately()
+    public async Task GetUserAccessStatus_MapsBalanceFields_13Plus25Equals38()
     {
-        // Arrange
-        var deviceId = "device-admin-reset";
-        var tokens = new UserTokens
+        var deviceId = "dev-13-25";
+        var balance = new BalanceDto
         {
             DeviceId = deviceId,
-            TokensRemaining = 7, // Admin reset value
-            IsActive = true
+            PaidWorkoutsRemaining = 38,
+            FreeWorkoutsRemaining = 0,
+            RemainingWorkouts = 38,
+            TotalWorkouts = 38,
+            HasUnlimitedAccess = false
         };
 
-        _mockDynamoService.Setup(x => x.ReconcileTokensAsync(deviceId))
-            .ReturnsAsync(tokens);
+        _mockDynamoService.Setup(s => s.GetBalanceAsync(deviceId))
+            .ReturnsAsync(balance);
 
-        // Act
         var result = await _controller.GetUserAccessStatus(deviceId);
 
-        // Assert
-        var okResult = Assert.IsAssignableFrom<ObjectResult>(result);
-        Assert.True(okResult.StatusCode is null or 200);
-        var tokensRemaining = GetProp<int?>(okResult.Value!, "tokensRemaining");
-        var hasUnlimitedAccess = GetProp<bool?>(okResult.Value!, "hasUnlimitedAccess");
-        Assert.Equal(7, tokensRemaining);
-        Assert.False(hasUnlimitedAccess ?? true);
+        var ok = Assert.IsAssignableFrom<ObjectResult>(result);
+        Assert.True(ok.StatusCode is null or 200);
+        Assert.Equal(38, GetProp<int?>(ok.Value!, "tokensRemaining"));
+        Assert.Equal(38, GetProp<int?>(ok.Value!, "remainingWorkouts"));
+        Assert.Equal(38, GetProp<int?>(ok.Value!, "totalWorkouts"));
+        Assert.False(GetProp<bool?>(ok.Value!, "hasUnlimitedAccess") ?? true);
 
-        // Verify Stripe was NOT checked (admin reset should skip Stripe)
-        _mockConfigService.Verify(x => x.GetStripeSecretKeyAsync(), Times.Never);
+        _mockDynamoService.Verify(s => s.GetBalanceAsync(deviceId), Times.Once);
     }
 
     [Fact]
-    public async Task GetUserAccessStatus_WithZeroTokens_ChecksStripe()
+    public async Task GetUserAccessStatus_MapsUnlimitedBalance()
     {
-        // Arrange
-        var deviceId = "device-zero-tokens";
-        var tokens = new UserTokens
+        var deviceId = "dev-unlimited";
+        var expires = DateTime.UtcNow.AddDays(200);
+        var balance = new BalanceDto
         {
             DeviceId = deviceId,
-            TokensRemaining = 0,
-            IsActive = true
+            PaidWorkoutsRemaining = 999999,
+            FreeWorkoutsRemaining = 0,
+            RemainingWorkouts = 999999,
+            TotalWorkouts = 999999,
+            HasUnlimitedAccess = true,
+            UnlimitedExpiresAt = expires
         };
 
-        _mockDynamoService.Setup(x => x.ReconcileTokensAsync(deviceId))
-            .ReturnsAsync(tokens);
-        _mockConfigService.Setup(x => x.GetStripeSecretKeyAsync())
-            .ReturnsAsync("sk_test_123");
+        _mockDynamoService.Setup(s => s.GetBalanceAsync(deviceId))
+            .ReturnsAsync(balance);
 
-        // Act
         var result = await _controller.GetUserAccessStatus(deviceId);
 
-        // Assert
-        var okResult = Assert.IsAssignableFrom<ObjectResult>(result);
-        Assert.True(okResult.StatusCode is null or 200);
-        // Verify Stripe was checked when tokens are 0
-        _mockConfigService.Verify(x => x.GetStripeSecretKeyAsync(), Times.AtLeastOnce);
+        var ok = Assert.IsAssignableFrom<ObjectResult>(result);
+        Assert.True(ok.StatusCode is null or 200);
+        Assert.True(GetProp<bool?>(ok.Value!, "hasUnlimitedAccess"));
+        Assert.Equal(999999, GetProp<int?>(ok.Value!, "tokensRemaining"));
+        Assert.Equal(expires.ToString("O"), GetProp<string?>(ok.Value!, "unlimitedExpiresAt"));
     }
 
     [Fact]
-    public async Task GetUserAccessStatus_WithUnlimitedAccess_ReturnsUnlimited()
+    public async Task GetUserAccessStatus_MapsFreeWorkouts()
     {
-        // Arrange
-        var deviceId = "device-unlimited";
-        var tokens = new UserTokens
+        var deviceId = "dev-free";
+        var balance = new BalanceDto
         {
             DeviceId = deviceId,
-            TokensRemaining = 999999,
-            ExpiresAt = DateTime.UtcNow.AddDays(365),
-            IsActive = true
+            PaidWorkoutsRemaining = 0,
+            FreeWorkoutsRemaining = 2,
+            RemainingWorkouts = 2,
+            TotalWorkouts = 2,
+            HasUnlimitedAccess = false
         };
 
-        _mockDynamoService.Setup(x => x.ReconcileTokensAsync(deviceId))
-            .ReturnsAsync(tokens);
-        _mockDynamoService.Setup(x => x.GetActiveUnlimitedPurchaseAsync(deviceId))
-            .ReturnsAsync(new UserPurchase
-            {
-                DeviceId = deviceId,
-                IsUnlimited = true,
-                ExpiresAt = tokens.ExpiresAt
-            });
+        _mockDynamoService.Setup(s => s.GetBalanceAsync(deviceId))
+            .ReturnsAsync(balance);
 
-        // Act
         var result = await _controller.GetUserAccessStatus(deviceId);
 
-        // Assert
-        var okResult = Assert.IsAssignableFrom<ObjectResult>(result);
-        Assert.NotNull(okResult.Value);
-    }
-
-    [Fact]
-    public async Task GetUserAccessStatus_WithFreeWorkouts_ReturnsFreeWorkouts()
-    {
-        // Arrange
-        var deviceId = "device-free";
-        var tokens = new UserTokens
-        {
-            DeviceId = deviceId,
-            TokensRemaining = 0,
-            IsActive = true
-        };
-
-        _mockDynamoService.Setup(x => x.ReconcileTokensAsync(deviceId))
-            .ReturnsAsync(tokens);
-        _mockDynamoService.Setup(x => x.GetTotalFreeWorkoutsAsync(deviceId))
-            .ReturnsAsync(2); // 2 free workouts used, 1 remaining
-
-        // Act
-        var result = await _controller.GetUserAccessStatus(deviceId);
-
-        // Assert
-        var okResult = Assert.IsAssignableFrom<ObjectResult>(result);
-        Assert.True(okResult.StatusCode is null or 200);
-        var freeRemaining = GetProp<int?>(okResult.Value!, "freeWorkoutsRemaining");
-        var tokensRemaining = GetProp<int?>(okResult.Value!, "tokensRemaining");
-        Assert.Equal(1, freeRemaining);
-        Assert.Equal(0, tokensRemaining);
-    }
-
-    [Fact]
-    public async Task GetUserAccessStatus_ReconcilesPurchasedTokens_WhenStoredBalanceIsLower()
-    {
-        // Arrange
-        var deviceId = "device-reconcile";
-        var tokens = new UserTokens
-        {
-            DeviceId = deviceId,
-            TokensRemaining = 90,
-            IsActive = true
-        };
-
-        _mockDynamoService.Setup(x => x.ReconcileTokensAsync(deviceId))
-            .ReturnsAsync(new UserTokens
-            {
-                DeviceId = deviceId,
-                TokensRemaining = 100,
-                IsActive = true
-            });
-
-        // Act
-        var result = await _controller.GetUserAccessStatus(deviceId);
-
-        // Assert
-        var okResult = Assert.IsAssignableFrom<ObjectResult>(result);
-        Assert.True(okResult.StatusCode is null or 200);
-        var tokensRemaining = GetProp<int?>(okResult.Value!, "tokensRemaining");
-        Assert.Equal(100, tokensRemaining);
-        _mockDynamoService.Verify(x => x.ReconcileTokensAsync(deviceId), Times.Once);
+        var ok = Assert.IsAssignableFrom<ObjectResult>(result);
+        Assert.True(ok.StatusCode is null or 200);
+        Assert.Equal(2, GetProp<int?>(ok.Value!, "freeWorkoutsRemaining"));
+        Assert.Equal(0, GetProp<int?>(ok.Value!, "tokensRemaining"));
+        Assert.Equal(2, GetProp<int?>(ok.Value!, "remainingWorkouts"));
     }
 }

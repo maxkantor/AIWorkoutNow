@@ -35,13 +35,13 @@ function AdminCustomerDetail() {
     const normalizedStatus = c.statusLabel || 'Free';
     const isDeactivated = normalizedStatus === 'Deactivated' || c.isDeactivated;
     const remainingTokens = isDeactivated ? 0 : (c.remainingTokens ?? 0);
-    const remainingWorkouts = isDeactivated
-      ? 0
-      : (c.remainingWorkouts ?? remainingTokens + freeRemaining);
+    const remainingWorkouts = isDeactivated ? 0 : (c.remainingWorkouts ?? remainingTokens);
+    const totalWorkouts = c.totalWorkouts ?? remainingWorkouts;
     return {
       ...c,
       statusLabel: normalizedStatus,
       remainingTokens,
+      totalWorkouts,
       generatedWorkouts: c.generatedWorkouts ?? 0,
       purchasesCount: c.purchasesCount ?? 0,
       totalSpentCents: c.totalSpentCents ?? 0,
@@ -173,6 +173,8 @@ function AdminCustomerDetail() {
       
       // Trigger refresh on home page if it's open
       window.dispatchEvent(new CustomEvent('refreshAccessStatus'));
+      // Trigger refresh for admin customers list
+      window.dispatchEvent(new CustomEvent('adminCustomersRefresh'));
       
       // Show success message
       alert(`Successfully reset workouts to ${tokenCountNum} for this device.`);
@@ -334,7 +336,9 @@ function AdminCustomerDetail() {
               <h3>Account Stats</h3>
               <div className="info-row">
                 <span className="label">💪Remaining Workouts:</span>
-                <span className="value highlight">{customer.remainingWorkouts}</span>
+                <span className="value highlight">
+                  {customer.remainingWorkouts}/{customer.totalWorkouts ?? customer.remainingWorkouts}
+                </span>
               </div>
               <div className="info-row">
                 <span className="label">Generated Workouts:</span>
@@ -499,7 +503,7 @@ function AdminCustomerDetail() {
                 <ul style={{ marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
                   {linkedDevices.map((device: any) => (
                     <li key={device.deviceId}>
-                      {device.deviceId.substring(0, 12)}... - {device.remainingWorkouts} workouts
+                      {device.deviceId.substring(0, 12)}... - {device.remainingWorkouts}/{device.totalWorkouts ?? device.remainingWorkouts} workouts
                     </li>
                   ))}
                 </ul>

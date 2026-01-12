@@ -69,6 +69,7 @@ public class AdminCustomerSummary
     public bool IsDeactivated { get; set; }
     public string StatusLabel { get; set; } = "Free"; // Free | Paid | Deactivated
     public int RemainingTokens { get; set; }
+    public int TotalWorkouts { get; set; }
     public int GeneratedWorkouts { get; set; }
     public int RemainingWorkouts { get; set; }
     public int PurchasesCount { get; set; }
@@ -102,4 +103,20 @@ public class AdminCustomerDetails : AdminCustomerSummary
     public int FreeWorkoutsRemaining { get; set; }
     public List<AdminPurchaseDto> Purchases { get; set; } = new();
     public List<AdminUsageEventDto> UsageEvents { get; set; } = new();
+}
+
+// Shared balance DTO for Home + Admin
+public class BalanceDto
+{
+    public string DeviceId { get; set; } = string.Empty;
+    public int PaidWorkoutsRemaining { get; set; }
+    public int FreeWorkoutsRemaining { get; set; }
+    public int RemainingWorkouts { get; set; }
+    public int TotalWorkouts { get; set; }
+    public int GeneratedWorkouts { get; set; }
+    public int PurchasesCount { get; set; }
+    public int TotalSpentCents { get; set; }
+    public bool HasUnlimitedAccess { get; set; }
+    public DateTime? UnlimitedExpiresAt { get; set; }
+    public string? LastActivityIso { get; set; }
 }

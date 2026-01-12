@@ -235,6 +235,8 @@ export interface UserAccessStatus {
   unlimitedExpiresAt?: string;
   hasTokenAccess: boolean;
   tokensRemaining: number;
+  remainingWorkouts?: number;
+  totalWorkouts?: number;
   canGenerateWorkout: boolean;
 }
 
@@ -381,6 +383,7 @@ export interface AdminCustomerSummary {
   isDeactivated: boolean;
   statusLabel: 'Free' | 'Paid' | 'Deactivated' | string;
   remainingTokens: number;
+  totalWorkouts: number;
   generatedWorkouts: number;
   remainingWorkouts: number;
   purchasesCount: number;

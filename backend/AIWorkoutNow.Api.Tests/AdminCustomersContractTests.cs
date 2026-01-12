@@ -33,6 +33,7 @@ public class AdminCustomersContractTests
             IsDeactivated = false,
             StatusLabel = "Paid",
             RemainingTokens = 42,
+            TotalWorkouts = 45,
             GeneratedWorkouts = 7,
             RemainingWorkouts = 45,
             PurchasesCount = 3,
@@ -49,6 +50,7 @@ public class AdminCustomersContractTests
             IsDeactivated = summary.IsDeactivated,
             StatusLabel = summary.StatusLabel,
             RemainingTokens = summary.RemainingTokens,
+            TotalWorkouts = summary.TotalWorkouts,
             GeneratedWorkouts = summary.GeneratedWorkouts,
             RemainingWorkouts = summary.RemainingWorkouts,
             PurchasesCount = summary.PurchasesCount,
@@ -81,6 +83,7 @@ public class AdminCustomersContractTests
         Assert.Equal(listItem.DeviceId, detailValue.DeviceId);
         Assert.Equal(listItem.StatusLabel, detailValue.StatusLabel);
         Assert.Equal(listItem.RemainingTokens, detailValue.RemainingTokens);
+        Assert.Equal(listItem.TotalWorkouts, detailValue.TotalWorkouts);
         Assert.Equal(listItem.GeneratedWorkouts, detailValue.GeneratedWorkouts);
         Assert.Equal(listItem.RemainingWorkouts, detailValue.RemainingWorkouts);
         Assert.Equal(listItem.PurchasesCount, detailValue.PurchasesCount);

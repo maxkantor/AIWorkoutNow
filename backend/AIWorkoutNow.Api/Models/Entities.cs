@@ -53,6 +53,7 @@ public class UserTokens
 {
     public string DeviceId { get; set; } = string.Empty;
     public int TokensRemaining { get; set; }
+    public int TotalWorkouts { get; set; } // New: denominator for remaining/total
     public DateTime? ExpiresAt { get; set; }
     public bool IsActive { get; set; } = true; // For marking customers as inactive
 }

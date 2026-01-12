@@ -335,24 +335,11 @@ public class AdminController : ControllerBase
             }
             
             Console.WriteLine($"[AdminController] Resetting tokens from {previousCount} to {request.NewTokenCount}");
-            await _dynamoService.ResetUserTokensAsync(deviceId, request.NewTokenCount);
+            // Reset balance to exact count and return updated balance DTO
+            var balance = await _dynamoService.ResetBalanceAsync(deviceId, request.NewTokenCount, request.Reason);
             
-            // Log activity
-            await _dynamoService.SaveCustomerActivityAsync(new CustomerActivity
-            {
-                DeviceId = deviceId,
-                ActivityType = "tokens_reset",
-                Description = $"Tokens reset to {request.NewTokenCount} by admin",
-                Details = new Dictionary<string, object>
-                {
-                    { "previousCount", previousCount },
-                    { "newCount", request.NewTokenCount },
-                    { "reason", request.Reason ?? "Admin reset" }
-                }
-            });
-
             Console.WriteLine($"[AdminController] Reset successful for device: {deviceId}");
-            return Ok(new { message = "Tokens reset successfully", newTokenCount = request.NewTokenCount });
+            return Ok(balance);
         }
         catch (Exception ex)
         {

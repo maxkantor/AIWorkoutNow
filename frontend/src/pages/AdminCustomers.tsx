@@ -19,6 +19,20 @@ function AdminCustomers() {
     }
 
     loadCustomers(token);
+
+    const handleRefresh = () => {
+      const refreshedToken = localStorage.getItem('admin_token');
+      if (refreshedToken) {
+        loadCustomers(refreshedToken);
+      } else {
+        navigate('/admin');
+      }
+    };
+
+    window.addEventListener('adminCustomersRefresh', handleRefresh);
+    return () => {
+      window.removeEventListener('adminCustomersRefresh', handleRefresh);
+    };
   }, [navigate]);
 
   const loadCustomers = async (token: string) => {
@@ -134,7 +148,9 @@ function AdminCustomers() {
                         </td>
                         <td className="numeric">{customer.remainingTokens}</td>
                         <td className="numeric">{customer.generatedWorkouts}</td>
-                        <td className="numeric">{customer.remainingWorkouts}</td>
+                        <td className="numeric">
+                          {customer.remainingWorkouts}/{customer.totalWorkouts ?? customer.remainingWorkouts}
+                        </td>
                         <td className="numeric">{customer.purchasesCount}</td>
                         <td className="numeric">{customer.totalSpentFormatted}</td>
                         <td>

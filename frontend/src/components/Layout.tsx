@@ -9,9 +9,13 @@ interface HeroContent {
     hasUnlimitedAccess?: boolean;
     unlimitedExpiresAt?: string;
     tokensRemaining?: number;
+    remainingWorkouts?: number | null;
+    totalWorkouts?: number | null;
   };
   tokenBalance?: number | null;
   checkingAccess?: boolean;
+  remainingWorkouts?: number | null;
+  totalWorkouts?: number | null;
 }
 
 const HeroContext = createContext<{
@@ -32,7 +36,7 @@ interface LayoutProps {
 
 function Layout({ children }: LayoutProps) {
   const [heroContent, setHeroContent] = useState<HeroContent | null>(null);
-  const { freeWorkoutsRemaining, accessStatus, tokenBalance, checkingAccess } = heroContent || {};
+  const { freeWorkoutsRemaining, accessStatus, tokenBalance, checkingAccess, remainingWorkouts, totalWorkouts } = heroContent || {};
   const location = useLocation();
   const isAdminPage = location.pathname.startsWith('/admin');
 
@@ -109,14 +113,15 @@ function Layout({ children }: LayoutProps) {
                         </span>
                       )}
                     </div>
-                  ) : (accessStatus?.tokensRemaining !== undefined && accessStatus.tokensRemaining > 0 && accessStatus.tokensRemaining < 999999) ||
-                      (tokenBalance !== null && tokenBalance !== undefined && tokenBalance > 0 && tokenBalance < 999999) ? (
+                  ) : ((remainingWorkouts !== null && remainingWorkouts !== undefined && totalWorkouts !== null && totalWorkouts !== undefined) ||
+                      (accessStatus?.tokensRemaining !== undefined && accessStatus.tokensRemaining > 0 && accessStatus.tokensRemaining < 999999) ||
+                      (tokenBalance !== null && tokenBalance !== undefined && tokenBalance > 0 && tokenBalance < 999999)) ? (
                     <div className="inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-semibold text-xs md:text-sm shadow-sm">
                       {(() => {
                         const paid = accessStatus?.tokensRemaining ?? tokenBalance ?? 0;
-                        const free = freeWorkoutsRemaining ?? 0;
-                        const total = paid + (paid > 0 ? free : 0);
-                        return `💪 Remaining Workouts: ${total}/${total}`;
+                        const remaining = remainingWorkouts ?? paid;
+                        const total = totalWorkouts ?? remaining;
+                        return `💪 Remaining Workouts: ${remaining}/${total}`;
                       })()}
                     </div>
                   ) : freeWorkoutsRemaining !== undefined && freeWorkoutsRemaining > 0 ? (

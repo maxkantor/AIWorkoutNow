@@ -14,6 +14,8 @@ function Home() {
   const [error, setError] = useState<string | null>(null);
   const [tokenBalance, setTokenBalance] = useState<number | null>(null);
   const [freeWorkoutsRemaining, setFreeWorkoutsRemaining] = useState<number>(3);
+  const [remainingWorkouts, setRemainingWorkouts] = useState<number | null>(null);
+  const [totalWorkouts, setTotalWorkouts] = useState<number | null>(null);
   const [accessStatus, setAccessStatus] = useState<UserAccessStatus | null>(null);
   const [showRestoreCredits, setShowRestoreCredits] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
@@ -57,11 +59,15 @@ function Home() {
         hasUnlimitedAccess: accessStatus.hasUnlimitedAccess,
         unlimitedExpiresAt: accessStatus.unlimitedExpiresAt || undefined,
         tokensRemaining: accessStatus.tokensRemaining,
+        remainingWorkouts: accessStatus.remainingWorkouts ?? remainingWorkouts,
+        totalWorkouts: accessStatus.totalWorkouts ?? totalWorkouts,
       } : undefined,
       tokenBalance,
       checkingAccess,
+      remainingWorkouts,
+      totalWorkouts,
     });
-  }, [freeWorkoutsRemaining, accessStatus, tokenBalance, checkingAccess, setHeroContent]);
+  }, [freeWorkoutsRemaining, accessStatus, tokenBalance, checkingAccess, remainingWorkouts, totalWorkouts, setHeroContent]);
 
   const checkAccessStatus = async (forceRefresh: boolean = false) => {
     try {
@@ -74,6 +80,8 @@ function Home() {
       console.log('[Home] tokensRemaining:', status.tokensRemaining);
       console.log('[Home] hasUnlimitedAccess:', status.hasUnlimitedAccess);
       setAccessStatus(status);
+      setRemainingWorkouts(status.remainingWorkouts ?? null);
+      setTotalWorkouts(status.totalWorkouts ?? status.remainingWorkouts ?? null);
       
       // CRITICAL FIX: Backend returns hasUnlimitedAccess=false when tokens are reset (e.g., to 5)
       // ALWAYS respect the API response - if hasUnlimitedAccess is false, never show unlimited
@@ -89,13 +97,16 @@ function Home() {
         setTokenBalance(status.tokensRemaining);
         updateTokenStorage(deviceId, status.tokensRemaining);
         setFreeWorkoutsRemaining(status.freeWorkoutsRemaining ?? 0);
+        setRemainingWorkouts(status.remainingWorkouts ?? status.tokensRemaining ?? null);
+        setTotalWorkouts(status.totalWorkouts ?? status.remainingWorkouts ?? status.tokensRemaining ?? null);
       } else if (status.tokensRemaining !== undefined && status.tokensRemaining !== null && status.tokensRemaining > 0) {
         // Regular token count (including when reset to 5 - hasUnlimitedAccess will be false)
         // This handles both regular tokens AND admin resets
         console.log('[Home] Setting paid tokens:', status.tokensRemaining);
         setTokenBalance(status.tokensRemaining);
         updateTokenStorage(deviceId, status.tokensRemaining);
-        // Keep free workouts count alongside paid tokens (so 3 free + purchased tokens can show combined)
+        setRemainingWorkouts(status.remainingWorkouts ?? status.tokensRemaining);
+        setTotalWorkouts(status.totalWorkouts ?? status.remainingWorkouts ?? status.tokensRemaining);
         setFreeWorkoutsRemaining(status.freeWorkoutsRemaining ?? freeWorkoutsRemaining);
       } else {
         // No paid tokens, check free workouts
@@ -103,11 +114,15 @@ function Home() {
         const freeWorkouts = await getFreeWorkoutsRemaining(deviceId);
         console.log('[Home] Free workouts:', freeWorkouts.remaining);
         setFreeWorkoutsRemaining(freeWorkouts.remaining);
+        setRemainingWorkouts(freeWorkouts.remaining);
+        setTotalWorkouts(freeWorkouts.remaining);
         setTokenBalance(null);
       }
     } catch (err) {
       console.error('Failed to check access status:', err);
       setFreeWorkoutsRemaining(3);
+      setRemainingWorkouts(null);
+      setTotalWorkouts(null);
     } finally {
       setCheckingAccess(false);
     }
@@ -173,7 +188,10 @@ function Home() {
 
   // Disable button if no workouts remaining (free or paid)
   const canGenerate = accessStatus?.canGenerateWorkout ?? 
-    (freeWorkoutsRemaining > 0 || (accessStatus?.tokensRemaining ?? 0) > 0 || accessStatus?.hasUnlimitedAccess === true);
+    (accessStatus?.hasUnlimitedAccess === true ||
+    (remainingWorkouts ?? 0) > 0 ||
+    (freeWorkoutsRemaining > 0) ||
+    (accessStatus?.tokensRemaining ?? 0) > 0);
 
   return (
     <>
