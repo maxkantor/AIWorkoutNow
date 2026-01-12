@@ -1206,6 +1206,24 @@ public class DynamoDBService : IDynamoDBService
                 var remainingWorkouts = isDeactivated ? 0 : bal.RemainingWorkouts;
                 var totalWorkouts = isDeactivated ? 0 : bal.TotalWorkouts;
 
+                // Try to enrich with customer email/name from purchases
+                string? customerEmail = null;
+                string? customerName = null;
+                try
+                {
+                    var purchases = await GetUserPurchasesByDeviceIdAsync(deviceId);
+                    var withEmail = purchases.FirstOrDefault(p => !string.IsNullOrEmpty(p.CustomerEmail) || !string.IsNullOrEmpty(p.CustomerName));
+                    if (withEmail != null)
+                    {
+                        customerEmail = withEmail.CustomerEmail;
+                        customerName = withEmail.CustomerName;
+                    }
+                }
+                catch (Exception exPurchases)
+                {
+                    Console.WriteLine($"[DynamoDBService] Error enriching customer info for {deviceId}: {exPurchases.Message}");
+                }
+
                 var status = isDeactivated
                     ? "Deactivated"
                     : ((remainingTokens > 0 || bal.PurchasesCount > 0) ? "Paid" : "Free");
@@ -1213,8 +1231,8 @@ public class DynamoDBService : IDynamoDBService
                 results.Add(new AdminCustomerSummary
                 {
                     DeviceId = deviceId,
-                    Email = null,
-                    Name = null,
+                    Email = customerEmail,
+                    Name = customerName,
                     IsDeactivated = isDeactivated,
                     StatusLabel = status,
                     RemainingTokens = remainingTokens,
@@ -1250,11 +1268,29 @@ public class DynamoDBService : IDynamoDBService
             var remainingWorkouts = isDeactivated ? 0 : bal.RemainingWorkouts;
             var totalWorkouts = isDeactivated ? 0 : bal.TotalWorkouts;
 
+            // Enrich with customer email/name from purchases
+            string? customerEmail = null;
+            string? customerName = null;
+            try
+            {
+                var purchasesWithEmail = await GetUserPurchasesByDeviceIdAsync(deviceId);
+                var withEmail = purchasesWithEmail.FirstOrDefault(p => !string.IsNullOrEmpty(p.CustomerEmail) || !string.IsNullOrEmpty(p.CustomerName));
+                if (withEmail != null)
+                {
+                    customerEmail = withEmail.CustomerEmail;
+                    customerName = withEmail.CustomerName;
+                }
+            }
+            catch (Exception exPurchases)
+            {
+                Console.WriteLine($"[DynamoDBService] Error enriching customer detail for {deviceId}: {exPurchases.Message}");
+            }
+
             var details = new AdminCustomerDetails
             {
                 DeviceId = deviceId,
-                Email = null,
-                Name = null,
+                Email = customerEmail,
+                Name = customerName,
                 IsDeactivated = isDeactivated,
                 StatusLabel = isDeactivated ? "Deactivated" : ((remainingTokens > 0 || bal.PurchasesCount > 0) ? "Paid" : "Free"),
                 RemainingTokens = remainingTokens,
