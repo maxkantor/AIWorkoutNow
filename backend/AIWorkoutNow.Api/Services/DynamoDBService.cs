@@ -246,10 +246,28 @@ public class DynamoDBService : IDynamoDBService
         var completed = purchases.Where(p => p.Status == "completed").ToList();
 
         // Unlimited check
-        var unlimitedPurchase = completed.FirstOrDefault(p => p.IsUnlimited);
+        UserPurchase? unlimitedPurchase = completed.FirstOrDefault(p => p.IsUnlimited);
+        if (unlimitedPurchase == null)
+        {
+            foreach (var p in completed)
+            {
+                try
+                {
+                    var plan = await GetPricingPlanAsync(p.PlanId);
+                    if (plan?.IsUnlimited == true || (!string.IsNullOrEmpty(p.PlanId) && p.PlanId.Contains("unlimited", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        unlimitedPurchase = p;
+                        break;
+                    }
+                }
+                catch { /* ignore plan lookup failures here */ }
+            }
+        }
+
         if (unlimitedPurchase != null)
         {
             tokens.TokensRemaining = 999999;
+            tokens.TotalWorkouts = 999999;
             tokens.ExpiresAt = (unlimitedPurchase.ExpiresAt ?? unlimitedPurchase.PurchasedAt.AddDays(365));
             tokens.IsActive = true;
             await SaveUserTokensAsync(tokens);
@@ -713,11 +731,40 @@ public class DynamoDBService : IDynamoDBService
         {
             try
             {
-                // Ensure TokensGranted
+                var plan = await GetPricingPlanAsync(purchase.PlanId);
+                var isUnlimited = purchase.IsUnlimited
+                    || (plan?.IsUnlimited == true)
+                    || (!string.IsNullOrEmpty(purchase.PlanId) && purchase.PlanId.Contains("unlimited", StringComparison.OrdinalIgnoreCase));
+
+                if (isUnlimited)
+                {
+                    var expires = purchase.ExpiresAt
+                        ?? (purchase.PurchasedAt == default ? DateTime.UtcNow : purchase.PurchasedAt).AddDays(plan?.UnlimitedDays ?? 365);
+
+                    var tokens = await GetUserTokensAsync(deviceId) ?? new UserTokens { DeviceId = deviceId };
+                    tokens.TokensRemaining = 999999;
+                    tokens.TotalWorkouts = 999999;
+                    tokens.ExpiresAt = expires;
+                    tokens.IsActive = true;
+                    await SaveUserTokensAsync(tokens);
+
+                    purchase.Status = "completed";
+                    purchase.IsUnlimited = true;
+                    purchase.TokensGranted = null;
+                    purchase.ExpiresAt = expires;
+                    if (purchase.PurchasedAt == default)
+                    {
+                        purchase.PurchasedAt = DateTime.UtcNow;
+                    }
+                    await SaveUserPurchaseAsync(purchase);
+                    Console.WriteLine($"[DynamoDBService] Applied pending unlimited purchase {purchase.PurchaseId} for device {deviceId}, expires {expires}");
+                    continue;
+                }
+
+                // Ensure TokensGranted for non-unlimited
                 int tokenGrant = purchase.TokensGranted ?? 0;
                 if (tokenGrant <= 0)
                 {
-                    var plan = await GetPricingPlanAsync(purchase.PlanId);
                     if (plan != null && plan.TokenCount.HasValue && plan.TokenCount.Value > 0)
                     {
                         tokenGrant = plan.TokenCount.Value;
