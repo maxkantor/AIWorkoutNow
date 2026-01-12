@@ -116,7 +116,7 @@ function Layout({ children }: LayoutProps) {
                         const paid = accessStatus?.tokensRemaining ?? tokenBalance ?? 0;
                         const free = freeWorkoutsRemaining ?? 0;
                         const total = paid + (paid > 0 ? free : 0);
-                        return total > paid ? `💪 Remaining Workouts: ${total} (includes ${free} free)` : `💪 Remaining Workouts: ${paid}`;
+                        return `💪 Remaining Workouts: ${total}/${total}`;
                       })()}
                     </div>
                   ) : freeWorkoutsRemaining !== undefined && freeWorkoutsRemaining > 0 ? (
