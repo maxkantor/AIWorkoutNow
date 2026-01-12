@@ -362,9 +362,20 @@ public class DynamoDBService : IDynamoDBService
             Console.WriteLine($"[DynamoDBService] Error reading activities for balance: {ex.Message}");
         }
 
-        // For paid workflows, do not add free on top for the denominator: total = paid + free, remaining = paid + free
-        var remainingWorkouts = tokens.TokensRemaining + freeRemaining;
-        var totalWorkouts = tokens.TotalWorkouts > 0 ? tokens.TotalWorkouts + freeRemaining : remainingWorkouts;
+        // If we have an explicit total (purchases or admin reset), show exactly that without adding free on top.
+        // Otherwise (no total recorded), include free workouts in remaining/total.
+        int remainingWorkouts;
+        int totalWorkouts;
+        if (tokens.TotalWorkouts > 0)
+        {
+            remainingWorkouts = tokens.TokensRemaining;
+            totalWorkouts = tokens.TotalWorkouts;
+        }
+        else
+        {
+            remainingWorkouts = tokens.TokensRemaining + freeRemaining;
+            totalWorkouts = remainingWorkouts;
+        }
 
         var dto = new BalanceDto
         {
