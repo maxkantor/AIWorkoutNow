@@ -388,70 +388,127 @@ public class DynamoDBService : IDynamoDBService
     {
         // This is a simplified version - in production, use CloudWatch metrics or pre-aggregated data
         var stats = new AdminStats();
-
-        // Count unique device IDs in anonymous usage (free users)
-        var freeUsersSet = new System.Collections.Generic.HashSet<string>();
-        var freeUsersResponse = await _dynamoDB.ScanAsync(new ScanRequest
-        {
-            TableName = _anonymousUsageTable
-        });
-        
-        foreach (var item in freeUsersResponse.Items)
-        {
-            if (item.ContainsKey("DeviceId"))
-            {
-                freeUsersSet.Add(item["DeviceId"].S);
-            }
-        }
-        stats.FreeUsers = freeUsersSet.Count;
-        Console.WriteLine($"[DynamoDBService] FreeUsers count: {stats.FreeUsers}");
-
-        // Count unique device IDs in user tokens (paid users)
-        var paidUsersSet = new System.Collections.Generic.HashSet<string>();
-        var paidUsersResponse = await _dynamoDB.ScanAsync(new ScanRequest
-        {
-            TableName = _userTokensTable
-        });
-        
-        foreach (var item in paidUsersResponse.Items)
-        {
-            if (item.ContainsKey("DeviceId"))
-            {
-                paidUsersSet.Add(item["DeviceId"].S);
-            }
-        }
-        stats.PaidUsers = paidUsersSet.Count;
-        Console.WriteLine($"[DynamoDBService] PaidUsers count: {stats.PaidUsers}");
-
-        // Count total workouts
-        var workoutsResponse = await _dynamoDB.ScanAsync(new ScanRequest
-        {
-            TableName = _workoutsTable,
-            Select = Select.COUNT
-        });
-        stats.TotalWorkouts = workoutsResponse.Count;
-        Console.WriteLine($"[DynamoDBService] TotalWorkouts count: {stats.TotalWorkouts}");
-
-        // Count token purchases from UserPurchases table (not StripePurchases)
-        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
-        var purchasesTable = $"{tablePrefix}-UserPurchases";
         try
         {
-            var purchasesResponse = await _dynamoDB.ScanAsync(new ScanRequest
+            // Count unique device IDs in anonymous usage (free users)
+            var freeUsersSet = new System.Collections.Generic.HashSet<string>();
+            try
             {
-                TableName = purchasesTable,
-                Select = Select.COUNT
-            });
-            stats.TokenPurchases = purchasesResponse.Count;
-            Console.WriteLine($"[DynamoDBService] TokenPurchases count: {stats.TokenPurchases}");
+                var freeUsersResponse = await _dynamoDB.ScanAsync(new ScanRequest
+                {
+                    TableName = _anonymousUsageTable
+                });
+                
+                foreach (var item in freeUsersResponse.Items)
+                {
+                    if (item.ContainsKey("DeviceId"))
+                    {
+                        freeUsersSet.Add(item["DeviceId"].S);
+                    }
+                }
+                stats.FreeUsers = freeUsersSet.Count;
+                Console.WriteLine($"[DynamoDBService] FreeUsers count: {stats.FreeUsers}");
+            }
+            catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+            {
+                Console.WriteLine($"[DynamoDBService] AnonymousUsage table not found ({_anonymousUsageTable}), FreeUsers=0");
+                stats.FreeUsers = 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DynamoDBService] Error counting FreeUsers: {ex.Message}");
+                stats.FreeUsers = 0;
+            }
+
+            // Count unique device IDs in user tokens (paid users)
+            var paidUsersSet = new System.Collections.Generic.HashSet<string>();
+            try
+            {
+                var paidUsersResponse = await _dynamoDB.ScanAsync(new ScanRequest
+                {
+                    TableName = _userTokensTable
+                });
+                
+                foreach (var item in paidUsersResponse.Items)
+                {
+                    if (item.ContainsKey("DeviceId"))
+                    {
+                        paidUsersSet.Add(item["DeviceId"].S);
+                    }
+                }
+                stats.PaidUsers = paidUsersSet.Count;
+                Console.WriteLine($"[DynamoDBService] PaidUsers count: {stats.PaidUsers}");
+            }
+            catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+            {
+                Console.WriteLine($"[DynamoDBService] UserTokens table not found ({_userTokensTable}), PaidUsers=0");
+                stats.PaidUsers = 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DynamoDBService] Error counting PaidUsers: {ex.Message}");
+                stats.PaidUsers = 0;
+            }
+
+            // Count total workouts
+            try
+            {
+                var workoutsResponse = await _dynamoDB.ScanAsync(new ScanRequest
+                {
+                    TableName = _workoutsTable,
+                    Select = Select.COUNT
+                });
+                stats.TotalWorkouts = workoutsResponse.Count;
+                Console.WriteLine($"[DynamoDBService] TotalWorkouts count: {stats.TotalWorkouts}");
+            }
+            catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+            {
+                Console.WriteLine($"[DynamoDBService] Workouts table not found ({_workoutsTable}), TotalWorkouts=0");
+                stats.TotalWorkouts = 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DynamoDBService] Error counting TotalWorkouts: {ex.Message}");
+                stats.TotalWorkouts = 0;
+            }
+
+            // Count token purchases from UserPurchases table (not StripePurchases)
+            var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+            var purchasesTable = $"{tablePrefix}-UserPurchases";
+            try
+            {
+                var purchasesResponse = await _dynamoDB.ScanAsync(new ScanRequest
+                {
+                    TableName = purchasesTable,
+                    Select = Select.COUNT
+                });
+                stats.TokenPurchases = purchasesResponse.Count;
+                Console.WriteLine($"[DynamoDBService] TokenPurchases count: {stats.TokenPurchases}");
+            }
+            catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+            {
+                Console.WriteLine($"[DynamoDBService] UserPurchases table not found ({purchasesTable}), TokenPurchases=0");
+                stats.TokenPurchases = 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DynamoDBService] Error counting token purchases: {ex.Message}");
+                stats.TokenPurchases = 0;
+            }
+
+            return stats;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[DynamoDBService] Error counting token purchases: {ex.Message}");
-        stats.TokenPurchases = 0;
+            Console.WriteLine($"[DynamoDBService] GetAdminStatsAsync fatal error: {ex.Message}");
+            return new AdminStats
+            {
+                FreeUsers = 0,
+                PaidUsers = 0,
+                TotalWorkouts = 0,
+                TokenPurchases = 0
+            };
         }
-
-        return stats;
     }
 
     // CRM Methods
