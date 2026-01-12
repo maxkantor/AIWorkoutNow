@@ -395,6 +395,23 @@ public class DynamoDBService : IDynamoDBService
         tokens.ExpiresAt = null;
         await SaveUserTokensAsync(tokens);
 
+        // Mark all purchases for this device as reset (so reconciliation won't re-grant)
+        try
+        {
+            var purchases = await GetUserPurchasesAsync(deviceId);
+            foreach (var p in purchases)
+            {
+                p.Status = "reset";
+                p.TokensGranted = 0;
+                p.IsUnlimited = false;
+                await SaveUserPurchaseAsync(p);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error marking purchases as reset for {deviceId}: {ex.Message}");
+        }
+
         // Reset free usage: delete anonymous usage rows
         try
         {
