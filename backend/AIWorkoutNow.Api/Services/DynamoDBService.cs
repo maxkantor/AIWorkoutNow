@@ -330,6 +330,16 @@ public class DynamoDBService : IDynamoDBService
             {
                 totalSpentCents += (int)Math.Round(plan.Price * 100);
             }
+            else
+            {
+                // Fallback: infer price from tokens granted for known default packs
+                if (p.TokensGranted.HasValue)
+                {
+                    var tg = p.TokensGranted.Value;
+                    if (tg == 10) totalSpentCents += 199; // default 10-pack
+                    else if (tg == 25) totalSpentCents += 399; // default 25-pack
+                }
+            }
         }
 
         // Activities (generated workouts, last activity)
@@ -360,6 +370,12 @@ public class DynamoDBService : IDynamoDBService
         catch (Exception ex)
         {
             Console.WriteLine($"[DynamoDBService] Error reading activities for balance: {ex.Message}");
+        }
+
+        // Fallback generated count if activities table missing: derive from total - remaining
+        if (generatedWorkouts == 0 && tokens.TotalWorkouts > tokens.TokensRemaining)
+        {
+            generatedWorkouts = Math.Max(0, tokens.TotalWorkouts - tokens.TokensRemaining);
         }
 
         // If we have an explicit total (purchases or admin reset), show exactly that without adding free on top.
