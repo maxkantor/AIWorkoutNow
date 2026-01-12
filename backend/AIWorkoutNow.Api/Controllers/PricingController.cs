@@ -498,6 +498,21 @@ public class PricingController : ControllerBase
                                                 // CRITICAL FIX: Also check if planId contains "unlimited" as fallback
                                                 var isUnlimitedPlan = (plan != null && plan.IsUnlimited) || (planId?.Contains("unlimited", StringComparison.OrdinalIgnoreCase) == true);
                                                 
+                                                // Load existing purchases for this device to reconcile/complete pending ones
+                                                var devicePurchases = new List<UserPurchase>();
+                                                try
+                                                {
+                                                    devicePurchases = await _dynamoService.GetUserPurchasesAsync(deviceId);
+                                                }
+                                                catch (Exception loadEx)
+                                                {
+                                                    Console.WriteLine($"[PricingController] Error loading purchases for device {deviceId}: {loadEx.Message}");
+                                                }
+
+                                                var matchedPurchase = devicePurchases.FirstOrDefault(p =>
+                                                    (p.StripeSessionId == sessionId) ||
+                                                    (p.PlanId == (planId ?? string.Empty) && p.Status == "pending"));
+
                                                 if (isUnlimitedPlan)
                                                 {
                                                     Console.WriteLine($"[PricingController] AGGRESSIVE FIX: Granting unlimited access from Stripe check!");
@@ -583,7 +598,7 @@ public class PricingController : ControllerBase
                                                 }
                                                 else
                                                 {
-                                                    // Non-unlimited: grant tokens even if purchases table is missing
+                                                    // Non-unlimited: grant tokens and complete pending purchase
                                                     var tokenGrant = 10;
                                                     if (plan != null && plan.TokenCount.HasValue && plan.TokenCount.Value > 0)
                                                     {
@@ -593,6 +608,27 @@ public class PricingController : ControllerBase
                                                     {
                                                         Console.WriteLine($"[PricingController] Plan {planId ?? "unknown"} missing TokenCount or plan lookup failed; defaulting token grant to 10");
                                                     }
+
+                                                    if (matchedPurchase == null)
+                                                    {
+                                                        matchedPurchase = new UserPurchase
+                                                        {
+                                                            PurchaseId = Guid.NewGuid().ToString(),
+                                                            DeviceId = deviceId,
+                                                            PlanId = planId ?? "",
+                                                            StripeSessionId = sessionId ?? "",
+                                                            StripePaymentIntentId = "",
+                                                            Status = "pending",
+                                                            PurchasedAt = DateTime.UtcNow,
+                                                            ExpiresAt = null,
+                                                            IsUnlimited = false,
+                                                            TokensGranted = tokenGrant
+                                                        };
+                                                    }
+
+                                                    matchedPurchase.Status = "completed";
+                                                    matchedPurchase.TokensGranted = tokenGrant;
+                                                    matchedPurchase.IsUnlimited = false;
 
                                                     var newBalance = await _dynamoService.IncrementUserTokensAsync(deviceId, tokenGrant);
                                                     tokensRemaining = newBalance;
@@ -613,21 +649,8 @@ public class PricingController : ControllerBase
                                                     // Persist purchase record so future reconciliations work once the table exists
                                                     try
                                                     {
-                                                        var purchase = new UserPurchase
-                                                        {
-                                                            PurchaseId = Guid.NewGuid().ToString(),
-                                                            DeviceId = deviceId,
-                                                            PlanId = planId ?? "",
-                                                            StripeSessionId = sessionId ?? "",
-                                                            StripePaymentIntentId = "",
-                                                            Status = "completed",
-                                                            PurchasedAt = DateTime.UtcNow,
-                                                            ExpiresAt = null,
-                                                            IsUnlimited = false,
-                                                            TokensGranted = tokenGrant
-                                                        };
-                                                        await _dynamoService.SaveUserPurchaseAsync(purchase);
-                                                        Console.WriteLine($"[PricingController] Created token purchase record: {purchase.PurchaseId} (+{tokenGrant}, new balance {newBalance})");
+                                                        await _dynamoService.SaveUserPurchaseAsync(matchedPurchase);
+                                                        Console.WriteLine($"[PricingController] Upserted token purchase record: {matchedPurchase.PurchaseId} (+{tokenGrant}, new balance {newBalance})");
                                                     }
                                                     catch (Exception purchaseEx)
                                                     {
