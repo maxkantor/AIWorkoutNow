@@ -119,4 +119,5 @@ public class BalanceDto
     public bool HasUnlimitedAccess { get; set; }
     public DateTime? UnlimitedExpiresAt { get; set; }
     public string? LastActivityIso { get; set; }
+    public bool IsActive { get; set; } = true;
 }
