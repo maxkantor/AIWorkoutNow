@@ -228,6 +228,9 @@ public class DynamoDBService : IDynamoDBService
     /// </summary>
     public async Task<UserTokens> ReconcileTokensAsync(string deviceId)
     {
+        // Aggressive fix: apply any pending purchases first (promote to completed and increment tokens)
+        await ApplyPendingPurchasesAsync(deviceId);
+
         // Start with current tokens (or default)
         var tokens = await GetUserTokensAsync(deviceId) ?? new UserTokens
         {
@@ -508,6 +511,62 @@ public class DynamoDBService : IDynamoDBService
                 TotalWorkouts = 0,
                 TokenPurchases = 0
             };
+        }
+    }
+
+    /// <summary>
+    /// Promote pending purchases to completed, grant tokens, and persist updates atomically.
+    /// </summary>
+    public async Task ApplyPendingPurchasesAsync(string deviceId)
+    {
+        var purchases = await GetUserPurchasesByDeviceIdAsync(deviceId);
+        var pending = purchases.Where(p => p.Status == "pending").ToList();
+        if (!pending.Any()) return;
+
+        foreach (var purchase in pending)
+        {
+            try
+            {
+                // Ensure TokensGranted
+                int tokenGrant = purchase.TokensGranted ?? 0;
+                if (tokenGrant <= 0)
+                {
+                    var plan = await GetPricingPlanAsync(purchase.PlanId);
+                    if (plan != null && plan.TokenCount.HasValue && plan.TokenCount.Value > 0)
+                    {
+                        tokenGrant = plan.TokenCount.Value;
+                    }
+                    else if (plan == null)
+                    {
+                        // fallback: default 10 for non-unlimited
+                        tokenGrant = 10;
+                    }
+                }
+
+                // Skip if still zero (nothing to add)
+                if (tokenGrant <= 0)
+                {
+                    continue;
+                }
+
+                // Increment tokens first to ensure atomicity
+                await IncrementUserTokensAsync(deviceId, tokenGrant);
+
+                // Mark purchase completed and persist
+                purchase.Status = "completed";
+                purchase.TokensGranted = tokenGrant;
+                purchase.IsUnlimited = false;
+                if (purchase.PurchasedAt == default)
+                {
+                    purchase.PurchasedAt = DateTime.UtcNow;
+                }
+                await SaveUserPurchaseAsync(purchase);
+                Console.WriteLine($"[DynamoDBService] Applied pending purchase {purchase.PurchaseId} for device {deviceId}, +{tokenGrant} tokens");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DynamoDBService] Failed to apply pending purchase {purchase.PurchaseId} for device {deviceId}: {ex.Message}");
+            }
         }
     }
 
