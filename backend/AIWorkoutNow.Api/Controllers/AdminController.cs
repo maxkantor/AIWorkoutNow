@@ -16,6 +16,37 @@ public class AdminController : ControllerBase
     private readonly IEmailService _emailService;
     private readonly IConfigService _configService;
 
+    private async Task<AdminUser?> EnsureDefaultAdminAsync()
+    {
+        // Seed a default admin if the AdminUsers table is empty or the default email is missing.
+        var defaultEmail = Environment.GetEnvironmentVariable("DEFAULT_ADMIN_EMAIL") ?? "admin@aiworkoutnow.com";
+        var defaultPassword = Environment.GetEnvironmentVariable("DEFAULT_ADMIN_PASSWORD") ?? "Maxang11@@";
+
+        if (string.IsNullOrWhiteSpace(defaultEmail) || string.IsNullOrWhiteSpace(defaultPassword))
+        {
+            return null;
+        }
+
+        var existing = await _dynamoService.GetAdminUserAsync(defaultEmail);
+        if (existing != null)
+        {
+            return existing;
+        }
+
+        var seeded = new AdminUser
+        {
+            AdminId = Guid.NewGuid().ToString(),
+            Email = defaultEmail,
+            PasswordHash = _authService.HashPassword(defaultPassword),
+            Role = "owner",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _dynamoService.SaveAdminUserAsync(seeded);
+        Console.WriteLine($"[AdminController] Seeded default admin user: {defaultEmail}");
+        return seeded;
+    }
+
     public AdminController(
         IDynamoDBService dynamoService,
         IAuthService authService,
@@ -45,7 +76,13 @@ public class AdminController : ControllerBase
             if (admin == null)
             {
                 Console.WriteLine($"[AdminController] Admin user not found for email: {request.Email}");
-                return Unauthorized(new { message = "Invalid credentials" });
+                var seeded = await EnsureDefaultAdminAsync();
+                if (seeded == null || !string.Equals(seeded.Email, request.Email, StringComparison.OrdinalIgnoreCase))
+                {
+                    return Unauthorized(new { message = "Invalid credentials" });
+                }
+
+                admin = seeded;
             }
 
             Console.WriteLine($"[AdminController] Admin user found: {admin.AdminId}");

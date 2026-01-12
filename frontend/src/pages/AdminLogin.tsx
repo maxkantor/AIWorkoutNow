@@ -6,9 +6,18 @@ import './AdminLogin.css';
 
 function AdminLogin() {
   const [email, setEmail] = useState(() => localStorage.getItem('admin_email') || '');
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState(() => {
+    const stored = localStorage.getItem('admin_password');
+    if (!stored) return '';
+    try {
+      return atob(stored);
+    } catch {
+      return '';
+    }
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [rememberEmail, setRememberEmail] = useState(() => !!localStorage.getItem('admin_email'));
+  const [rememberPassword, setRememberPassword] = useState(() => !!localStorage.getItem('admin_password'));
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
@@ -21,6 +30,18 @@ function AdminLogin() {
     }
     localStorage.setItem('admin_email', email);
   }, [email, rememberEmail]);
+
+  useEffect(() => {
+    if (!rememberPassword) {
+      localStorage.removeItem('admin_password');
+      return;
+    }
+    try {
+      localStorage.setItem('admin_password', btoa(password));
+    } catch {
+      // ignore encoding issues
+    }
+  }, [password, rememberPassword]);
 
   const validateEmail = (val: string) => /\S+@\S+\.\S+/.test(val.trim());
   const isEmailValid = validateEmail(email);
@@ -41,6 +62,11 @@ function AdminLogin() {
         localStorage.setItem('admin_email', email.trim());
       } else {
         localStorage.removeItem('admin_email');
+      }
+      if (rememberPassword) {
+        localStorage.setItem('admin_password', btoa(password));
+      } else {
+        localStorage.removeItem('admin_password');
       }
       navigate('/admin/dashboard');
     } catch (err: any) {
@@ -111,6 +137,14 @@ function AdminLogin() {
                   onChange={(e) => setRememberEmail(e.target.checked)}
                 />
                 <span>Remember me</span>
+              </label>
+              <label className="remember">
+                <input
+                  type="checkbox"
+                  checked={rememberPassword}
+                  onChange={(e) => setRememberPassword(e.target.checked)}
+                />
+                <span>Remember password</span>
               </label>
               <button type="button" className="link-button" onClick={() => setShowForgot(true)}>
                 Forgot password?
