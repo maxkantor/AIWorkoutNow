@@ -78,20 +78,25 @@ function Home() {
       // CRITICAL FIX: Backend returns hasUnlimitedAccess=false when tokens are reset (e.g., to 5)
       // ALWAYS respect the API response - if hasUnlimitedAccess is false, never show unlimited
       // Even if tokensRemaining is high, if hasUnlimitedAccess is false, treat it as regular tokens
+      // Always persist the API-reported free workouts count when provided
+      if (status.freeWorkoutsRemaining !== undefined && status.freeWorkoutsRemaining !== null) {
+        setFreeWorkoutsRemaining(status.freeWorkoutsRemaining);
+      }
+
       if (status.hasUnlimitedAccess === true && status.tokensRemaining >= 999999) {
         // Only set unlimited if API explicitly confirms it
         console.log('[Home] Setting unlimited access');
         setTokenBalance(status.tokensRemaining);
         updateTokenStorage(deviceId, status.tokensRemaining);
-        setFreeWorkoutsRemaining(0);
+        setFreeWorkoutsRemaining(status.freeWorkoutsRemaining ?? 0);
       } else if (status.tokensRemaining !== undefined && status.tokensRemaining !== null && status.tokensRemaining > 0) {
         // Regular token count (including when reset to 5 - hasUnlimitedAccess will be false)
         // This handles both regular tokens AND admin resets
         console.log('[Home] Setting paid tokens:', status.tokensRemaining);
         setTokenBalance(status.tokensRemaining);
         updateTokenStorage(deviceId, status.tokensRemaining);
-        // Clear free workouts when paid tokens exist
-        setFreeWorkoutsRemaining(0);
+        // Keep free workouts count alongside paid tokens (so 3 free + purchased tokens can show combined)
+        setFreeWorkoutsRemaining(status.freeWorkoutsRemaining ?? freeWorkoutsRemaining);
       } else {
         // No paid tokens, check free workouts
         console.log('[Home] No paid tokens, checking free workouts');
