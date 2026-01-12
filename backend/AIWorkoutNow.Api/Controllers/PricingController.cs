@@ -320,11 +320,13 @@ public class PricingController : ControllerBase
             var tokensRemaining = tokens?.TokensRemaining ?? 0;
             
             // Aggressive reconciliation: if purchases exist and tokensRemaining is lower than purchased tokens, bump tokensRemaining
+            var hasLocalCompletedPurchases = false;
             try
             {
                 var purchases = await _dynamoService.GetUserPurchasesAsync(deviceId);
                 var completed = purchases.Where(p => p.Status == "completed").ToList();
                 var reconUnlimited = completed.FirstOrDefault(p => p.IsUnlimited);
+                hasLocalCompletedPurchases = completed.Any();
 
                 if (reconUnlimited != null)
                 {
@@ -431,8 +433,9 @@ public class PricingController : ControllerBase
             
             // REMOVE early return for admin resets: always allow merge/purchase checks even if tokens > 0
             
-            // Only check Stripe if tokens are exactly 0
-            bool shouldCheckStripe = tokensRemaining == 0;
+            // Only check Stripe if tokens are exactly 0 AND we already have local purchases.
+            // This prevents repopulating tokens from Stripe when tables were intentionally wiped.
+            bool shouldCheckStripe = tokensRemaining == 0 && hasLocalCompletedPurchases;
             
             if (shouldCheckStripe)
             {
