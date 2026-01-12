@@ -379,7 +379,8 @@ public class DynamoDBService : IDynamoDBService
             HasUnlimitedAccess = tokens.TokensRemaining >= 999999,
             UnlimitedExpiresAt = tokens.ExpiresAt,
             LastActivityIso = lastActivity?.ToUniversalTime().ToString("o"),
-            IsActive = tokens.IsActive
+            // If a device has any paid balance, consider it active to keep Admin/Home in sync
+            IsActive = tokens.IsActive || tokens.TokensRemaining > 0 || tokens.TotalWorkouts > 0
         };
         return dto;
     }
