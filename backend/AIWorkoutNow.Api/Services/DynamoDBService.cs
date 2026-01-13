@@ -2637,7 +2637,7 @@ public class DynamoDBService : IDynamoDBService
         {
             // Table already exists or being created; safe to ignore
         }
-        catch (Amazon.DynamoDBv2.Model.AccessDeniedException ex)
+        catch (Amazon.Runtime.AmazonServiceException ex) when (string.Equals(ex.ErrorCode, "AccessDeniedException", StringComparison.OrdinalIgnoreCase))
         {
             Console.WriteLine($"[DynamoDBService] IAM denied CreateTable/Describe for {tableName}: {ex.Message}");
         }
