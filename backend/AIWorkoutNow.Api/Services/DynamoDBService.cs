@@ -2605,10 +2605,15 @@ public class DynamoDBService : IDynamoDBService
     {
         try
         {
-            var list = await _dynamoDB.ListTablesAsync();
-            if (list.TableNames.Contains(tableName))
+            // First try describe (avoids ListTables permission)
+            try
             {
-                return;
+                await _dynamoDB.DescribeTableAsync(tableName);
+                return; // table exists
+            }
+            catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+            {
+                // proceed to create
             }
 
             await _dynamoDB.CreateTableAsync(new CreateTableRequest
@@ -2631,6 +2636,10 @@ public class DynamoDBService : IDynamoDBService
         catch (Amazon.DynamoDBv2.Model.ResourceInUseException)
         {
             // Table already exists or being created; safe to ignore
+        }
+        catch (Amazon.DynamoDBv2.Model.AccessDeniedException ex)
+        {
+            Console.WriteLine($"[DynamoDBService] IAM denied CreateTable/Describe for {tableName}: {ex.Message}");
         }
         catch (Exception ex)
         {
