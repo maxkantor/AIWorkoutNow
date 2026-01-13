@@ -231,7 +231,7 @@ public class DynamoDBService : IDynamoDBService
     public async Task<UserTokens> ReconcileTokensAsync(string deviceId)
     {
         // Aggressive fix: apply any pending purchases first (promote to completed and increment tokens)
-        await ApplyPendingPurchasesAsync(deviceId);
+        await ApplyPendingPurchasesAsync(deviceId, null);
 
         // Start with current tokens (or default)
         var tokens = await GetUserTokensAsync(deviceId) ?? new UserTokens
@@ -713,8 +713,13 @@ public class DynamoDBService : IDynamoDBService
     /// <summary>
     /// Promote pending purchases to completed by verifying payment status with Stripe, grant tokens once, and persist.
     /// </summary>
-    public async Task ApplyPendingPurchasesAsync(string deviceId, string stripeSecretKey)
+    public async Task ApplyPendingPurchasesAsync(string deviceId, string? stripeSecretKey = null)
     {
+        if (string.IsNullOrEmpty(stripeSecretKey))
+        {
+            return;
+        }
+
         try
         {
             var pending = (await GetUserPurchasesByDeviceIdAsync(deviceId))
