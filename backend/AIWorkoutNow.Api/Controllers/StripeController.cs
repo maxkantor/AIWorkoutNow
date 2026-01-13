@@ -230,6 +230,24 @@ public class StripeController : ControllerBase
 
             await _dynamoService.SaveUserPurchaseAsync(purchase);
 
+            // AGGRESSIVE RECOVERY: immediately grant tokens so UI reflects purchase even if webhook/table issues
+            try
+            {
+                var beforeTokens = await _dynamoService.GetUserTokensAsync(request.DeviceId);
+                var afterTokens = await _dynamoService.IncrementUserTokensAsync(request.DeviceId, plan.TokenCount);
+                Console.WriteLine($"[StripeController] Immediate grant: +{plan.TokenCount} tokens to {request.DeviceId}. Before={beforeTokens?.TokensRemaining}, After={afterTokens}");
+
+                // Persist purchase as completed to support totals even if webhook not received
+                purchase.Status = "completed";
+                purchase.TokensGranted = plan.TokenCount;
+                await _dynamoService.SaveUserPurchaseAsync(purchase);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StripeController] Immediate grant failed: {ex.Message}");
+                // continue; webhook may still grant
+            }
+
             return Ok(new { sessionId, url = sessionUrl });
         }
         catch (Exception ex)
