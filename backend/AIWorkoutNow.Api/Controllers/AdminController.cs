@@ -182,6 +182,20 @@ public class AdminController : ControllerBase
     {
         try
         {
+            // Best-effort enrich purchases with Stripe customer info before returning
+            try
+            {
+                var secret = await _configService.GetStripeSecretKeyAsync();
+                if (!string.IsNullOrEmpty(secret))
+                {
+                    await _dynamoService.EnrichPurchasesFromStripeAsync(deviceId, secret);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[AdminController] Enrich purchases failed: {ex.Message}");
+            }
+
             var customer = await _dynamoService.GetCustomerSummaryAsync(deviceId);
             if (customer == null)
             {

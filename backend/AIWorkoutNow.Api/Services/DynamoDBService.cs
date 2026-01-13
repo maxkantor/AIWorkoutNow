@@ -837,6 +837,147 @@ public class DynamoDBService : IDynamoDBService
         }
     }
 
+    /// <summary>
+    /// Enrich completed purchases missing customer info or token counts by querying Stripe session/payment_intent.
+    /// Does NOT grant tokens; only updates purchase metadata.
+    /// </summary>
+    public async Task EnrichPurchasesFromStripeAsync(string deviceId, string stripeSecretKey)
+    {
+        try
+        {
+            var purchases = await GetUserPurchasesByDeviceIdAsync(deviceId);
+            var targets = purchases.Where(p =>
+                string.Equals(p.Status, "completed", StringComparison.OrdinalIgnoreCase) &&
+                (string.IsNullOrEmpty(p.CustomerEmail) || string.IsNullOrEmpty(p.CustomerName) || !p.TokensGranted.HasValue || p.TokensGranted.Value <= 0)
+            ).ToList();
+
+            if (!targets.Any())
+            {
+                return;
+            }
+
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", stripeSecretKey);
+
+            foreach (var purchase in targets)
+            {
+                try
+                {
+                    var sessionId = purchase.StripeSessionId;
+                    var paymentIntentId = purchase.StripePaymentIntentId;
+                    string? customerEmail = null;
+                    string? customerName = null;
+                    string? customerPhone = null;
+                    string? customerAddress1 = null;
+                    string? customerCity = null;
+                    string? customerState = null;
+                    string? customerPostal = null;
+                    string? customerCountry = null;
+                    int tokenGrant = purchase.TokensGranted ?? 0;
+
+                    // Helper to parse customer details from JSON element
+                    void ExtractCustomerDetails(System.Text.Json.JsonElement elem)
+                    {
+                        if (elem.ValueKind != System.Text.Json.JsonValueKind.Object) return;
+                        if (elem.TryGetProperty("email", out var e)) customerEmail = e.GetString();
+                        if (elem.TryGetProperty("name", out var n)) customerName = n.GetString();
+                        if (elem.TryGetProperty("phone", out var ph)) customerPhone = ph.GetString();
+                        if (elem.TryGetProperty("address", out var addr) && addr.ValueKind == System.Text.Json.JsonValueKind.Object)
+                        {
+                            if (addr.TryGetProperty("line1", out var line1)) customerAddress1 = line1.GetString();
+                            if (addr.TryGetProperty("city", out var city)) customerCity = city.GetString();
+                            if (addr.TryGetProperty("state", out var state)) customerState = state.GetString();
+                            if (addr.TryGetProperty("postal_code", out var postal)) customerPostal = postal.GetString();
+                            if (addr.TryGetProperty("country", out var country)) customerCountry = country.GetString();
+                        }
+                    }
+
+                    // Prefer session lookup
+                    if (!string.IsNullOrEmpty(sessionId))
+                    {
+                        var resp = await httpClient.GetAsync($"https://api.stripe.com/v1/checkout/sessions/{sessionId}");
+                        if (resp.IsSuccessStatusCode)
+                        {
+                            var content = await resp.Content.ReadAsStringAsync();
+                            var data = System.Text.Json.JsonDocument.Parse(content).RootElement;
+                            if (data.TryGetProperty("customer_details", out var cd)) ExtractCustomerDetails(cd);
+                            if (data.TryGetProperty("customer", out var customerIdElem))
+                            {
+                                var customerId = customerIdElem.GetString();
+                                if (!string.IsNullOrEmpty(customerId))
+                                {
+                                    var cResp = await httpClient.GetAsync($"https://api.stripe.com/v1/customers/{customerId}");
+                                    if (cResp.IsSuccessStatusCode)
+                                    {
+                                        var cContent = await cResp.Content.ReadAsStringAsync();
+                                        var cData = System.Text.Json.JsonDocument.Parse(cContent).RootElement;
+                                        ExtractCustomerDetails(cData);
+                                    }
+                                }
+                            }
+                            if (data.TryGetProperty("metadata", out var meta) && meta.ValueKind == System.Text.Json.JsonValueKind.Object)
+                            {
+                                if (tokenGrant <= 0 && meta.TryGetProperty("tokenCount", out var tg) && tg.TryGetInt32(out var tgInt))
+                                    tokenGrant = tgInt;
+                                if (string.IsNullOrEmpty(purchase.PlanId) && meta.TryGetProperty("planId", out var pid))
+                                    purchase.PlanId = pid.GetString();
+                            }
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(paymentIntentId))
+                    {
+                        var resp = await httpClient.GetAsync($"https://api.stripe.com/v1/payment_intents/{paymentIntentId}");
+                        if (resp.IsSuccessStatusCode)
+                        {
+                            var content = await resp.Content.ReadAsStringAsync();
+                            var data = System.Text.Json.JsonDocument.Parse(content).RootElement;
+                            if (data.TryGetProperty("charges", out var charges) && charges.TryGetProperty("data", out var arr) && arr.ValueKind == System.Text.Json.JsonValueKind.Array && arr.GetArrayLength() > 0)
+                            {
+                                var charge = arr[0];
+                                if (charge.TryGetProperty("billing_details", out var bd)) ExtractCustomerDetails(bd);
+                            }
+                            if (data.TryGetProperty("metadata", out var meta) && meta.ValueKind == System.Text.Json.JsonValueKind.Object)
+                            {
+                                if (tokenGrant <= 0 && meta.TryGetProperty("tokenCount", out var tg) && tg.TryGetInt32(out var tgInt))
+                                    tokenGrant = tgInt;
+                                if (string.IsNullOrEmpty(purchase.PlanId) && meta.TryGetProperty("planId", out var pid))
+                                    purchase.PlanId = pid.GetString();
+                            }
+                        }
+                    }
+
+                    // Backfill token grant from plan if still missing
+                    if (tokenGrant <= 0 && !string.IsNullOrEmpty(purchase.PlanId))
+                    {
+                        var plan = await GetPricingPlanAsync(purchase.PlanId);
+                        if (plan?.TokenCount != null) tokenGrant = plan.TokenCount.Value;
+                    }
+
+                    purchase.CustomerEmail = customerEmail ?? purchase.CustomerEmail;
+                    purchase.CustomerName = customerName ?? purchase.CustomerName;
+                    purchase.CustomerPhone = customerPhone ?? purchase.CustomerPhone;
+                    purchase.CustomerAddressLine1 = customerAddress1 ?? purchase.CustomerAddressLine1;
+                    purchase.CustomerCity = customerCity ?? purchase.CustomerCity;
+                    purchase.CustomerState = customerState ?? purchase.CustomerState;
+                    purchase.CustomerPostalCode = customerPostal ?? purchase.CustomerPostalCode;
+                    purchase.CustomerCountry = customerCountry ?? purchase.CustomerCountry;
+                    if (tokenGrant > 0) purchase.TokensGranted = tokenGrant;
+
+                    await SaveUserPurchaseAsync(purchase);
+                }
+                catch (Exception exInner)
+                {
+                    Console.WriteLine($"[DynamoDBService] Error enriching purchase {purchase.PurchaseId}: {exInner.Message}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] EnrichPurchasesFromStripeAsync error: {ex.Message}");
+        }
+    }
+
     // CRM Methods
     public async Task<List<ContactMessage>> GetAllContactMessagesAsync()
     {
