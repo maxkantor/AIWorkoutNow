@@ -46,7 +46,7 @@ public interface IDynamoDBService
     Task<List<UserPurchase>> GetUserPurchasesAsync(string deviceId);
     Task<UserPurchase?> GetActiveUnlimitedPurchaseAsync(string deviceId);
     Task<int> GetTotalFreeWorkoutsAsync(string deviceId);
-    Task ApplyPendingPurchasesAsync(string deviceId);
+    Task ApplyPendingPurchasesAsync(string deviceId, string stripeSecretKey);
     Task<BalanceDto> GetBalanceAsync(string deviceId);
     Task<BalanceDto> ResetBalanceAsync(string deviceId, int newCount, string? reason = null);
     

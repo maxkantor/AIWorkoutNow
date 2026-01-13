@@ -711,13 +711,125 @@ public class DynamoDBService : IDynamoDBService
     }
 
     /// <summary>
-    /// Promote pending purchases to completed, grant tokens, and persist updates atomically.
+    /// Promote pending purchases to completed by verifying payment status with Stripe, grant tokens once, and persist.
     /// </summary>
-    public async Task ApplyPendingPurchasesAsync(string deviceId)
+    public async Task ApplyPendingPurchasesAsync(string deviceId, string stripeSecretKey)
     {
-        // Intentionally left blank: rely solely on Stripe webhook/verify to grant tokens.
-        // Prevents “back/cancel” sessions from granting tokens.
-        return;
+        try
+        {
+            var pending = (await GetUserPurchasesByDeviceIdAsync(deviceId))
+                .Where(p => string.Equals(p.Status, "pending", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (!pending.Any())
+            {
+                return;
+            }
+
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", stripeSecretKey);
+
+            foreach (var purchase in pending)
+            {
+                try
+                {
+                    var sessionId = purchase.StripeSessionId;
+                    var paymentIntentId = purchase.StripePaymentIntentId;
+                    var planId = purchase.PlanId;
+                    int tokenGrant = purchase.TokensGranted ?? 0;
+                    string paymentStatus = "";
+                    string sessionStatus = "";
+
+                    // Prefer session lookup
+                    if (!string.IsNullOrEmpty(sessionId))
+                    {
+                        var resp = await httpClient.GetAsync($"https://api.stripe.com/v1/checkout/sessions/{sessionId}");
+                        if (resp.IsSuccessStatusCode)
+                        {
+                            var content = await resp.Content.ReadAsStringAsync();
+                            var data = System.Text.Json.JsonDocument.Parse(content).RootElement;
+                            if (data.TryGetProperty("payment_status", out var ps)) paymentStatus = ps.GetString() ?? "";
+                            if (data.TryGetProperty("status", out var ss)) sessionStatus = ss.GetString() ?? "";
+                            if (data.TryGetProperty("metadata", out var meta) && meta.ValueKind == System.Text.Json.JsonValueKind.Object)
+                            {
+                                if (string.IsNullOrEmpty(planId) && meta.TryGetProperty("planId", out var pid))
+                                    planId = pid.GetString();
+                                if (meta.TryGetProperty("tokenCount", out var tg) && tg.TryGetInt32(out var tgInt))
+                                    tokenGrant = tgInt;
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[DynamoDBService] Stripe session lookup failed for {sessionId}: {resp.StatusCode}");
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(paymentIntentId))
+                    {
+                        var resp = await httpClient.GetAsync($"https://api.stripe.com/v1/payment_intents/{paymentIntentId}");
+                        if (resp.IsSuccessStatusCode)
+                        {
+                            var content = await resp.Content.ReadAsStringAsync();
+                            var data = System.Text.Json.JsonDocument.Parse(content).RootElement;
+                            if (data.TryGetProperty("status", out var ps)) paymentStatus = ps.GetString() ?? "";
+                            if (data.TryGetProperty("metadata", out var meta) && meta.ValueKind == System.Text.Json.JsonValueKind.Object)
+                            {
+                                if (string.IsNullOrEmpty(planId) && meta.TryGetProperty("planId", out var pid))
+                                    planId = pid.GetString();
+                                if (meta.TryGetProperty("tokenCount", out var tg) && tg.TryGetInt32(out var tgInt))
+                                    tokenGrant = tgInt;
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[DynamoDBService] Stripe payment_intent lookup failed for {paymentIntentId}: {resp.StatusCode}");
+                        }
+                    }
+
+                    // Backfill tokens from plan if still missing
+                    if (tokenGrant <= 0 && !string.IsNullOrEmpty(planId))
+                    {
+                        var plan = await GetPricingPlanAsync(planId);
+                        if (plan?.TokenCount != null)
+                        {
+                            tokenGrant = plan.TokenCount.Value;
+                        }
+                    }
+
+                    if (string.Equals(paymentStatus, "paid", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(paymentStatus, "succeeded", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (tokenGrant > 0)
+                        {
+                            var after = await IncrementUserTokensAsync(deviceId, tokenGrant);
+                            Console.WriteLine($"[DynamoDBService] Applied pending purchase {purchase.PurchaseId} (+{tokenGrant}) new balance {after}");
+                        }
+                        purchase.Status = "completed";
+                        purchase.PlanId = planId ?? purchase.PlanId;
+                        purchase.TokensGranted = tokenGrant;
+                        await SaveUserPurchaseAsync(purchase);
+                    }
+                    else if (string.Equals(sessionStatus, "expired", StringComparison.OrdinalIgnoreCase) ||
+                             string.Equals(paymentStatus, "canceled", StringComparison.OrdinalIgnoreCase))
+                    {
+                        purchase.Status = "canceled";
+                        await SaveUserPurchaseAsync(purchase);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[DynamoDBService] Pending purchase {purchase.PurchaseId} not paid yet (payment_status={paymentStatus}, status={sessionStatus})");
+                    }
+                }
+                catch (Exception exInner)
+                {
+                    Console.WriteLine($"[DynamoDBService] Error processing pending purchase {purchase.PurchaseId}: {exInner.Message}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] ApplyPendingPurchasesAsync error: {ex.Message}");
+        }
     }
 
     // CRM Methods

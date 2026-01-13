@@ -312,6 +312,20 @@ public class PricingController : ControllerBase
     {
         try
         {
+            // Attempt to verify and apply any paid pending purchases (handles back button / delayed webhooks)
+            try
+            {
+                var stripeSecret = await _configService.GetStripeSecretKeyAsync();
+                if (!string.IsNullOrEmpty(stripeSecret))
+                {
+                    await _dynamoService.ApplyPendingPurchasesAsync(deviceId, stripeSecret);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[PricingController] Error applying pending purchases: {ex.Message}");
+            }
+
             var balance = await _dynamoService.GetBalanceAsync(deviceId);
             return Ok(new
             {
