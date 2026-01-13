@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { getAllPurchases, StripePurchase } from '../services/api';
+import { getAllPurchases, StripePurchase, PurchasesResponse } from '../services/api';
 import './AdminPurchases.css';
 
 function AdminPurchases() {
   const [purchases, setPurchases] = useState<StripePurchase[]>([]);
+  const [summary, setSummary] = useState<{ totalRevenue: number; totalPurchases: number; completedCount: number }>({
+    totalRevenue: 0,
+    totalPurchases: 0,
+    completedCount: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>('all');
@@ -23,8 +28,16 @@ function AdminPurchases() {
 
   const loadPurchases = async (token: string) => {
     try {
-      const data = await getAllPurchases(token);
-      setPurchases(data);
+      const data: PurchasesResponse = await getAllPurchases(token);
+      const purchaseList = data.purchases || [];
+      setPurchases(purchaseList);
+      setSummary({
+        totalRevenue: data.totalRevenue ?? purchaseList.reduce((sum, p) => sum + ((p as any).amount || p.amount || p.amountTotal || 0), 0),
+        totalPurchases: data.totalPurchases ?? purchaseList.length,
+        completedCount:
+          data.completedCount ??
+          purchaseList.filter(p => ((p as any).status || p.status || p.paymentStatus || '').toLowerCase() === 'completed').length,
+      });
     } catch (err: any) {
       setError(err.message || 'Failed to load purchases');
       if (err.message?.includes('401') || err.message?.includes('unauthorized')) {
@@ -42,20 +55,6 @@ function AdminPurchases() {
         const status = (p as any).status || p.status || p.paymentStatus || 'pending';
         return status.toLowerCase() === filter.toLowerCase();
       });
-
-  // AGGRESSIVE FIX: Calculate revenue from ALL purchases (not filtered)
-  const totalRevenue = purchases
-    .filter(p => {
-      const status = (p as any).status || p.status || p.paymentStatus || 'pending';
-      return status === 'completed';
-    })
-    .reduce((sum, p) => sum + ((p as any).amount || p.amount || p.amountTotal || 0), 0);
-  
-  // Calculate completed count from ALL purchases
-  const completedCount = purchases.filter(p => {
-    const status = (p as any).status || p.status || p.paymentStatus || 'pending';
-    return status === 'completed';
-  }).length;
 
   if (loading) {
     return (
@@ -85,15 +84,15 @@ function AdminPurchases() {
           <div className="purchases-stats">
             <div className="stat-card">
               <h3>Total Revenue</h3>
-              <p className="stat-value">${totalRevenue.toFixed(2)}</p>
+              <p className="stat-value">${summary.totalRevenue.toFixed(2)}</p>
             </div>
             <div className="stat-card">
               <h3>Total Purchases</h3>
-              <p className="stat-value">{purchases.length}</p>
+              <p className="stat-value">{summary.totalPurchases}</p>
             </div>
             <div className="stat-card">
               <h3>Completed</h3>
-              <p className="stat-value">{completedCount}</p>
+              <p className="stat-value">{summary.completedCount}</p>
             </div>
           </div>
 

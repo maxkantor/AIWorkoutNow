@@ -650,7 +650,14 @@ export async function replyToContact(token: string, messageId: string, replyMess
   }
 }
 
-export async function getAllPurchases(token: string): Promise<StripePurchase[]> {
+export interface PurchasesResponse {
+  purchases: StripePurchase[];
+  totalRevenue?: number;
+  totalPurchases?: number;
+  completedCount?: number;
+}
+
+export async function getAllPurchases(token: string): Promise<PurchasesResponse> {
   const response = await fetch(`${API_BASE_URL}/admin/purchases`, {
     method: 'GET',
     headers: {
@@ -663,7 +670,29 @@ export async function getAllPurchases(token: string): Promise<StripePurchase[]> 
     throw new Error('Failed to fetch purchases');
   }
 
-  return response.json();
+  const data = await response.json();
+
+  // Backward-compat: API used to return an array. Normalize to object.
+  if (Array.isArray(data)) {
+    const completed = data.filter((p: any) => (p.status || p.paymentStatus || '').toLowerCase() === 'completed');
+    const totalRevenue = completed.reduce((sum: number, p: any) => {
+      const amt = p.amount ?? p.amountTotal ?? 0;
+      return sum + Number(amt || 0);
+    }, 0);
+    return {
+      purchases: data,
+      totalRevenue,
+      totalPurchases: data.length,
+      completedCount: completed.length,
+    };
+  }
+
+  return {
+    purchases: data.purchases ?? [],
+    totalRevenue: data.totalRevenue ?? 0,
+    totalPurchases: data.totalPurchases ?? (data.purchases?.length ?? 0),
+    completedCount: data.completedCount ?? 0,
+  };
 }
 
 export async function getAllActivities(token: string, limit?: number): Promise<CustomerActivity[]> {

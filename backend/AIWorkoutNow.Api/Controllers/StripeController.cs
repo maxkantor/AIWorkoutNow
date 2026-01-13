@@ -105,6 +105,23 @@ public class StripeController : ControllerBase
                 plan = defaultPlan;
             }
 
+            // Canonicalize defaults to prevent stale/incorrect prices
+            if (plan.PlanId.Contains("10"))
+            {
+                plan.Price = 1.99m;
+                plan.TokenCount = 10;
+            }
+            else if (plan.PlanId.Contains("30"))
+            {
+                plan.Price = 3.99m;
+                plan.TokenCount = 30;
+            }
+            else if (plan.PlanId.Contains("100"))
+            {
+                plan.Price = 7.99m;
+                plan.TokenCount = 100;
+            }
+
             Console.WriteLine($"[StripeController] Plan found: {plan.Name}, Price: {plan.Price}, Currency: {plan.Currency}");
 
             // Get Stripe secret key from SSM
