@@ -230,31 +230,6 @@ public class StripeController : ControllerBase
 
             await _dynamoService.SaveUserPurchaseAsync(purchase);
 
-            // AGGRESSIVE RECOVERY: immediately grant tokens so UI reflects purchase even if webhook/table issues
-            try
-            {
-                var tokenGrant = plan.TokenCount ?? 0;
-                if (tokenGrant <= 0)
-                {
-                    Console.WriteLine("[StripeController] Immediate grant skipped: tokenGrant is 0 or null");
-                    return Ok(new { sessionId, url = sessionUrl });
-                }
-
-                var beforeTokens = await _dynamoService.GetUserTokensAsync(request.DeviceId);
-                var afterTokens = await _dynamoService.IncrementUserTokensAsync(request.DeviceId, tokenGrant);
-                Console.WriteLine($"[StripeController] Immediate grant: +{tokenGrant} tokens to {request.DeviceId}. Before={beforeTokens?.TokensRemaining}, After={afterTokens}");
-
-                // Persist purchase as completed to support totals even if webhook not received
-                purchase.Status = "completed";
-                purchase.TokensGranted = tokenGrant;
-                await _dynamoService.SaveUserPurchaseAsync(purchase);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[StripeController] Immediate grant failed: {ex.Message}");
-                // continue; webhook may still grant
-            }
-
             return Ok(new { sessionId, url = sessionUrl });
         }
         catch (Exception ex)
@@ -293,6 +268,13 @@ public class StripeController : ControllerBase
                 var deviceId = metadata?["deviceId"]?.ToString();
                 var planId = metadata?["planId"]?.ToString();
                 var paymentIntentId = sessionObject?["payment_intent"]?.ToString() ?? "";
+                var paymentStatus = sessionObject?["payment_status"]?.ToString();
+
+                if (!string.Equals(paymentStatus, "paid", StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine($"[StripeController] Skipping grant because payment_status is {paymentStatus}");
+                    return Ok();
+                }
 
                 Console.WriteLine($"[StripeController] Session ID: {sessionId}, DeviceId: {deviceId}, PlanId: {planId}");
 
@@ -342,7 +324,7 @@ public class StripeController : ControllerBase
                             PlanId = planId,
                             StripeSessionId = sessionId ?? "",
                             StripePaymentIntentId = paymentIntentId,
-                            Status = "completed",
+                            Status = "pending",
                             PurchasedAt = purchaseDate, // CRITICAL: Use actual payment date from Stripe
                             IsUnlimited = plan.IsUnlimited,
                             TokensGranted = plan.TokenCount
@@ -358,7 +340,6 @@ public class StripeController : ControllerBase
                     else
                     {
                         Console.WriteLine($"[StripeController] Found existing purchase: {purchase.PurchaseId}");
-                        purchase.Status = "completed";
                         purchase.StripePaymentIntentId = paymentIntentId;
                         
                         // CRITICAL FIX: If PurchasedAt is wrong (was set to webhook time instead of payment time), fix it
@@ -493,7 +474,11 @@ public class StripeController : ControllerBase
                         }
                     }
 
-                    if (purchase.TokensGranted.HasValue)
+                    if (purchase.Status == "completed")
+                    {
+                        Console.WriteLine($"[StripeController] Purchase {purchase.PurchaseId} already completed; skipping duplicate grant.");
+                    }
+                    else if (purchase.TokensGranted.HasValue)
                     {
                         int tokensToAdd = purchase.TokensGranted.Value;
                         var beforeTokens = await _dynamoService.GetUserTokensAsync(deviceId);
@@ -501,6 +486,7 @@ public class StripeController : ControllerBase
                         var newBalance = await _dynamoService.IncrementUserTokensAsync(deviceId, tokensToAdd);
                         var afterTokens = await _dynamoService.GetUserTokensAsync(deviceId);
                         Console.WriteLine($"[StripeController] Added {tokensToAdd} tokens to device {deviceId}. New balance (return): {newBalance}, DB after: {afterTokens?.TokensRemaining}");
+                        purchase.Status = "completed";
                     }
                     else
                     {
