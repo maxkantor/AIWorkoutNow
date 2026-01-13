@@ -517,251 +517,32 @@ public class AdminController : ControllerBase
     {
         try
         {
-            var purchases = await _dynamoService.GetAllUserPurchasesAsync();
-            
-            // AGGRESSIVE FIX: Enrich purchases with plan details for Admin CRM
-            var enrichedPurchases = new List<object>();
-            
-            // Get Stripe secret key for fetching customer data
-            string? stripeSecretKey = null;
-            try
+            var stripeSecretKey = await _configService.GetStripeSecretKeyAsync();
+
+            // Reconcile + enrich all devices (paid only)
+            if (!string.IsNullOrEmpty(stripeSecretKey))
             {
-                stripeSecretKey = await _configService.GetStripeSecretKeyAsync();
+                var allDevices = (await _dynamoService.GetAllCustomersAsync()).Select(c => c.DeviceId).Distinct(StringComparer.OrdinalIgnoreCase);
+                foreach (var device in allDevices)
+                {
+                    await _dynamoService.ApplyPendingPurchasesAsync(device, stripeSecretKey);
+                    await _dynamoService.EnrichPurchasesFromStripeAsync(device, stripeSecretKey);
+                }
             }
-            catch (Exception ex)
+
+            // Completed-only, deduped, price-inferred
+            var purchases = await _dynamoService.GetAllStripePurchasesAsync();
+            var completed = purchases.Where(p => string.Equals(p.Status, "completed", StringComparison.OrdinalIgnoreCase)).ToList();
+            var totalRevenue = completed.Sum(p => p.Amount);
+            var totalPurchases = completed.Count;
+
+            return Ok(new
             {
-                Console.WriteLine($"[AdminController] Error getting Stripe secret key: {ex.Message}");
-            }
-            
-            foreach (var purchase in purchases)
-            {
-                var plan = await _dynamoService.GetPricingPlanAsync(purchase.PlanId);
-                
-                // CRITICAL FIX: If plan not found, create default plan based on PlanId
-                if (plan == null)
-                {
-                    Console.WriteLine($"[AdminController] Plan {purchase.PlanId} not found, creating default plan");
-                    plan = new PricingPlan
-                    {
-                        PlanId = purchase.PlanId,
-                        Name = purchase.PlanId.Contains("unlimited") ? "Unlimited Access" : 
-                               purchase.PlanId.Contains("10") ? "10 Workouts" : 
-                               purchase.PlanId.Contains("25") ? "25 Workouts" : "Workout Plan",
-                        Price = purchase.PlanId.Contains("unlimited") ? 9.99m : 
-                                purchase.PlanId.Contains("10") ? 1.99m : 
-                                purchase.PlanId.Contains("25") ? 3.99m : 1.99m,
-                        Currency = "USD",
-                        TokenCount = purchase.PlanId.Contains("unlimited") ? null : 
-                                    (purchase.PlanId.Contains("10") ? 10 : 
-                                     purchase.PlanId.Contains("25") ? 25 : 10),
-                        IsUnlimited = purchase.PlanId.Contains("unlimited"),
-                        UnlimitedDays = purchase.PlanId.Contains("unlimited") ? 365 : null,
-                        DisplayOrder = 1,
-                        IsRecommended = false,
-                        IsActive = true,
-                        StripePriceId = string.Empty,
-                        CreatedAt = DateTime.UtcNow
-                    };
-                }
-                
-                // CRITICAL FIX: Backfill customer data AND payment status from Stripe if missing
-                string? customerEmail = purchase.CustomerEmail;
-                string? customerName = purchase.CustomerName;
-                bool needsUpdate = false;
-                bool statusChanged = false;
-                
-                if (!string.IsNullOrEmpty(purchase.StripeSessionId) && !string.IsNullOrEmpty(stripeSecretKey))
-                {
-                    // Only fetch if missing customer data OR if status is pending
-                    bool needsCustomerData = string.IsNullOrEmpty(customerEmail) || string.IsNullOrEmpty(customerName);
-                    bool needsStatusCheck = purchase.Status == "pending";
-                    
-                    if (needsCustomerData || needsStatusCheck)
-                    {
-                        Console.WriteLine($"[AdminController] Purchase {purchase.PurchaseId} - Fetching from Stripe (CustomerData: {needsCustomerData}, StatusCheck: {needsStatusCheck})");
-                        try
-                        {
-                            using var httpClient = new HttpClient();
-                            httpClient.DefaultRequestHeaders.Authorization = 
-                                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", stripeSecretKey);
-                            
-                            var sessionUrl = $"https://api.stripe.com/v1/checkout/sessions/{purchase.StripeSessionId}";
-                            var sessionResponse = await httpClient.GetAsync(sessionUrl);
-                            
-                            if (sessionResponse.IsSuccessStatusCode)
-                            {
-                                var sessionContent = await sessionResponse.Content.ReadAsStringAsync();
-                                var sessionData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(sessionContent);
-                                
-                                // CRITICAL FIX: Check payment status and update if paid
-                                if (needsStatusCheck && sessionData != null && sessionData.ContainsKey("payment_status"))
-                                {
-                                    var paymentStatus = sessionData["payment_status"]?.ToString();
-                                    Console.WriteLine($"[AdminController] Payment status from Stripe: {paymentStatus}");
-                                    
-                                    if (paymentStatus == "paid" && purchase.Status != "completed")
-                                    {
-                                        purchase.Status = "completed";
-                                        statusChanged = true;
-                                        needsUpdate = true;
-                                        Console.WriteLine($"[AdminController] Updating purchase {purchase.PurchaseId} status from pending to completed");
-                                        
-                                        // Also update payment intent ID if available
-                                        if (sessionData.ContainsKey("payment_intent"))
-                                        {
-                                            var paymentIntentId = sessionData["payment_intent"]?.ToString();
-                                            if (!string.IsNullOrEmpty(paymentIntentId))
-                                            {
-                                                purchase.StripePaymentIntentId = paymentIntentId;
-                                            }
-                                        }
-                                    }
-                                }
-                                
-                                // Get customer_details
-                                if (needsCustomerData && sessionData != null && sessionData.ContainsKey("customer_details"))
-                                {
-                                    var customerDetails = (System.Text.Json.JsonElement)sessionData["customer_details"];
-                                    if (customerDetails.TryGetProperty("email", out var emailElement))
-                                        customerEmail = emailElement.GetString();
-                                    if (customerDetails.TryGetProperty("name", out var nameElement))
-                                        customerName = nameElement.GetString();
-                                    
-                                    Console.WriteLine($"[AdminController] Fetched from customer_details - Email: {customerEmail}, Name: {customerName}");
-                                }
-                                
-                                // If not in customer_details, try customer object
-                                if (needsCustomerData && string.IsNullOrEmpty(customerEmail) && sessionData != null && sessionData.ContainsKey("customer"))
-                                {
-                                    var customerId = sessionData["customer"]?.ToString();
-                                    if (!string.IsNullOrEmpty(customerId))
-                                    {
-                                        var customerUrl = $"https://api.stripe.com/v1/customers/{customerId}";
-                                        var customerResponse = await httpClient.GetAsync(customerUrl);
-                                        if (customerResponse.IsSuccessStatusCode)
-                                        {
-                                            var customerContent = await customerResponse.Content.ReadAsStringAsync();
-                                            var customerData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(customerContent);
-                                            if (customerData != null)
-                                            {
-                                                if (customerData.ContainsKey("email"))
-                                                    customerEmail = customerData["email"]?.ToString();
-                                                if (customerData.ContainsKey("name"))
-                                                    customerName = customerData["name"]?.ToString();
-                                                
-                                                Console.WriteLine($"[AdminController] Fetched from customer object - Email: {customerEmail}, Name: {customerName}");
-                                            }
-                                        }
-                                    }
-                                }
-                                
-                                // Update purchase if we got customer data
-                                if (needsCustomerData && (!string.IsNullOrEmpty(customerEmail) || !string.IsNullOrEmpty(customerName)))
-                                {
-                                    purchase.CustomerEmail = customerEmail ?? purchase.CustomerEmail;
-                                    purchase.CustomerName = customerName ?? purchase.CustomerName;
-                                    needsUpdate = true;
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"[AdminController] Error fetching data from Stripe: {ex.Message}");
-                            // Non-critical, continue with existing data
-                        }
-                    }
-                }
-                
-                // Save updated purchase if we fetched customer data or updated status
-                if (needsUpdate)
-                {
-                    try
-                    {
-                        await _dynamoService.SaveUserPurchaseAsync(purchase);
-                        if (statusChanged)
-                        {
-                            Console.WriteLine($"[AdminController] Updated purchase {purchase.PurchaseId} status to completed");
-                            
-                            // CRITICAL: Grant tokens if status changed to completed
-                            if (purchase.IsUnlimited)
-                            {
-                                var tokens = await _dynamoService.GetUserTokensAsync(purchase.DeviceId);
-                                if (tokens == null)
-                                {
-                                    tokens = new UserTokens
-                                    {
-                                        DeviceId = purchase.DeviceId,
-                                        TokensRemaining = 999999,
-                                        ExpiresAt = purchase.ExpiresAt ?? purchase.PurchasedAt.AddDays(365)
-                                    };
-                                }
-                                else
-                                {
-                                    tokens.TokensRemaining = 999999;
-                                    tokens.ExpiresAt = purchase.ExpiresAt ?? purchase.PurchasedAt.AddDays(365);
-                                }
-                                await _dynamoService.SaveUserTokensAsync(tokens);
-                                Console.WriteLine($"[AdminController] Granted unlimited access for {purchase.DeviceId}");
-                            }
-                            else if (purchase.TokensGranted.HasValue)
-                            {
-                                var tokens = await _dynamoService.GetUserTokensAsync(purchase.DeviceId);
-                                if (tokens == null)
-                                {
-                                    tokens = new UserTokens
-                                    {
-                                        DeviceId = purchase.DeviceId,
-                                        TokensRemaining = purchase.TokensGranted.Value
-                                    };
-                                }
-                                else
-                                {
-                                    tokens.TokensRemaining += purchase.TokensGranted.Value;
-                                }
-                                await _dynamoService.SaveUserTokensAsync(tokens);
-                                Console.WriteLine($"[AdminController] Granted {purchase.TokensGranted.Value} tokens for {purchase.DeviceId}");
-                            }
-                        }
-                        if (!string.IsNullOrEmpty(customerEmail) || !string.IsNullOrEmpty(customerName))
-                        {
-                            Console.WriteLine($"[AdminController] Updated purchase {purchase.PurchaseId} with customer data - Email: {customerEmail}, Name: {customerName}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"[AdminController] Error saving updated purchase: {ex.Message}");
-                    }
-                }
-                
-                // Use updated status if it was changed
-                var currentStatus = purchase.Status;
-                
-                enrichedPurchases.Add(new
-                {
-                    purchaseId = purchase.PurchaseId,
-                    deviceId = purchase.DeviceId,
-                    planId = purchase.PlanId,
-                    planName = plan.Name,
-                    packType = plan.Name, // Use plan name as pack type
-                    amount = plan.Price,
-                    amountTotal = plan.Price, // Frontend expects both
-                    currency = plan.Currency ?? "USD",
-                    status = currentStatus,
-                    paymentStatus = currentStatus, // Frontend expects both
-                    purchasedAt = purchase.PurchasedAt,
-                    createdAt = purchase.PurchasedAt, // Frontend expects both
-                    expiresAt = purchase.ExpiresAt,
-                    tokensGranted = purchase.TokensGranted,
-                    tokensPurchased = purchase.TokensGranted, // Frontend expects both
-                    isUnlimited = purchase.IsUnlimited,
-                    stripeSessionId = purchase.StripeSessionId,
-                    stripePaymentIntentId = purchase.StripePaymentIntentId,
-                    customerEmail = customerEmail ?? string.Empty,
-                    customerName = customerName ?? string.Empty
-                });
-            }
-            
-            return Ok(enrichedPurchases);
+                totalRevenue,
+                totalPurchases,
+                completedCount = totalPurchases,
+                purchases = completed.OrderByDescending(p => p.CreatedAt)
+            });
         }
         catch (Exception ex)
         {
