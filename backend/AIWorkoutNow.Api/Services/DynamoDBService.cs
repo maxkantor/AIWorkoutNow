@@ -610,7 +610,7 @@ public class DynamoDBService : IDynamoDBService
             }
             catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
             {
-                Console.WriteLine($"[DynamoDBService] AnonymousUsage table not found ({_anonymousUsageTable}), FreeUsers=0");
+                // Quiet fallback when table missing or IAM blocks Describe/Create
                 stats.FreeUsers = 0;
             }
             catch (Exception ex)
@@ -640,7 +640,6 @@ public class DynamoDBService : IDynamoDBService
             }
             catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
             {
-                Console.WriteLine($"[DynamoDBService] UserTokens table not found ({_userTokensTable}), PaidUsers=0");
                 stats.PaidUsers = 0;
             }
             catch (Exception ex)
@@ -662,7 +661,6 @@ public class DynamoDBService : IDynamoDBService
             }
             catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
             {
-                Console.WriteLine($"[DynamoDBService] Workouts table not found ({_workoutsTable}), TotalWorkouts=0");
                 stats.TotalWorkouts = 0;
             }
             catch (Exception ex)
@@ -686,7 +684,6 @@ public class DynamoDBService : IDynamoDBService
             }
             catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
             {
-                Console.WriteLine($"[DynamoDBService] UserPurchases table not found ({purchasesTable}), TokenPurchases=0");
                 stats.TokenPurchases = 0;
             }
             catch (Exception ex)
@@ -1412,10 +1409,10 @@ public class DynamoDBService : IDynamoDBService
                 }
             }
         }
-        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
-        {
-            Console.WriteLine($"[DynamoDBService] UserTokens table not found ({_userTokensTable}) when listing customers");
-        }
+            catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+            {
+                // silent fallback
+            }
         catch (Exception ex)
         {
             Console.WriteLine($"[DynamoDBService] Error scanning UserTokens: {ex.Message}");
@@ -1435,10 +1432,10 @@ public class DynamoDBService : IDynamoDBService
                 }
             }
         }
-        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
-        {
-            Console.WriteLine("[DynamoDBService] UserPurchases table not found when listing customers");
-        }
+            catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+            {
+                // silent fallback
+            }
         catch (Exception ex)
         {
             Console.WriteLine($"[DynamoDBService] Error scanning purchases: {ex.Message}");
@@ -1456,10 +1453,10 @@ public class DynamoDBService : IDynamoDBService
                 }
             }
         }
-        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
-        {
-            Console.WriteLine($"[DynamoDBService] AnonymousUsage table not found ({_anonymousUsageTable}) when listing customers");
-        }
+            catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+            {
+                // silent fallback
+            }
         catch (Exception ex)
         {
             Console.WriteLine($"[DynamoDBService] Error scanning AnonymousUsage: {ex.Message}");
@@ -2242,7 +2239,6 @@ public class DynamoDBService : IDynamoDBService
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
-            Console.WriteLine($"[DynamoDBService] AnonymousUsage table not found ({_anonymousUsageTable}) when counting free workouts, returning 0");
             return 0;
         }
         catch (Exception ex)
@@ -2950,7 +2946,7 @@ public class DynamoDBService : IDynamoDBService
         }
         catch (Amazon.Runtime.AmazonServiceException ex) when (string.Equals(ex.ErrorCode, "AccessDeniedException", StringComparison.OrdinalIgnoreCase))
         {
-            Console.WriteLine($"[DynamoDBService] IAM denied CreateTable/Describe for {tableName}: {ex.Message}");
+            // Assume the table exists but IAM blocks Describe/Create. Be quiet to avoid noisy logs.
         }
         catch (Exception ex)
         {
