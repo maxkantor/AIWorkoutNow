@@ -308,9 +308,27 @@ public class DynamoDBService : IDynamoDBService
         // Purchases
         var purchases = await GetUserPurchasesByDeviceIdAsync(deviceId);
         var completed = purchases.Where(p => p.Status == "completed").ToList();
-        var purchasesCount = completed.Count;
+
+        // Deduplicate completed purchases by payment intent or session to avoid double-counting
+        var distinctCompleted = new List<UserPurchase>();
+        var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var p in completed.OrderBy(p => p.PurchasedAt))
+        {
+            var key = !string.IsNullOrEmpty(p.StripePaymentIntentId)
+                ? $"pi:{p.StripePaymentIntentId}"
+                : !string.IsNullOrEmpty(p.StripeSessionId)
+                    ? $"cs:{p.StripeSessionId}"
+                    : $"id:{p.PurchaseId}";
+
+            if (seenKeys.Add(key))
+            {
+                distinctCompleted.Add(p);
+            }
+        }
+
+        var purchasesCount = distinctCompleted.Count;
         var totalSpentCents = 0;
-        foreach (var p in completed)
+        foreach (var p in distinctCompleted)
         {
             if (p.TokensGranted.HasValue && p.TokensGranted.Value > 0)
             {
@@ -328,7 +346,8 @@ public class DynamoDBService : IDynamoDBService
                 {
                     var tg = p.TokensGranted.Value;
                     if (tg == 10) totalSpentCents += 199; // default 10-pack
-                    else if (tg == 25) totalSpentCents += 399; // default 25-pack
+                    else if (tg == 30) totalSpentCents += 399; // default 30-pack
+                    else if (tg == 100) totalSpentCents += 799; // default 100-pack
                 }
             }
         }
