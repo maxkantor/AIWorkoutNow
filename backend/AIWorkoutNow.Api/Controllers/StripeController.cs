@@ -226,12 +226,7 @@ public class StripeController : ControllerBase
                 TokensGranted = plan.TokenCount
             };
 
-            if (plan.IsUnlimited)
-            {
-                // CRITICAL FIX: Always set expiration to 1 year (365 days) from actual purchase date
-                purchase.ExpiresAt = purchase.PurchasedAt.AddDays(365);
-                Console.WriteLine($"[StripeController] CreateCheckoutSession - Set unlimited expiration to {purchase.ExpiresAt} (1 year from purchase date: {purchase.PurchasedAt})");
-            }
+            // Unlimited disabled: do not set unlimited expiration/grants here
 
             await _dynamoService.SaveUserPurchaseAsync(purchase);
 
@@ -449,7 +444,7 @@ public class StripeController : ControllerBase
                         // Non-critical, continue processing
                     }
                     
-                    // AGGRESSIVE FIX: Set customer info on purchase
+                    // Set customer info on purchase
                     purchase.CustomerEmail = customerEmail ?? purchase.CustomerEmail;
                     purchase.CustomerName = customerName ?? purchase.CustomerName;
                     purchase.CustomerPhone = customerPhone ?? purchase.CustomerPhone;
@@ -459,97 +454,32 @@ public class StripeController : ControllerBase
                     purchase.CustomerPostalCode = customerPostal ?? purchase.CustomerPostalCode;
                     purchase.CustomerCountry = customerCountry ?? purchase.CustomerCountry;
 
-                    // Grant tokens or unlimited access
-                    Console.WriteLine($"[StripeController] Granting access - IsUnlimited: {purchase.IsUnlimited}, TokensGranted: {purchase.TokensGranted}");
-                    
-                    // AGGRESSIVE FIX: If customer has email, merge tokens across all devices linked to that email
-                    List<string> linkedDeviceIds = new List<string> { deviceId };
-                    if (!string.IsNullOrEmpty(customerEmail))
+                    // Grant tokens (no unlimited; unlimited plans are disabled)
+                    Console.WriteLine($"[StripeController] Granting tokens - TokensGranted: {purchase.TokensGranted}");
+
+                    // Ensure TokensGranted is populated from plan if missing
+                    if (!purchase.TokensGranted.HasValue)
                     {
-                        try
+                        var planLookup = await _dynamoService.GetPricingPlanAsync(planId ?? string.Empty);
+                        if (planLookup?.TokenCount != null)
                         {
-                            var allLinkedDevices = await _dynamoService.GetVisitorIdsByEmailAsync(customerEmail);
-                            if (allLinkedDevices.Any())
-                            {
-                                linkedDeviceIds = allLinkedDevices.Distinct().ToList();
-                                Console.WriteLine($"[StripeController] Found {linkedDeviceIds.Count} devices linked to email {customerEmail}: {string.Join(", ", linkedDeviceIds)}");
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"[StripeController] Error getting linked devices: {ex.Message}");
+                            purchase.TokensGranted = planLookup.TokenCount;
+                            Console.WriteLine($"[StripeController] Backfilled TokensGranted from plan {planId} => {planLookup.TokenCount}");
                         }
                     }
-                    
-                    if (purchase.IsUnlimited)
+
+                    if (purchase.TokensGranted.HasValue)
                     {
-                        // CRITICAL FIX: Ensure PurchasedAt is set before calculating expiration
-                        if (purchase.PurchasedAt == default)
-                        {
-                            purchase.PurchasedAt = DateTime.UtcNow;
-                            Console.WriteLine($"[StripeController] Set PurchasedAt to {purchase.PurchasedAt}");
-                        }
-                        
-                        // CRITICAL FIX: Always calculate expiration from purchase date, not current date
-                        if (!purchase.ExpiresAt.HasValue || purchase.ExpiresAt.Value != purchase.PurchasedAt.AddDays(365))
-                        {
-                            purchase.ExpiresAt = purchase.PurchasedAt.AddDays(365);
-                            Console.WriteLine($"[StripeController] Set/Updated expiration to {purchase.ExpiresAt} (1 year from purchase date: {purchase.PurchasedAt})");
-                        }
-                        
-                        // AGGRESSIVE FIX: Grant unlimited access to ALL devices linked to this email
-                        foreach (var linkedDeviceId in linkedDeviceIds)
-                        {
-                            var tokens = await _dynamoService.GetUserTokensAsync(linkedDeviceId);
-                            if (tokens == null)
-                            {
-                                tokens = new UserTokens
-                                {
-                                    DeviceId = linkedDeviceId,
-                                    TokensRemaining = 999999, // Large number for unlimited
-                                    ExpiresAt = purchase.ExpiresAt
-                                };
-                                Console.WriteLine($"[StripeController] Creating new UserTokens for device {linkedDeviceId} with expiration: {tokens.ExpiresAt}");
-                            }
-                            else
-                            {
-                                tokens.TokensRemaining = 999999;
-                                // CRITICAL FIX: Always use purchase date for expiration, never current date
-                                tokens.ExpiresAt = purchase.ExpiresAt;
-                                Console.WriteLine($"[StripeController] Updated existing tokens for device {linkedDeviceId} expiration to {tokens.ExpiresAt} (from purchase date: {purchase.PurchasedAt})");
-                            }
-                            await _dynamoService.SaveUserTokensAsync(tokens);
-                        }
-                        Console.WriteLine($"[StripeController] Granted unlimited access to {linkedDeviceIds.Count} device(s) until {purchase.ExpiresAt} (purchased on {purchase.PurchasedAt})");
+                        int tokensToAdd = purchase.TokensGranted.Value;
+                        var beforeTokens = await _dynamoService.GetUserTokensAsync(deviceId);
+                        Console.WriteLine($"[StripeController] Before increment - Device: {deviceId}, TokensRemaining: {beforeTokens?.TokensRemaining}");
+                        var newBalance = await _dynamoService.IncrementUserTokensAsync(deviceId, tokensToAdd);
+                        var afterTokens = await _dynamoService.GetUserTokensAsync(deviceId);
+                        Console.WriteLine($"[StripeController] Added {tokensToAdd} tokens to device {deviceId}. New balance (return): {newBalance}, DB after: {afterTokens?.TokensRemaining}");
                     }
                     else
                     {
-                        // Ensure TokensGranted is populated from plan if missing
-                        if (!purchase.TokensGranted.HasValue)
-                        {
-                            var planLookup = await _dynamoService.GetPricingPlanAsync(planId ?? string.Empty);
-                            if (planLookup?.TokenCount != null)
-                            {
-                                purchase.TokensGranted = planLookup.TokenCount;
-                                Console.WriteLine($"[StripeController] Backfilled TokensGranted from plan {planId} => {planLookup.TokenCount}");
-                            }
-                        }
-
-                        if (purchase.TokensGranted.HasValue)
-                        {
-                            // AGGRESSIVE FIX: Add all purchased tokens to the current deviceId (no dilution across linked devices)
-                            int tokensToAdd = purchase.TokensGranted.Value;
-                            // Capture before/after for proof
-                            var beforeTokens = await _dynamoService.GetUserTokensAsync(deviceId);
-                            Console.WriteLine($"[StripeController] Before increment - Device: {deviceId}, TokensRemaining: {beforeTokens?.TokensRemaining}");
-                            var newBalance = await _dynamoService.IncrementUserTokensAsync(deviceId, tokensToAdd);
-                            var afterTokens = await _dynamoService.GetUserTokensAsync(deviceId);
-                            Console.WriteLine($"[StripeController] Added {tokensToAdd} tokens to device {deviceId}. New balance (return): {newBalance}, DB after: {afterTokens?.TokensRemaining}");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"[StripeController] WARNING: TokensGranted is missing for purchase {purchase.PurchaseId}, tokens will not be added.");
-                        }
+                        Console.WriteLine($"[StripeController] WARNING: TokensGranted is missing for purchase {purchase.PurchaseId}, tokens will not be added.");
                     }
 
                     // Save purchase record (may fail if table doesn't exist, but that's OK)

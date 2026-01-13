@@ -245,34 +245,7 @@ public class DynamoDBService : IDynamoDBService
         var purchases = await GetUserPurchasesByDeviceIdAsync(deviceId);
         var completed = purchases.Where(p => p.Status == "completed").ToList();
 
-        // Unlimited check
-        UserPurchase? unlimitedPurchase = completed.FirstOrDefault(p => p.IsUnlimited);
-        if (unlimitedPurchase == null)
-        {
-            foreach (var p in completed)
-            {
-                try
-                {
-                    var plan = await GetPricingPlanAsync(p.PlanId);
-                    if (plan?.IsUnlimited == true || (!string.IsNullOrEmpty(p.PlanId) && p.PlanId.Contains("unlimited", StringComparison.OrdinalIgnoreCase)))
-                    {
-                        unlimitedPurchase = p;
-                        break;
-                    }
-                }
-                catch { /* ignore plan lookup failures here */ }
-            }
-        }
-
-        if (unlimitedPurchase != null)
-        {
-            tokens.TokensRemaining = 999999;
-            tokens.TotalWorkouts = 999999;
-            tokens.ExpiresAt = (unlimitedPurchase.ExpiresAt ?? unlimitedPurchase.PurchasedAt.AddDays(365));
-            tokens.IsActive = true;
-            await SaveUserTokensAsync(tokens);
-            return tokens;
-        }
+        // Unlimited disabled: do not auto-promote to unlimited
 
         // Sum paid tokens; backfill TokensGranted when missing
         int purchasedTokens = 0;
@@ -723,8 +696,8 @@ public class DynamoDBService : IDynamoDBService
     /// </summary>
     public async Task ApplyPendingPurchasesAsync(string deviceId)
     {
-        // No-op: we now rely on Stripe webhook/verification to mark purchases completed.
-        // This prevents pending purchases (e.g., user clicks back) from granting tokens.
+        // Intentionally left blank: rely solely on Stripe webhook/verify to grant tokens.
+        // Prevents “back/cancel” sessions from granting tokens.
         return;
     }
 
@@ -990,30 +963,30 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task SaveCustomerActivityAsync(CustomerActivity activity)
     {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var activitiesTable = $"{tablePrefix}-CustomerActivities";
+
+        // AGGRESSIVE FIX: Ensure timestamp is set to current time if not provided
+        if (activity.Timestamp == default)
+        {
+            activity.Timestamp = DateTime.UtcNow;
+        }
+
+        var document = new Document();
+        document["ActivityId"] = activity.ActivityId;
+        document["DeviceId"] = activity.DeviceId;
+        document["ActivityType"] = activity.ActivityType;
+        document["Description"] = activity.Description;
+        document["Timestamp"] = activity.Timestamp.ToString("O");
+        if (!string.IsNullOrEmpty(activity.WorkoutId))
+            document["WorkoutId"] = activity.WorkoutId;
+        if (!string.IsNullOrEmpty(activity.PurchaseId))
+            document["PurchaseId"] = activity.PurchaseId;
+        if (!string.IsNullOrEmpty(activity.ContactMessageId))
+            document["ContactMessageId"] = activity.ContactMessageId;
+
         try
         {
-            var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
-            var activitiesTable = $"{tablePrefix}-CustomerActivities";
-            
-            // AGGRESSIVE FIX: Ensure timestamp is set to current time if not provided
-            if (activity.Timestamp == default)
-            {
-                activity.Timestamp = DateTime.UtcNow;
-            }
-            
-            var document = new Document();
-            document["ActivityId"] = activity.ActivityId;
-            document["DeviceId"] = activity.DeviceId;
-            document["ActivityType"] = activity.ActivityType;
-            document["Description"] = activity.Description;
-            document["Timestamp"] = activity.Timestamp.ToString("O");
-            if (!string.IsNullOrEmpty(activity.WorkoutId))
-                document["WorkoutId"] = activity.WorkoutId;
-            if (!string.IsNullOrEmpty(activity.PurchaseId))
-                document["PurchaseId"] = activity.PurchaseId;
-            if (!string.IsNullOrEmpty(activity.ContactMessageId))
-                document["ContactMessageId"] = activity.ContactMessageId;
-
             await _dynamoDB.PutItemAsync(new PutItemRequest
             {
                 TableName = activitiesTable,
@@ -1024,8 +997,21 @@ public class DynamoDBService : IDynamoDBService
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
-            Console.WriteLine("[DynamoDBService] CustomerActivities table does not exist, cannot save activity");
-            // Don't throw - allow the request to continue
+            Console.WriteLine("[DynamoDBService] CustomerActivities table missing, creating and retrying save...");
+            await CreateTableIfMissingAsync(activitiesTable, "ActivityId");
+            try
+            {
+                await _dynamoDB.PutItemAsync(new PutItemRequest
+                {
+                    TableName = activitiesTable,
+                    Item = document.ToAttributeMap()
+                });
+                Console.WriteLine($"[DynamoDBService] Saved activity after creating table: {activity.ActivityType} for {activity.DeviceId}");
+            }
+            catch (Exception retryEx)
+            {
+                Console.WriteLine($"[DynamoDBService] Retry save activity failed after table create: {retryEx.Message}");
+            }
         }
         catch (Exception ex)
         {
@@ -1065,7 +1051,8 @@ public class DynamoDBService : IDynamoDBService
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
-            Console.WriteLine($"[DynamoDBService] {activitiesTable} not found, returning empty activities list");
+            Console.WriteLine($"[DynamoDBService] {activitiesTable} not found, creating and returning empty list");
+            await CreateTableIfMissingAsync(activitiesTable, "ActivityId");
             return new List<CustomerActivity>();
         }
         catch (Exception ex)
@@ -1673,41 +1660,43 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task SaveUserPurchaseAsync(UserPurchase purchase)
     {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var purchasesTable = $"{tablePrefix}-UserPurchases";
+
+        var document = new Document
+        {
+            ["PurchaseId"] = purchase.PurchaseId,
+            ["DeviceId"] = purchase.DeviceId,
+            ["PlanId"] = purchase.PlanId,
+            ["StripeSessionId"] = purchase.StripeSessionId,
+            ["StripePaymentIntentId"] = purchase.StripePaymentIntentId,
+            ["Status"] = purchase.Status,
+            ["PurchasedAt"] = purchase.PurchasedAt.ToString("O"),
+            ["IsUnlimited"] = purchase.IsUnlimited
+        };
+        if (purchase.ExpiresAt.HasValue)
+            document["ExpiresAt"] = purchase.ExpiresAt.Value.ToString("O");
+        if (purchase.TokensGranted.HasValue)
+            document["TokensGranted"] = purchase.TokensGranted.Value;
+        if (!string.IsNullOrEmpty(purchase.CustomerEmail))
+            document["CustomerEmail"] = purchase.CustomerEmail;
+        if (!string.IsNullOrEmpty(purchase.CustomerName))
+            document["CustomerName"] = purchase.CustomerName;
+        if (!string.IsNullOrEmpty(purchase.CustomerPhone))
+            document["CustomerPhone"] = purchase.CustomerPhone;
+        if (!string.IsNullOrEmpty(purchase.CustomerAddressLine1))
+            document["CustomerAddressLine1"] = purchase.CustomerAddressLine1;
+        if (!string.IsNullOrEmpty(purchase.CustomerCity))
+            document["CustomerCity"] = purchase.CustomerCity;
+        if (!string.IsNullOrEmpty(purchase.CustomerState))
+            document["CustomerState"] = purchase.CustomerState;
+        if (!string.IsNullOrEmpty(purchase.CustomerPostalCode))
+            document["CustomerPostalCode"] = purchase.CustomerPostalCode;
+        if (!string.IsNullOrEmpty(purchase.CustomerCountry))
+            document["CustomerCountry"] = purchase.CustomerCountry;
+
         try
         {
-            var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
-            var purchasesTable = $"{tablePrefix}-UserPurchases";
-            
-            var document = new Document();
-            document["PurchaseId"] = purchase.PurchaseId;
-            document["DeviceId"] = purchase.DeviceId;
-            document["PlanId"] = purchase.PlanId;
-            document["StripeSessionId"] = purchase.StripeSessionId;
-            document["StripePaymentIntentId"] = purchase.StripePaymentIntentId;
-            document["Status"] = purchase.Status;
-            document["PurchasedAt"] = purchase.PurchasedAt.ToString("O");
-            if (purchase.ExpiresAt.HasValue)
-                document["ExpiresAt"] = purchase.ExpiresAt.Value.ToString("O");
-            if (purchase.TokensGranted.HasValue)
-                document["TokensGranted"] = purchase.TokensGranted.Value;
-            document["IsUnlimited"] = purchase.IsUnlimited;
-            if (!string.IsNullOrEmpty(purchase.CustomerEmail))
-                document["CustomerEmail"] = purchase.CustomerEmail;
-            if (!string.IsNullOrEmpty(purchase.CustomerName))
-                document["CustomerName"] = purchase.CustomerName;
-            if (!string.IsNullOrEmpty(purchase.CustomerPhone))
-                document["CustomerPhone"] = purchase.CustomerPhone;
-            if (!string.IsNullOrEmpty(purchase.CustomerAddressLine1))
-                document["CustomerAddressLine1"] = purchase.CustomerAddressLine1;
-            if (!string.IsNullOrEmpty(purchase.CustomerCity))
-                document["CustomerCity"] = purchase.CustomerCity;
-            if (!string.IsNullOrEmpty(purchase.CustomerState))
-                document["CustomerState"] = purchase.CustomerState;
-            if (!string.IsNullOrEmpty(purchase.CustomerPostalCode))
-                document["CustomerPostalCode"] = purchase.CustomerPostalCode;
-            if (!string.IsNullOrEmpty(purchase.CustomerCountry))
-                document["CustomerCountry"] = purchase.CustomerCountry;
-
             await _dynamoDB.PutItemAsync(new PutItemRequest
             {
                 TableName = purchasesTable,
@@ -1716,8 +1705,20 @@ public class DynamoDBService : IDynamoDBService
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
-            Console.WriteLine($"[DynamoDBService] UserPurchases table does not exist, cannot save purchase");
-            // Don't throw - allow the request to continue
+            Console.WriteLine($"[DynamoDBService] UserPurchases table missing, creating and retrying save...");
+            await CreateTableIfMissingAsync(purchasesTable, "PurchaseId");
+            try
+            {
+                await _dynamoDB.PutItemAsync(new PutItemRequest
+                {
+                    TableName = purchasesTable,
+                    Item = document.ToAttributeMap()
+                });
+            }
+            catch (Exception retryEx)
+            {
+                Console.WriteLine($"[DynamoDBService] Retry save purchase failed after table create: {retryEx.Message}");
+            }
         }
         catch (Exception ex)
         {
@@ -2598,6 +2599,64 @@ public class DynamoDBService : IDynamoDBService
     {
         // AGGRESSIVE FIX: Mark as inactive instead of deleting
         await DeactivateCustomerAsync(deviceId);
+    }
+
+    private async Task CreateTableIfMissingAsync(string tableName, string hashKeyName)
+    {
+        try
+        {
+            var list = await _dynamoDB.ListTablesAsync();
+            if (list.TableNames.Contains(tableName))
+            {
+                return;
+            }
+
+            await _dynamoDB.CreateTableAsync(new CreateTableRequest
+            {
+                TableName = tableName,
+                AttributeDefinitions = new List<AttributeDefinition>
+                {
+                    new AttributeDefinition(hashKeyName, ScalarAttributeType.S)
+                },
+                KeySchema = new List<KeySchemaElement>
+                {
+                    new KeySchemaElement(hashKeyName, KeyType.HASH)
+                },
+                BillingMode = BillingMode.PAY_PER_REQUEST
+            });
+
+            await WaitForActiveTableAsync(tableName);
+            Console.WriteLine($"[DynamoDBService] Created table {tableName} with hash key {hashKeyName}");
+        }
+        catch (Amazon.DynamoDBv2.Model.ResourceInUseException)
+        {
+            // Table already exists or being created; safe to ignore
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Failed to create table {tableName}: {ex.Message}");
+        }
+    }
+
+    private async Task WaitForActiveTableAsync(string tableName)
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            try
+            {
+                var status = (await _dynamoDB.DescribeTableAsync(tableName)).Table.TableStatus;
+                if (string.Equals(status, "ACTIVE", StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+            }
+            catch
+            {
+                // ignore and retry
+            }
+
+            await Task.Delay(1000);
+        }
     }
 
     public async Task DeactivateCustomerAsync(string deviceId)
