@@ -33,4 +33,10 @@ public class UserPurchase
     public bool IsUnlimited { get; set; }
     public string? CustomerEmail { get; set; } // From Stripe customer_details
     public string? CustomerName { get; set; } // From Stripe customer_details
+    public string? CustomerPhone { get; set; }
+    public string? CustomerAddressLine1 { get; set; }
+    public string? CustomerCity { get; set; }
+    public string? CustomerState { get; set; }
+    public string? CustomerPostalCode { get; set; }
+    public string? CustomerCountry { get; set; }
 }

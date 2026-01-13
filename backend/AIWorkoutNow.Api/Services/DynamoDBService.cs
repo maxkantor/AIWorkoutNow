@@ -723,84 +723,9 @@ public class DynamoDBService : IDynamoDBService
     /// </summary>
     public async Task ApplyPendingPurchasesAsync(string deviceId)
     {
-        var purchases = await GetUserPurchasesByDeviceIdAsync(deviceId);
-        var pending = purchases.Where(p => p.Status == "pending").ToList();
-        if (!pending.Any()) return;
-
-        foreach (var purchase in pending)
-        {
-            try
-            {
-                var plan = await GetPricingPlanAsync(purchase.PlanId);
-                var isUnlimited = purchase.IsUnlimited
-                    || (plan?.IsUnlimited == true)
-                    || (!string.IsNullOrEmpty(purchase.PlanId) && purchase.PlanId.Contains("unlimited", StringComparison.OrdinalIgnoreCase));
-
-                if (isUnlimited)
-                {
-                    var expires = purchase.ExpiresAt
-                        ?? (purchase.PurchasedAt == default ? DateTime.UtcNow : purchase.PurchasedAt).AddDays(plan?.UnlimitedDays ?? 365);
-
-                    var tokens = await GetUserTokensAsync(deviceId) ?? new UserTokens { DeviceId = deviceId };
-                    tokens.TokensRemaining = 999999;
-                    tokens.TotalWorkouts = 999999;
-                    tokens.ExpiresAt = expires;
-                    tokens.IsActive = true;
-                    await SaveUserTokensAsync(tokens);
-
-                    purchase.Status = "completed";
-                    purchase.IsUnlimited = true;
-                    purchase.TokensGranted = null;
-                    purchase.ExpiresAt = expires;
-                    if (purchase.PurchasedAt == default)
-                    {
-                        purchase.PurchasedAt = DateTime.UtcNow;
-                    }
-                    await SaveUserPurchaseAsync(purchase);
-                    Console.WriteLine($"[DynamoDBService] Applied pending unlimited purchase {purchase.PurchaseId} for device {deviceId}, expires {expires}");
-                    continue;
-                }
-
-                // Ensure TokensGranted for non-unlimited
-                int tokenGrant = purchase.TokensGranted ?? 0;
-                if (tokenGrant <= 0)
-                {
-                    if (plan != null && plan.TokenCount.HasValue && plan.TokenCount.Value > 0)
-                    {
-                        tokenGrant = plan.TokenCount.Value;
-                    }
-                    else if (plan == null)
-                    {
-                        // fallback: default 10 for non-unlimited
-                        tokenGrant = 10;
-                    }
-                }
-
-                // Skip if still zero (nothing to add)
-                if (tokenGrant <= 0)
-                {
-                    continue;
-                }
-
-                // Increment tokens first to ensure atomicity
-                await IncrementUserTokensAsync(deviceId, tokenGrant);
-
-                // Mark purchase completed and persist
-                purchase.Status = "completed";
-                purchase.TokensGranted = tokenGrant;
-                purchase.IsUnlimited = false;
-                if (purchase.PurchasedAt == default)
-                {
-                    purchase.PurchasedAt = DateTime.UtcNow;
-                }
-                await SaveUserPurchaseAsync(purchase);
-                Console.WriteLine($"[DynamoDBService] Applied pending purchase {purchase.PurchaseId} for device {deviceId}, +{tokenGrant} tokens");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[DynamoDBService] Failed to apply pending purchase {purchase.PurchaseId} for device {deviceId}: {ex.Message}");
-            }
-        }
+        // No-op: we now rely on Stripe webhook/verification to mark purchases completed.
+        // This prevents pending purchases (e.g., user clicks back) from granting tokens.
+        return;
     }
 
     // CRM Methods
@@ -1770,6 +1695,18 @@ public class DynamoDBService : IDynamoDBService
                 document["CustomerEmail"] = purchase.CustomerEmail;
             if (!string.IsNullOrEmpty(purchase.CustomerName))
                 document["CustomerName"] = purchase.CustomerName;
+            if (!string.IsNullOrEmpty(purchase.CustomerPhone))
+                document["CustomerPhone"] = purchase.CustomerPhone;
+            if (!string.IsNullOrEmpty(purchase.CustomerAddressLine1))
+                document["CustomerAddressLine1"] = purchase.CustomerAddressLine1;
+            if (!string.IsNullOrEmpty(purchase.CustomerCity))
+                document["CustomerCity"] = purchase.CustomerCity;
+            if (!string.IsNullOrEmpty(purchase.CustomerState))
+                document["CustomerState"] = purchase.CustomerState;
+            if (!string.IsNullOrEmpty(purchase.CustomerPostalCode))
+                document["CustomerPostalCode"] = purchase.CustomerPostalCode;
+            if (!string.IsNullOrEmpty(purchase.CustomerCountry))
+                document["CustomerCountry"] = purchase.CustomerCountry;
 
             await _dynamoDB.PutItemAsync(new PutItemRequest
             {
@@ -1931,7 +1868,13 @@ public class DynamoDBService : IDynamoDBService
                 TokensGranted = item.ContainsKey("TokensGranted") ? int.Parse(item["TokensGranted"].N) : null,
                 IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL,
                 CustomerEmail = item.ContainsKey("CustomerEmail") ? item["CustomerEmail"].S : null,
-                CustomerName = item.ContainsKey("CustomerName") ? item["CustomerName"].S : null
+                    CustomerName = item.ContainsKey("CustomerName") ? item["CustomerName"].S : null,
+                    CustomerPhone = item.ContainsKey("CustomerPhone") ? item["CustomerPhone"].S : null,
+                    CustomerAddressLine1 = item.ContainsKey("CustomerAddressLine1") ? item["CustomerAddressLine1"].S : null,
+                    CustomerCity = item.ContainsKey("CustomerCity") ? item["CustomerCity"].S : null,
+                    CustomerState = item.ContainsKey("CustomerState") ? item["CustomerState"].S : null,
+                    CustomerPostalCode = item.ContainsKey("CustomerPostalCode") ? item["CustomerPostalCode"].S : null,
+                    CustomerCountry = item.ContainsKey("CustomerCountry") ? item["CustomerCountry"].S : null
             }).OrderByDescending(p => p.PurchasedAt).ToList();
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)

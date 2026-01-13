@@ -59,18 +59,18 @@ public class StripeController : ControllerBase
                     plan = new PricingPlan
                     {
                         PlanId = request.PlanId,
-                        Name = request.PlanId.Contains("unlimited") ? "Unlimited Access" : 
-                               request.PlanId.Contains("10") ? "10 Workouts" : 
-                               request.PlanId.Contains("25") ? "25 Workouts" : "Workout Plan",
-                        Price = request.PlanId.Contains("unlimited") ? 9.99m : 
-                                request.PlanId.Contains("10") ? 1.99m : 
-                                request.PlanId.Contains("25") ? 3.99m : 1.99m,
+                        Name = request.PlanId.Contains("10") ? "10 Workouts" :
+                               request.PlanId.Contains("30") ? "30 Workouts" :
+                               request.PlanId.Contains("100") ? "100 Workouts" : "Workout Plan",
+                        Price = request.PlanId.Contains("10") ? 1.99m :
+                                request.PlanId.Contains("30") ? 3.99m :
+                                request.PlanId.Contains("100") ? 7.99m : 1.99m,
                         Currency = "USD",
-                        TokenCount = request.PlanId.Contains("unlimited") ? null : 
-                                    (request.PlanId.Contains("10") ? 10 : 
-                                     request.PlanId.Contains("25") ? 25 : 10),
-                        IsUnlimited = request.PlanId.Contains("unlimited"),
-                        UnlimitedDays = request.PlanId.Contains("unlimited") ? 365 : null,
+                        TokenCount = request.PlanId.Contains("10") ? 10 :
+                                     request.PlanId.Contains("30") ? 30 :
+                                     request.PlanId.Contains("100") ? 100 : 10,
+                        IsUnlimited = false,
+                        UnlimitedDays = null,
                         DisplayOrder = 1,
                         IsRecommended = false,
                         IsActive = true,
@@ -89,12 +89,12 @@ public class StripeController : ControllerBase
                 var defaultPlan = new PricingPlan
                 {
                     PlanId = request.PlanId,
-                    Name = plan.Name ?? (request.PlanId.Contains("unlimited") ? "Unlimited Access" : request.PlanId.Contains("10") ? "10 Workouts" : "25 Workouts"),
-                    Price = plan.Price > 0 ? plan.Price : (request.PlanId.Contains("unlimited") ? 9.99m : request.PlanId.Contains("10") ? 1.99m : 3.99m),
+                    Name = plan.Name ?? (request.PlanId.Contains("10") ? "10 Workouts" : request.PlanId.Contains("30") ? "30 Workouts" : "100 Workouts"),
+                    Price = plan.Price > 0 ? plan.Price : (request.PlanId.Contains("10") ? 1.99m : request.PlanId.Contains("30") ? 3.99m : 7.99m),
                     Currency = plan.Currency ?? "USD",
-                    TokenCount = request.PlanId.Contains("unlimited") ? null : (request.PlanId.Contains("10") ? 10 : 25),
-                    IsUnlimited = request.PlanId.Contains("unlimited"),
-                    UnlimitedDays = request.PlanId.Contains("unlimited") ? 365 : null,
+                    TokenCount = request.PlanId.Contains("10") ? 10 : request.PlanId.Contains("30") ? 30 : 100,
+                    IsUnlimited = false,
+                    UnlimitedDays = null,
                     DisplayOrder = 1,
                     IsRecommended = false,
                     IsActive = true,
@@ -163,9 +163,9 @@ public class StripeController : ControllerBase
                 new("metadata[planId]", plan.PlanId),
                 new("allow_promotion_codes", "true"),
                 // CRITICAL: Ensure customer email and name are collected
-                new("billing_address_collection", "required"), // This ensures email is collected
+                new("billing_address_collection", "required"), // collect address
                 new("customer_creation", "always"), // Always create a customer record
-                new("phone_number_collection[enabled]", "false") // Disable phone, focus on email/name
+                new("phone_number_collection[enabled]", "true") // collect phone
             };
             
             // Add description if available
@@ -357,9 +357,15 @@ public class StripeController : ControllerBase
                         }
                     }
                     
-                    // AGGRESSIVE FIX: Fetch customer name/email from Stripe session
+                    // AGGRESSIVE FIX: Fetch customer info from Stripe session
                     string? customerEmail = null;
                     string? customerName = null;
+                    string? customerPhone = null;
+                    string? customerAddress1 = null;
+                    string? customerCity = null;
+                    string? customerState = null;
+                    string? customerPostal = null;
+                    string? customerCountry = null;
                     try
                     {
                         var stripeSecretKey = await _configService.GetStripeSecretKeyAsync();
@@ -386,8 +392,18 @@ public class StripeController : ControllerBase
                                         customerEmail = emailElement.GetString();
                                     if (customerDetails.TryGetProperty("name", out var nameElement))
                                         customerName = nameElement.GetString();
+                                    if (customerDetails.TryGetProperty("phone", out var phoneElement))
+                                        customerPhone = phoneElement.GetString();
+                                    if (customerDetails.TryGetProperty("address", out var addrElement) && addrElement.ValueKind == System.Text.Json.JsonValueKind.Object)
+                                    {
+                                        if (addrElement.TryGetProperty("line1", out var line1)) customerAddress1 = line1.GetString();
+                                        if (addrElement.TryGetProperty("city", out var city)) customerCity = city.GetString();
+                                        if (addrElement.TryGetProperty("state", out var state)) customerState = state.GetString();
+                                        if (addrElement.TryGetProperty("postal_code", out var postal)) customerPostal = postal.GetString();
+                                        if (addrElement.TryGetProperty("country", out var country)) customerCountry = country.GetString();
+                                    }
                                     
-                                    Console.WriteLine($"[StripeController] Fetched customer info from customer_details - Email: {customerEmail}, Name: {customerName}");
+                                    Console.WriteLine($"[StripeController] Fetched customer info from customer_details - Email: {customerEmail}, Name: {customerName}, Phone: {customerPhone}");
                                 }
                                 
                                 // If not in customer_details, try to get from customer object
@@ -408,8 +424,18 @@ public class StripeController : ControllerBase
                                                     customerEmail = customerData["email"]?.ToString();
                                                 if (customerData.ContainsKey("name"))
                                                     customerName = customerData["name"]?.ToString();
+                                                if (customerData.ContainsKey("phone"))
+                                                    customerPhone = customerData["phone"]?.ToString();
+                                                if (customerData.ContainsKey("address") && customerData["address"] is System.Text.Json.JsonElement caddr && caddr.ValueKind == System.Text.Json.JsonValueKind.Object)
+                                                {
+                                                    if (caddr.TryGetProperty("line1", out var line1)) customerAddress1 = line1.GetString();
+                                                    if (caddr.TryGetProperty("city", out var city)) customerCity = city.GetString();
+                                                    if (caddr.TryGetProperty("state", out var state)) customerState = state.GetString();
+                                                    if (caddr.TryGetProperty("postal_code", out var postal)) customerPostal = postal.GetString();
+                                                    if (caddr.TryGetProperty("country", out var country)) customerCountry = country.GetString();
+                                                }
                                                 
-                                                Console.WriteLine($"[StripeController] Fetched customer info from customer object - Email: {customerEmail}, Name: {customerName}");
+                                                Console.WriteLine($"[StripeController] Fetched customer info from customer object - Email: {customerEmail}, Name: {customerName}, Phone: {customerPhone}");
                                             }
                                         }
                                     }
@@ -424,8 +450,14 @@ public class StripeController : ControllerBase
                     }
                     
                     // AGGRESSIVE FIX: Set customer info on purchase
-                    purchase.CustomerEmail = customerEmail;
-                    purchase.CustomerName = customerName;
+                    purchase.CustomerEmail = customerEmail ?? purchase.CustomerEmail;
+                    purchase.CustomerName = customerName ?? purchase.CustomerName;
+                    purchase.CustomerPhone = customerPhone ?? purchase.CustomerPhone;
+                    purchase.CustomerAddressLine1 = customerAddress1 ?? purchase.CustomerAddressLine1;
+                    purchase.CustomerCity = customerCity ?? purchase.CustomerCity;
+                    purchase.CustomerState = customerState ?? purchase.CustomerState;
+                    purchase.CustomerPostalCode = customerPostal ?? purchase.CustomerPostalCode;
+                    purchase.CustomerCountry = customerCountry ?? purchase.CustomerCountry;
 
                     // Grant tokens or unlimited access
                     Console.WriteLine($"[StripeController] Granting access - IsUnlimited: {purchase.IsUnlimited}, TokensGranted: {purchase.TokensGranted}");
