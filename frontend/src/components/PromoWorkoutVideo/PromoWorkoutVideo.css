@@ -1,0 +1,47 @@
+.promoVideoCard {
+  width: 100%;
+  margin: 0.75rem auto 0;
+}
+
+.promoVideoFrame {
+  width: 100%;
+  height: 200px; /* fixed to avoid CLS */
+  border-radius: 16px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+@media (max-width: 640px) {
+  .promoVideoFrame {
+    height: 160px;
+  }
+}
+
+.promoVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.promoVideoFallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: rgba(15, 23, 42, 0.85);
+  font-weight: 700;
+  font-size: 0.95rem;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(124, 58, 237, 0.10));
+}
+
+.promoVideoCaption {
+  margin-top: 0.5rem;
+  text-align: center;
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+

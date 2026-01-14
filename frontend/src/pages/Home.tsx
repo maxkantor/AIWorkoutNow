@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import WorkoutGenerator from '../components/WorkoutGenerator';
 import PricingPlans from '../components/PricingPlans';
 import RestoreCredits from '../components/RestoreCredits';
+import PromoWorkoutVideo from '../components/PromoWorkoutVideo/PromoWorkoutVideo';
 import { getDeviceId, setTokenBalance as updateTokenStorage } from '../utils/storage';
 import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus } from '../services/api';
 import { useHeroContext } from '../components/Layout';
@@ -316,6 +317,7 @@ function Home() {
               {/* Why Choose Us */}
               <section className="bg-slate-50/50 rounded-2xl p-6 border-2 border-slate-200 shadow-lg">
                 <h2 className="text-xl font-bold text-slate-900 mb-5">Why Choose AIWorkoutNow?</h2>
+                <PromoWorkoutVideo />
                 <div className="space-y-4">
                   <div className="bg-white rounded-xl p-5 shadow-md border border-slate-100 hover:shadow-lg transition-all">
                     <div className="text-3xl mb-3">🎯</div>
