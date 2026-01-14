@@ -15,7 +15,7 @@ function Privacy() {
         <meta property="og:description" content="Read AIWorkoutNow's privacy policy to understand how we collect, use, and protect your data." />
         <meta property="og:url" content="https://aiworkoutnow.com/privacy" />
         <link rel="canonical" href="https://aiworkoutnow.com/privacy" />
-        <meta name="robots" content="noindex, follow" />
+        <meta name="robots" content="index, follow" />
       </Helmet>
       
       <div className="privacy-page">

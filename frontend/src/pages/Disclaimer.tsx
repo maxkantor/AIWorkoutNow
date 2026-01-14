@@ -15,7 +15,7 @@ function Disclaimer() {
         <meta property="og:description" content="Read AIWorkoutNow's disclaimer regarding fitness advice and workout recommendations." />
         <meta property="og:url" content="https://aiworkoutnow.com/disclaimer" />
         <link rel="canonical" href="https://aiworkoutnow.com/disclaimer" />
-        <meta name="robots" content="noindex, follow" />
+        <meta name="robots" content="index, follow" />
       </Helmet>
       
       <div className="disclaimer-page">

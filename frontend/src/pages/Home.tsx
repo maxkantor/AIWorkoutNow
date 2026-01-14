@@ -21,9 +21,10 @@ function Home() {
   const [checkingAccess, setCheckingAccess] = useState(true);
   const { setHeroContent } = useHeroContext();
 
-  const seoTitle = "AI Workout Generator (No Signup) | Personalized Workout Plan in Seconds";
+  // SEO: keep title ~50–60 chars and description ~140–160 chars
+  const seoTitle = "AI Workout Generator (No Signup) | One-Time Payment";
   const seoDescription =
-    "Generate an instant, personalized workout plan in seconds—no signup. Try 3 free workouts, then unlock more with a one-time payment. Gym or home, equipment-aware, goals-based.";
+    "Generate a personalized workout plan instantly—no signup. Try 3 free workouts, then unlock more with a one-time payment. Gym or home, equipment-aware, goals-based.";
 
   useEffect(() => {
     checkAccessStatus();
@@ -198,6 +199,7 @@ function Home() {
       <Helmet>
         <title>{seoTitle}</title>
         <meta name="description" content={seoDescription} />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <link rel="canonical" href="https://aiworkoutnow.com/" />
 
         {/* Open Graph / Twitter */}
@@ -205,11 +207,15 @@ function Home() {
         <meta property="og:description" content={seoDescription} />
         <meta property="og:url" content="https://aiworkoutnow.com/" />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://aiworkoutnow.com/images/hero-bg.png" />
+        <meta property="og:image" content="https://aiworkoutnow.com/og-image.svg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:site_name" content="AIWorkoutNow" />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://aiworkoutnow.com/" />
         <meta name="twitter:title" content={seoTitle} />
         <meta name="twitter:description" content={seoDescription} />
-        <meta name="twitter:image" content="https://aiworkoutnow.com/images/hero-bg.png" />
+        <meta name="twitter:image" content="https://aiworkoutnow.com/og-image.svg" />
 
         {/* Structured data */}
         <script type="application/ld+json">
@@ -219,6 +225,20 @@ function Home() {
           "name": "AIWorkoutNow",
           "url": "https://aiworkoutnow.com/"
         })}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "AIWorkoutNow",
+            "url": "https://aiworkoutnow.com/",
+            "logo": "https://aiworkoutnow.com/favicon.svg",
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "Customer Support",
+              "url": "https://aiworkoutnow.com/contact"
+            }
+          })}
         </script>
         <script type="application/ld+json">
           {JSON.stringify({
@@ -235,6 +255,46 @@ function Home() {
               "priceCurrency": "USD",
               "description": "3 free workouts, then one-time payment workout packs"
             }
+          })}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Do I need to sign up?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. You can generate workouts immediately—no account or login required."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is this a subscription?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. Purchases are one-time payments (no recurring charges)."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How do I restore credits on another device?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Use “Restore Credits” and enter the email used at checkout. We’ll send a verification code."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What counts as a workout generation?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Each time you create a new workout plan, it uses 1 workout credit (unless you’re using free trial credits)."
+                }
+              }
+            ]
           })}
         </script>
       </Helmet>
@@ -384,7 +444,42 @@ function Home() {
             <p className="text-slate-700 leading-relaxed mb-4">
               Start free, then unlock more workouts with a <strong>one-time payment workout</strong> model. No subscriptions. No recurring charges.
             </p>
-            <h3 className="text-lg font-bold text-slate-900">No Signup. One-Time Payment.</h3>
+            <h3 className="text-lg font-bold text-slate-900 mb-3">Personalized Workout Plans in Seconds</h3>
+            <ul className="list-disc pl-5 text-slate-700 space-y-1">
+              <li>Beginner to advanced difficulty</li>
+              <li>Home or gym setups</li>
+              <li>Equipment-aware recommendations</li>
+              <li>Goals-based workouts (strength, fat loss, endurance)</li>
+              <li>Instant access — no signup required</li>
+            </ul>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-6 mb-2">No Signup. One-Time Payment.</h3>
+            <p className="text-slate-700 leading-relaxed">
+              Try the workout generator free, then choose a one-time payment pack when you’re ready. No recurring subscription.
+            </p>
+          </section>
+
+          {/* FAQ (small, appended — does not alter main layout) */}
+          <section className="mt-6 bg-white/70 rounded-2xl p-6 border border-slate-200 shadow-sm" aria-labelledby="faq-heading">
+            <h2 id="faq-heading" className="text-2xl font-extrabold text-slate-900 mb-3">FAQ</h2>
+            <div className="space-y-2">
+              <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
+                <summary className="font-semibold text-slate-900 cursor-pointer">Do I need to sign up?</summary>
+                <p className="text-slate-700 mt-2">No. You can generate workouts immediately—no account or login required.</p>
+              </details>
+              <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
+                <summary className="font-semibold text-slate-900 cursor-pointer">Is this a subscription?</summary>
+                <p className="text-slate-700 mt-2">No. Purchases are one-time payments (no recurring charges).</p>
+              </details>
+              <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
+                <summary className="font-semibold text-slate-900 cursor-pointer">How do I restore credits on another device?</summary>
+                <p className="text-slate-700 mt-2">Use “Restore Credits” and enter the email used at checkout. We’ll send a verification code.</p>
+              </details>
+              <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
+                <summary className="font-semibold text-slate-900 cursor-pointer">What counts as a workout generation?</summary>
+                <p className="text-slate-700 mt-2">Each time you create a new workout plan, it uses 1 workout credit (unless you’re using free trial credits).</p>
+              </details>
+            </div>
           </section>
         </div>
       </div>

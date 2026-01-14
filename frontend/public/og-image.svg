@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="AIWorkoutNow - AI Workout Generator">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="0.55" stop-color="#1d1b3a"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="1020" cy="120" r="220" fill="url(#g)" opacity="0.55"/>
+  <circle cx="220" cy="540" r="260" fill="url(#g)" opacity="0.35"/>
+
+  <g filter="url(#shadow)">
+    <rect x="80" y="90" width="1040" height="450" rx="36" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)"/>
+  </g>
+
+  <text x="120" y="210" fill="#ffffff" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="64" font-weight="800">
+    AI Workout Generator
+  </text>
+  <text x="120" y="285" fill="rgba(255,255,255,0.92)" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="34" font-weight="600">
+    Personalized workout plan in seconds — no signup
+  </text>
+
+  <g>
+    <rect x="120" y="335" rx="18" ry="18" width="360" height="64" fill="url(#g)"/>
+    <text x="150" y="378" fill="#ffffff" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="24" font-weight="800">
+      One‑time payment options
+    </text>
+  </g>
+
+  <text x="120" y="470" fill="rgba(255,255,255,0.78)" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="22" font-weight="500">
+    aiworkoutnow.com
+  </text>
+</svg>
+

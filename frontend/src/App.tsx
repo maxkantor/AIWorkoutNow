@@ -16,10 +16,12 @@ import Privacy from './pages/Privacy';
 import Disclaimer from './pages/Disclaimer';
 import Contact from './pages/Contact';
 import Layout from './components/Layout';
+import OptionalAnalytics from './components/OptionalAnalytics';
 
 function App() {
   return (
     <Layout>
+      <OptionalAnalytics />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/admin" element={<AdminLogin />} />
