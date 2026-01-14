@@ -309,49 +309,46 @@ function Home() {
         {/* Semi-transparent overlay to ensure content readability */}
         <div className="absolute inset-0 bg-white/30 pointer-events-none z-0"></div>
         <div className="relative z-10">
-        <div className="max-w-7xl mx-auto px-4">
-          {/* 3-Column Grid Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-8">
+        <div className="homeThreeColWrap">
+          {/* 3-Column Area (stable CSS grid) */}
+          <div className="homeThreeColGrid">
             {/* Left Column: Why Choose AIWorkoutNow? - Benefits, Stats */}
-            <aside className="md:col-span-2 lg:col-span-3 space-y-6 order-3 md:order-3 lg:order-1">
+            <aside className="homeColLeft">
               {/* Why Choose Us */}
-              <section className="bg-slate-50/50 rounded-2xl p-6 border-2 border-slate-200 shadow-lg">
-                <h2
-                  className="text-lg font-bold text-slate-900 mb-5 whitespace-normal lg:whitespace-nowrap"
-                  title="Why Choose AIWorkoutNow?"
-                >
+              <section className="homePanelCard">
+                <h2 className="homePanelTitle" title="Why Choose AIWorkoutNow?">
                   Why Choose AIWorkoutNow?
                 </h2>
                 <PromoWorkoutVideo />
-                <div className="space-y-4">
-                  <div className="bg-white rounded-xl p-5 shadow-md border border-slate-100 hover:shadow-lg transition-all">
-                    <div className="text-3xl mb-3">🎯</div>
-                    <h3 className="font-bold text-slate-900 mb-2 text-base">100% Personalized</h3>
-                    <p className="text-sm text-slate-600 leading-relaxed">Every workout is tailored to your fitness level, goals, and available equipment.</p>
+                <div className="homeWhyStack">
+                  <div className="homeWhyCard">
+                    <div className="homeWhyIcon" aria-hidden="true">🎯</div>
+                    <h3 className="homeWhyTitle">100% Personalized</h3>
+                    <p className="homeWhyBody">Every workout is tailored to your fitness level, goals, and available equipment.</p>
                   </div>
-                  <div className="bg-white rounded-xl p-5 shadow-md border border-slate-100 hover:shadow-lg transition-all">
-                    <div className="text-3xl mb-3">⚡</div>
-                    <h3 className="font-bold text-slate-900 mb-2 text-base">Instant Generation</h3>
-                    <p className="text-sm text-slate-600 leading-relaxed">Get professional-quality workout plans in seconds, not hours of research.</p>
+                  <div className="homeWhyCard">
+                    <div className="homeWhyIcon" aria-hidden="true">⚡</div>
+                    <h3 className="homeWhyTitle">Instant Generation</h3>
+                    <p className="homeWhyBody">Get professional-quality workout plans in seconds, not hours of research.</p>
                   </div>
-                  <div className="bg-white rounded-xl p-5 shadow-md border border-slate-100 hover:shadow-lg transition-all">
-                    <div className="text-3xl mb-3">🏠</div>
-                    <h3 className="font-bold text-slate-900 mb-2 text-base">Home or Gym</h3>
-                    <p className="text-sm text-slate-600 leading-relaxed">Works with any equipment—from bodyweight to full gym setups.</p>
-              </div>
-                  <div className="bg-white rounded-xl p-5 shadow-md border border-slate-100 hover:shadow-lg transition-all">
-                    <div className="text-3xl mb-3">🔒</div>
-                    <h3 className="font-bold text-slate-900 mb-2 text-base">No Commitment</h3>
-                    <p className="text-sm text-slate-600 leading-relaxed">Pay once. No subscriptions. No recurring charges. Ever.</p>
-              </div>
-          </div>
+                  <div className="homeWhyCard">
+                    <div className="homeWhyIcon" aria-hidden="true">🏠</div>
+                    <h3 className="homeWhyTitle">Home or Gym</h3>
+                    <p className="homeWhyBody">Works with any equipment—from bodyweight to full gym setups.</p>
+                  </div>
+                  <div className="homeWhyCard">
+                    <div className="homeWhyIcon" aria-hidden="true">🔒</div>
+                    <h3 className="homeWhyTitle">No Commitment</h3>
+                    <p className="homeWhyBody">Pay once. No subscriptions. No recurring charges. Ever.</p>
+                  </div>
+                </div>
               </section>
             </aside>
 
             {/* Center Column: Workout Generator Form */}
-            <section id="workout-generator" className="md:col-span-1 lg:col-span-6 order-1 md:order-1 lg:order-2">
+            <section id="workout-generator" className="homeColCenter">
               {/* Workout Generator Form */}
-              <div className="bg-white shadow-2xl rounded-2xl border-2 border-slate-200 p-6 md:p-8 lg:p-10">
+              <div className="homePanelCard homeCenterCard">
           <WorkoutGenerator
             onGenerate={handleGenerateWorkout}
             loading={loading}
@@ -416,9 +413,13 @@ function Home() {
             </section>
 
             {/* Right Column: Pricing Plans */}
-            <aside className="md:col-span-1 lg:col-span-3 order-2 md:order-2 lg:order-3">
-              <div className="bg-slate-50/50 rounded-2xl p-6 border-2 border-slate-200 shadow-lg">
-                <PricingPlans showHeader={true} vertical={true} />
+            <aside className="homeColRight">
+              <div className="homePanelCard">
+                <div className="homePricingHeader">
+                  <h2 className="homePanelTitle" title="Unlock More AI Workouts">Unlock More AI Workouts</h2>
+                  <p className="homePricingSub">Pay once • No login • Instant access</p>
+                </div>
+                <PricingPlans showHeader={false} vertical={true} />
               </div>
             </aside>
           </div>

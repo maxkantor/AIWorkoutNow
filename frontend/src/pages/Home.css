@@ -13,6 +13,159 @@
   }
 }
 
+.homeThreeColWrap {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 0 18px;
+}
+
+/* Stable 3-column layout (desktop >= 1100px) */
+.homeThreeColGrid {
+  display: grid;
+  grid-template-columns: 320px minmax(640px, 820px) 360px;
+  gap: 28px;
+  align-items: start;
+  justify-content: center; /* keeps grid centered inside max-width container */
+  /* IMPORTANT: do not clip children */
+  overflow: visible;
+}
+
+.homeColLeft {
+  grid-area: left;
+  min-width: 0;
+}
+.homeColCenter {
+  grid-area: center;
+  min-width: 0;
+}
+.homeColRight {
+  grid-area: right;
+  min-width: 0;
+}
+
+/* Use areas to control order on tablet/mobile */
+@media (min-width: 1100px) {
+  .homeThreeColGrid {
+    grid-template-areas: "left center right";
+  }
+}
+
+/* Tablet: center full width, then left/right */
+@media (min-width: 768px) and (max-width: 1099px) {
+  .homeThreeColWrap {
+    padding: 0 16px;
+  }
+  .homeThreeColGrid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "center center"
+      "left right";
+    gap: 24px;
+  }
+}
+
+/* Mobile: single column order center -> right -> left */
+@media (max-width: 767px) {
+  .homeThreeColWrap {
+    padding: 0 14px;
+  }
+  .homeThreeColGrid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "center"
+      "right"
+      "left";
+    gap: 18px;
+  }
+}
+
+/* Premium panel baseline (reduce glass, improve readability) */
+.homePanelCard {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 18px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.10);
+  padding: 18px;
+}
+
+@media (min-width: 768px) {
+  .homePanelCard {
+    padding: 20px;
+  }
+}
+
+.homeCenterCard {
+  padding: 18px;
+}
+
+@media (min-width: 768px) {
+  .homeCenterCard {
+    padding: 24px;
+  }
+}
+
+.homePanelTitle {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.15;
+  white-space: normal;
+}
+
+@media (min-width: 640px) {
+  .homePanelTitle {
+    white-space: nowrap;
+  }
+}
+
+.homeWhyStack {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.homeWhyCard {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+  padding: 14px 14px;
+}
+
+.homeWhyIcon {
+  font-size: 24px;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+
+.homeWhyTitle {
+  font-weight: 800;
+  color: #0f172a;
+  font-size: 15px;
+  margin: 0 0 6px;
+  line-height: 1.2;
+}
+
+.homeWhyBody {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #475569;
+}
+
+.homePricingHeader {
+  margin-bottom: 10px;
+}
+
+.homePricingSub {
+  margin: -4px 0 0;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 650;
+  color: #475569;
+}
+
 .hero {
   text-align: center;
   padding: 3rem 0;

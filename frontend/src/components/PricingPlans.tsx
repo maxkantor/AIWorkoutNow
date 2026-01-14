@@ -171,9 +171,9 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
           {plans.map((plan) => (
             <article
               key={plan.planId}
-              className={`relative bg-white rounded-2xl border transition-all p-5 sm:p-6 ${
+              className={`relative bg-white rounded-2xl border transition-all p-4 sm:p-5 ${
                 isMostPopular(plan.tokenCount)
-                  ? 'border-blue-600 shadow-2xl ring-2 ring-blue-500/20 sm:scale-[1.03] z-10'
+                  ? 'border-blue-600 shadow-2xl ring-2 ring-blue-500/20 z-10 p-5 sm:p-6'
                   : 'border-slate-200 shadow-md hover:shadow-lg hover:border-slate-300'
               }`}
               role="listitem"
@@ -195,20 +195,20 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
               
               {/* Price - Prominent */}
               <div className="text-center mt-3 mb-4">
-                <div className="flex items-baseline justify-center gap-1">
+                <div className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1">
                   <span className="text-[40px] sm:text-[42px] leading-none font-extrabold text-slate-900">
                     ${plan.price.toFixed(2)}
                   </span>
+                  {plan.tokenCount && (
+                    <span className="text-xs text-slate-500 font-semibold whitespace-nowrap">
+                      (${costPerWorkout(plan)} per workout)
+                    </span>
+                  )}
                 </div>
-                {plan.tokenCount && (
-                  <div className="mt-2 text-xs text-slate-500 font-semibold">
-                    ${costPerWorkout(plan)} per workout
-                  </div>
-                )}
               </div>
 
               {/* Benefits (replace repeated workouts copy) */}
-              <ul className="mt-3 mb-4 text-[13px] sm:text-[14px] leading-5 text-slate-700 space-y-1.5 sm:space-y-2">
+              <ul className="mt-3 mb-4 text-[13px] sm:text-[14px] leading-5 text-slate-700 space-y-1 sm:space-y-1.5">
                 {getBenefits(plan.tokenCount).map((b) => (
                   <li key={b} className="flex gap-2">
                     <span aria-hidden="true">✅</span>
@@ -226,7 +226,7 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
 
               {/* CTA Button */}
               <button
-                className="w-full py-3 sm:py-3.5 px-6 rounded-xl font-extrabold text-base transition-all duration-300 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg hover:shadow-blue-500/20 focus:outline-none focus:ring-4 focus:ring-blue-500/30 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full py-2.75 sm:py-3 px-6 rounded-xl font-extrabold text-base transition-all duration-300 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg hover:shadow-blue-500/20 focus:outline-none focus:ring-4 focus:ring-blue-500/30 disabled:opacity-60 disabled:cursor-not-allowed"
                 onClick={() => handlePurchase(plan)}
                 disabled={checkoutLoading === plan.planId}
                 aria-label={`Purchase ${plan.name} plan for $${plan.price.toFixed(2)}`}
@@ -271,14 +271,16 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
               </h3>
               
               <div className="text-center mb-3">
-                <span className="text-[38px] leading-none font-extrabold text-slate-900">
-                  ${plan.price.toFixed(2)}
-                </span>
-                {plan.tokenCount && (
-                  <div className="mt-2 text-xs text-slate-500 font-semibold">
-                    ${costPerWorkout(plan)} per workout
-                  </div>
-                )}
+                <div className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1">
+                  <span className="text-[38px] leading-none font-extrabold text-slate-900">
+                    ${plan.price.toFixed(2)}
+                  </span>
+                  {plan.tokenCount && (
+                    <span className="text-xs text-slate-500 font-semibold whitespace-nowrap">
+                      (${costPerWorkout(plan)} per workout)
+                    </span>
+                  )}
+                </div>
               </div>
 
               <ul className="mb-4 text-[13px] leading-5 text-slate-700 space-y-2">
