@@ -20,29 +20,31 @@ export default function PromoWorkoutVideo({
 
   return (
     <div className="promoVideoCard" aria-label={ariaLabel}>
-      <div className="promoVideoFrame">
-        {!failed ? (
-          <video
-            className="promoVideo"
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="metadata"
-            controls={false}
-            poster={poster}
-            onError={() => setFailed(true)}
-            aria-label={ariaLabel}
-          >
-            <source src={src} type="video/mp4" />
-          </video>
-        ) : (
-          <div className="promoVideoFallback" role="img" aria-label={fallbackText}>
-            {fallbackText}
-          </div>
-        )}
+      <div className="promoVideoInnerCard">
+        <div className="promoVideoFrame">
+          {!failed ? (
+            <video
+              className="promoVideo"
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="metadata"
+              controls={false}
+              poster={poster}
+              onError={() => setFailed(true)}
+              aria-label={ariaLabel}
+            >
+              <source src={src} type="video/mp4" />
+            </video>
+          ) : (
+            <div className="promoVideoFallback" role="img" aria-label={fallbackText}>
+              {fallbackText}
+            </div>
+          )}
+        </div>
+        <div className="promoVideoCaption">{caption}</div>
       </div>
-      <div className="promoVideoCaption">{caption}</div>
     </div>
   );
 }

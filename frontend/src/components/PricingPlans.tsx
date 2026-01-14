@@ -22,6 +22,32 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
 
   const isMostPopular = (tokenCount?: number | null) => tokenCount === 30;
 
+  const getCta = (tokenCount?: number | null) => {
+    if (tokenCount === 10) return 'Try 10 Workouts';
+    if (tokenCount === 30) return 'Unlock 30 Workouts';
+    if (tokenCount === 100) return 'Get 100 Workouts';
+    return 'Get Started';
+  };
+
+  const getBenefits = (tokenCount?: number | null) => {
+    if (tokenCount === 10) {
+      return ['Instant access', 'No signup', 'Great for testing', 'Restore credits anytime'];
+    }
+    if (tokenCount === 30) {
+      return ['Best for regular use', 'No signup', 'Better value per workout', 'Restore credits anytime'];
+    }
+    if (tokenCount === 100) {
+      return ['Best savings', 'No signup', 'Long-term access', 'Restore credits anytime'];
+    }
+    return ['Instant access', 'No signup', 'Restore credits anytime'];
+  };
+
+  const costPerWorkout = (plan: PricingPlan) => {
+    const count = plan.tokenCount ?? 0;
+    if (!count || !plan.price) return null;
+    return (plan.price / count).toFixed(2);
+  };
+
   useEffect(() => {
     loadPlans();
   }, []);
@@ -145,9 +171,9 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
           {plans.map((plan) => (
             <article
               key={plan.planId}
-              className={`relative bg-white rounded-2xl border p-6 transition-all ${
+              className={`relative bg-white rounded-2xl border transition-all p-5 sm:p-6 ${
                 isMostPopular(plan.tokenCount)
-                  ? 'border-blue-600 shadow-xl ring-1 ring-blue-500/20'
+                  ? 'border-blue-600 shadow-2xl ring-2 ring-blue-500/20 sm:scale-[1.03] z-10'
                   : 'border-slate-200 shadow-md hover:shadow-lg hover:border-slate-300'
               }`}
               role="listitem"
@@ -163,25 +189,32 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
               )}
               
               {/* Plan Name */}
-              <h3 className="mt-3 text-[19px] font-semibold text-slate-900 text-center">
+              <h3 className="mt-3 text-[18px] sm:text-[19px] font-semibold text-slate-900 text-center">
                 {plan.name}
               </h3>
               
               {/* Price - Prominent */}
               <div className="text-center mt-3 mb-4">
                 <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-[42px] leading-none font-extrabold text-slate-900">
+                  <span className="text-[40px] sm:text-[42px] leading-none font-extrabold text-slate-900">
                     ${plan.price.toFixed(2)}
                   </span>
                 </div>
+                {plan.tokenCount && (
+                  <div className="mt-2 text-xs text-slate-500 font-semibold">
+                    ${costPerWorkout(plan)} per workout
+                  </div>
+                )}
               </div>
 
               {/* Benefits (replace repeated workouts copy) */}
-              <ul className="mt-3 mb-5 text-[13px] leading-5 text-slate-700 space-y-2">
-                <li className="flex gap-2"><span aria-hidden="true">✅</span><span>Instant access</span></li>
-                <li className="flex gap-2"><span aria-hidden="true">✅</span><span>No signup</span></li>
-                <li className="flex gap-2"><span aria-hidden="true">✅</span><span>Pay once</span></li>
-                <li className="flex gap-2"><span aria-hidden="true">✅</span><span>Restore credits anytime</span></li>
+              <ul className="mt-3 mb-4 text-[13px] sm:text-[14px] leading-5 text-slate-700 space-y-1.5 sm:space-y-2">
+                {getBenefits(plan.tokenCount).map((b) => (
+                  <li key={b} className="flex gap-2">
+                    <span aria-hidden="true">✅</span>
+                    <span>{b}</span>
+                  </li>
+                ))}
               </ul>
 
               {/* Micro Copy - Simplified */}
@@ -193,7 +226,7 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
 
               {/* CTA Button */}
               <button
-                className="w-full py-3.5 px-6 rounded-xl font-extrabold text-base transition-all duration-300 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg hover:shadow-blue-500/20 focus:outline-none focus:ring-4 focus:ring-blue-500/30 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full py-3 sm:py-3.5 px-6 rounded-xl font-extrabold text-base transition-all duration-300 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg hover:shadow-blue-500/20 focus:outline-none focus:ring-4 focus:ring-blue-500/30 disabled:opacity-60 disabled:cursor-not-allowed"
                 onClick={() => handlePurchase(plan)}
                 disabled={checkoutLoading === plan.planId}
                 aria-label={`Purchase ${plan.name} plan for $${plan.price.toFixed(2)}`}
@@ -204,9 +237,13 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
                     Processing...
                   </span>
                 ) : (
-                  'Get Started'
+                  getCta(plan.tokenCount)
                 )}
               </button>
+
+              <div className="mt-2 text-xs text-slate-500 text-center">
+                🔒 Secure checkout • Instant access
+              </div>
             </article>
           ))}
         </div>
@@ -240,13 +277,20 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
                 <span className="text-[38px] leading-none font-extrabold text-slate-900">
                   ${plan.price.toFixed(2)}
                 </span>
+                {plan.tokenCount && (
+                  <div className="mt-2 text-xs text-slate-500 font-semibold">
+                    ${costPerWorkout(plan)} per workout
+                  </div>
+                )}
               </div>
 
               <ul className="mb-4 text-[13px] leading-5 text-slate-700 space-y-2">
-                <li className="flex gap-2"><span aria-hidden="true">✅</span><span>Instant access</span></li>
-                <li className="flex gap-2"><span aria-hidden="true">✅</span><span>No signup</span></li>
-                <li className="flex gap-2"><span aria-hidden="true">✅</span><span>Pay once</span></li>
-                <li className="flex gap-2"><span aria-hidden="true">✅</span><span>Restore credits anytime</span></li>
+                {getBenefits(plan.tokenCount).map((b) => (
+                  <li key={b} className="flex gap-2">
+                    <span aria-hidden="true">✅</span>
+                    <span>{b}</span>
+                  </li>
+                ))}
               </ul>
 
               {plan.microCopy && (
@@ -261,8 +305,12 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
                 disabled={checkoutLoading === plan.planId}
                 aria-label={`Purchase ${plan.name} plan`}
               >
-                {checkoutLoading === plan.planId ? 'Processing...' : 'Get Started'}
+                {checkoutLoading === plan.planId ? 'Processing...' : getCta(plan.tokenCount)}
               </button>
+
+              <div className="mt-2 text-xs text-slate-500 text-center">
+                🔒 Secure checkout • Instant access
+              </div>
             </article>
           ))}
         </div>
@@ -270,7 +318,7 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
 
       {showHeader && !vertical && (
         <div className="mt-6 text-center space-y-2 pt-6 border-t border-slate-200">
-          <p className="text-sm text-slate-600">No login. No subscription. Pay once.</p>
+          <p className="text-sm text-slate-600">No login. No subscription.</p>
           <p className="text-sm font-semibold text-slate-700">
             Other fitness apps charge $10–$30/month. We don't.
           </p>
