@@ -179,7 +179,7 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
               role="listitem"
             >
               {/* Badge + Plan Name in one line */}
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 whitespace-nowrap">
                 {getBadge(plan.tokenCount) && (
                   <div className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-extrabold tracking-wide whitespace-nowrap ${
                     isMostPopular(plan.tokenCount)
