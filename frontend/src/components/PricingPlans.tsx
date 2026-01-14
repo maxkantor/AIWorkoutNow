@@ -121,7 +121,11 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
     <section aria-labelledby={showHeader ? "pricing-heading" : undefined}>
       {showHeader && (
         <header className="mb-6">
-          <h2 id="pricing-heading" className="text-xl font-bold text-slate-800 mb-2">
+          <h2
+            id="pricing-heading"
+            className="text-lg sm:text-xl font-bold text-slate-800 mb-2 whitespace-normal sm:whitespace-nowrap overflow-hidden text-ellipsis"
+            title="Unlock More AI Workouts"
+          >
             Unlock More AI Workouts
           </h2>
           <p className="text-sm text-slate-600">

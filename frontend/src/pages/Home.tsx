@@ -149,9 +149,9 @@ function Home() {
       // If no workouts remaining, just return without generating
       if (isFreeUser && (accessStatus?.freeWorkoutsRemaining ?? 0) <= 0 && !accessStatus?.hasUnlimitedAccess) {
         setError('No free workouts remaining. Please purchase more workouts to continue.');
-        setLoading(false);
-        return;
-      }
+          setLoading(false);
+          return;
+        }
       
       if (!isFreeUser && (accessStatus?.tokensRemaining ?? 0) <= 0 && !accessStatus?.hasUnlimitedAccess) {
         setError('No workouts remaining. Please purchase more workouts to continue.');
@@ -169,7 +169,7 @@ function Home() {
           setFreeWorkoutsRemaining(Math.max(0, (accessStatus?.freeWorkoutsRemaining ?? freeWorkoutsRemaining) - 1));
         } else {
           // Paid token was used - update immediately
-          setTokenBalance(result.tokensRemaining);
+        setTokenBalance(result.tokensRemaining);
           // Update localStorage immediately
           updateTokenStorage(deviceId, result.tokensRemaining);
         }
@@ -316,7 +316,12 @@ function Home() {
             <aside className="md:col-span-2 lg:col-span-3 space-y-6 order-3 md:order-3 lg:order-1">
               {/* Why Choose Us */}
               <section className="bg-slate-50/50 rounded-2xl p-6 border-2 border-slate-200 shadow-lg">
-                <h2 className="text-xl font-bold text-slate-900 mb-5">Why Choose AIWorkoutNow?</h2>
+                <h2
+                  className="text-lg sm:text-xl font-bold text-slate-900 mb-5 whitespace-normal sm:whitespace-nowrap overflow-hidden text-ellipsis"
+                  title="Why Choose AIWorkoutNow?"
+                >
+                  Why Choose AIWorkoutNow?
+                </h2>
                 <PromoWorkoutVideo />
                 <div className="space-y-4">
                   <div className="bg-white rounded-xl p-5 shadow-md border border-slate-100 hover:shadow-lg transition-all">
@@ -341,35 +346,17 @@ function Home() {
                   </div>
                 </div>
               </section>
-
-              {/* Stats - Enhanced Visual Hierarchy */}
-              <section className="bg-gradient-to-br from-blue-600 via-purple-600 to-blue-700 rounded-2xl p-6 text-white shadow-xl">
-                <div className="space-y-6">
-                  <div className="text-center pb-4 border-b border-white/20">
-                    <div className="text-4xl font-black mb-2">10,000+</div>
-                    <div className="text-sm font-semibold opacity-95 uppercase tracking-wide">Workouts Generated</div>
-                  </div>
-                  <div className="text-center pb-4 border-b border-white/20">
-                    <div className="text-4xl font-black mb-2">4.8★</div>
-                    <div className="text-sm font-semibold opacity-95 uppercase tracking-wide">User Rating</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-4xl font-black mb-2">98%</div>
-                    <div className="text-sm font-semibold opacity-95 uppercase tracking-wide">Satisfaction Rate</div>
-                  </div>
-                </div>
-              </section>
             </aside>
 
             {/* Center Column: Workout Generator Form */}
             <section id="workout-generator" className="md:col-span-1 lg:col-span-6 order-1 md:order-1 lg:order-2">
               {/* Workout Generator Form */}
               <div className="bg-white shadow-2xl rounded-2xl border-2 border-slate-200 p-6 md:p-8 lg:p-10">
-                <WorkoutGenerator
-                  onGenerate={handleGenerateWorkout}
-                  loading={loading}
-                  error={error}
-                  workout={workout}
+          <WorkoutGenerator
+            onGenerate={handleGenerateWorkout}
+            loading={loading}
+            error={error}
+            workout={workout}
                   disabled={!canGenerate && !checkingAccess}
                 />
               </div>
