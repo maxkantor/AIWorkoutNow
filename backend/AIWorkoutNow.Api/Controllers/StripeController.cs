@@ -13,6 +13,34 @@ public class StripeController : ControllerBase
     private readonly IDynamoDBService _dynamoService;
     private readonly IConfigService _configService;
 
+        private static PricingPlan BuildDefaultPlan(string planId, string? currencyOverride = null, string? stripePriceIdOverride = null)
+        {
+            var lower = planId.ToLowerInvariant();
+            bool is100 = lower.Contains("100-workouts") || lower.Contains("default-100");
+            bool is30 = lower.Contains("30-workouts") || lower.Contains("default-30");
+            bool is10 = lower.Contains("10-workouts") || lower.Contains("default-10");
+
+            var name = is100 ? "100 Workouts" : is30 ? "30 Workouts" : is10 ? "10 Workouts" : "Workout Plan";
+            var price = is100 ? 7.99m : is30 ? 3.99m : is10 ? 1.99m : 1.99m;
+            var tokens = is100 ? 100 : is30 ? 30 : is10 ? 10 : 10;
+
+            return new PricingPlan
+            {
+                PlanId = planId,
+                Name = name,
+                Price = price,
+                Currency = currencyOverride ?? "USD",
+                TokenCount = tokens,
+                IsUnlimited = false,
+                UnlimitedDays = null,
+                DisplayOrder = 1,
+                IsRecommended = false,
+                IsActive = true,
+                StripePriceId = stripePriceIdOverride ?? string.Empty,
+                CreatedAt = DateTime.UtcNow
+            };
+        }
+
     public StripeController(IDynamoDBService dynamoService, IConfigService configService)
     {
         _dynamoService = dynamoService;
@@ -56,27 +84,7 @@ public class StripeController : ControllerBase
                     Console.WriteLine($"[StripeController] Plan {request.PlanId} not found in all plans. Available plans: {string.Join(", ", allPlans.Select(p => p.PlanId))}");
                     // CRITICAL FIX: Create default plan if not found (matching PricingController defaults)
                     Console.WriteLine($"[StripeController] Creating default plan for {request.PlanId}");
-                    plan = new PricingPlan
-                    {
-                        PlanId = request.PlanId,
-                        Name = request.PlanId.Contains("10") ? "10 Workouts" :
-                               request.PlanId.Contains("30") ? "30 Workouts" :
-                               request.PlanId.Contains("100") ? "100 Workouts" : "Workout Plan",
-                        Price = request.PlanId.Contains("10") ? 1.99m :
-                                request.PlanId.Contains("30") ? 3.99m :
-                                request.PlanId.Contains("100") ? 7.99m : 1.99m,
-                        Currency = "USD",
-                        TokenCount = request.PlanId.Contains("10") ? 10 :
-                                     request.PlanId.Contains("30") ? 30 :
-                                     request.PlanId.Contains("100") ? 100 : 10,
-                        IsUnlimited = false,
-                        UnlimitedDays = null,
-                        DisplayOrder = 1,
-                        IsRecommended = false,
-                        IsActive = true,
-                        StripePriceId = string.Empty,
-                        CreatedAt = DateTime.UtcNow
-                    };
+                    plan = BuildDefaultPlan(request.PlanId);
                     Console.WriteLine($"[StripeController] Created default plan: {plan.PlanId}, Price: {plan.Price}, IsUnlimited: {plan.IsUnlimited}");
                 }
             }
@@ -86,21 +94,7 @@ public class StripeController : ControllerBase
                 Console.WriteLine($"[StripeController] Pricing plan is not active: {request.PlanId}, using default active plan as fallback");
                 // AGGRESSIVE FIX: If DB plan is inactive, use a default active plan with same ID
                 // Create default plan inline (matching the IDs used in PricingController)
-                var defaultPlan = new PricingPlan
-                {
-                    PlanId = request.PlanId,
-                    Name = plan.Name ?? (request.PlanId.Contains("10") ? "10 Workouts" : request.PlanId.Contains("30") ? "30 Workouts" : "100 Workouts"),
-                    Price = plan.Price > 0 ? plan.Price : (request.PlanId.Contains("10") ? 1.99m : request.PlanId.Contains("30") ? 3.99m : 7.99m),
-                    Currency = plan.Currency ?? "USD",
-                    TokenCount = request.PlanId.Contains("10") ? 10 : request.PlanId.Contains("30") ? 30 : 100,
-                    IsUnlimited = false,
-                    UnlimitedDays = null,
-                    DisplayOrder = 1,
-                    IsRecommended = false,
-                    IsActive = true,
-                    StripePriceId = plan.StripePriceId ?? string.Empty,
-                    CreatedAt = DateTime.UtcNow
-                };
+                var defaultPlan = BuildDefaultPlan(request.PlanId, plan.Currency, plan.StripePriceId);
                 Console.WriteLine($"[StripeController] Using default active plan as fallback: {defaultPlan.PlanId}, Price: {defaultPlan.Price}");
                 plan = defaultPlan;
             }
