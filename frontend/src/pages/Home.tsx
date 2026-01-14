@@ -317,7 +317,7 @@ function Home() {
               {/* Why Choose Us */}
               <section className="bg-slate-50/50 rounded-2xl p-6 border-2 border-slate-200 shadow-lg">
                 <h2
-                  className="text-lg sm:text-xl font-bold text-slate-900 mb-5 whitespace-normal sm:whitespace-nowrap overflow-hidden text-ellipsis"
+                  className="text-lg font-bold text-slate-900 mb-5 whitespace-normal lg:whitespace-nowrap"
                   title="Why Choose AIWorkoutNow?"
                 >
                   Why Choose AIWorkoutNow?
@@ -338,13 +338,13 @@ function Home() {
                     <div className="text-3xl mb-3">🏠</div>
                     <h3 className="font-bold text-slate-900 mb-2 text-base">Home or Gym</h3>
                     <p className="text-sm text-slate-600 leading-relaxed">Works with any equipment—from bodyweight to full gym setups.</p>
-                  </div>
+              </div>
                   <div className="bg-white rounded-xl p-5 shadow-md border border-slate-100 hover:shadow-lg transition-all">
                     <div className="text-3xl mb-3">🔒</div>
                     <h3 className="font-bold text-slate-900 mb-2 text-base">No Commitment</h3>
                     <p className="text-sm text-slate-600 leading-relaxed">Pay once. No subscriptions. No recurring charges. Ever.</p>
-                  </div>
-                </div>
+              </div>
+          </div>
               </section>
             </aside>
 
