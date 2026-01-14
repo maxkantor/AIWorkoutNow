@@ -21,9 +21,9 @@ function Home() {
   const [checkingAccess, setCheckingAccess] = useState(true);
   const { setHeroContent } = useHeroContext();
 
-  const seoTitle = "AIWorkoutNow - Free AI Workout Generator | Personalized Fitness Plans";
-  const seoDescription = "Get personalized AI-generated workouts instantly. No signup required. Free AI workout generator that creates custom fitness plans tailored to your goals, equipment, and schedule. Try 3 free workouts today!";
-  const seoKeywords = "AI workouts, workout generator, fitness AI, personalized workouts, no signup workouts, free workout generator, AI fitness, custom workout plans, home workouts, gym workouts, fitness app, workout planner, exercise generator, fitness coach AI";
+  const seoTitle = "AI Workout Generator (No Signup) | Personalized Workout Plans in Seconds";
+  const seoDescription =
+    "Generate a personalized workout plan in seconds—no signup. Try 3 free workouts, then unlock more with a one-time payment. Equipment-aware, goals-based, gym or home.";
 
   useEffect(() => {
     checkAccessStatus();
@@ -198,38 +198,47 @@ function Home() {
       <Helmet>
         <title>{seoTitle}</title>
         <meta name="description" content={seoDescription} />
-        <meta name="keywords" content={seoKeywords} />
+        <link rel="canonical" href="https://aiworkoutnow.com/" />
+
+        {/* Social preview */}
         <meta property="og:title" content={seoTitle} />
         <meta property="og:description" content={seoDescription} />
-        <meta property="og:url" content="https://aiworkoutnow.com" />
+        <meta property="og:url" content="https://aiworkoutnow.com/" />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://aiworkoutnow.com/og-image.png" />
+        <meta property="og:image" content="https://aiworkoutnow.com/images/hero-bg.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={seoTitle} />
         <meta name="twitter:description" content={seoDescription} />
-        <meta name="twitter:image" content="https://aiworkoutnow.com/og-image.png" />
-        <link rel="canonical" href="https://aiworkoutnow.com" />
+        <meta name="twitter:image" content="https://aiworkoutnow.com/images/hero-bg.png" />
+
+        {/* Performance: prioritize hero image */}
+        <link rel="preload" as="image" href="/images/hero-bg.png" />
+
+        {/* Structured data */}
         <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "WebApplication",
-          "name": "AIWorkoutNow",
-          "url": "https://aiworkoutnow.com",
-          "description": seoDescription,
-          "applicationCategory": "HealthApplication",
-          "operatingSystem": "Web",
-          "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "USD",
-            "description": "3 free workouts, then one-time payment options available"
-          },
-          "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.8",
-            "ratingCount": "150"
-          }
-        })}
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "AIWorkoutNow",
+            "url": "https://aiworkoutnow.com/"
+          })}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "AIWorkoutNow",
+            "applicationCategory": "HealthApplication",
+            "operatingSystem": "Web",
+            "url": "https://aiworkoutnow.com/",
+            "description": seoDescription,
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "description": "3 free workouts, then one-time payment workout packs"
+            }
+          })}
         </script>
         <script type="application/ld+json">
           {JSON.stringify({
@@ -238,34 +247,42 @@ function Home() {
             "mainEntity": [
               {
                 "@type": "Question",
-                "name": "Is this a real trainer?",
+                "name": "Do I need to sign up?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "No, this is an AI-generated workout plan. Our AI creates personalized workouts based on your preferences, but it's not a replacement for professional medical or fitness advice."
+                  "text": "No. You can generate workouts immediately—no account or login required."
                 }
               },
               {
                 "@type": "Question",
-                "name": "Is this medical advice?",
+                "name": "Is this a subscription?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "No, AIWorkoutNow provides AI-generated workout plans for informational purposes only. Always consult with a healthcare professional before starting any new exercise program."
+                  "text": "No. Purchases are one-time payments (no recurring charges)."
                 }
               },
               {
                 "@type": "Question",
-                "name": "Do I need an account?",
+                "name": "How do I restore credits on another device?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "No, you don't need to create an account. You can use AIWorkoutNow immediately with 3 free workouts, no signup required."
+                  "text": "Use “Restore Credits” and enter the email used at checkout. We’ll send a verification code to restore workouts on the new device."
                 }
               },
               {
                 "@type": "Question",
-                "name": "Is there a subscription?",
+                "name": "What counts as a workout generation?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "No, there are no subscriptions. You pay once for additional workouts or unlimited access. No recurring charges."
+                  "text": "Each time you create a new workout plan, it uses 1 workout credit (unless you are using the free trial credits)."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Refund policy",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "If you have an issue with a purchase, contact support and we’ll help you resolve it."
                 }
               }
             ]
@@ -273,71 +290,19 @@ function Home() {
         </script>
       </Helmet>
       
-      <main className="min-h-screen py-6 relative" style={{
-        backgroundImage: "url('/images/main-bg.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        backgroundAttachment: "fixed"
-      }}>
-        {/* Semi-transparent overlay to ensure content readability */}
-        <div className="absolute inset-0 bg-white/30 pointer-events-none z-0"></div>
-        <div className="relative z-10">
-        <div className="max-w-7xl mx-auto px-4">
-          {/* 3-Column Grid Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-8">
-            {/* Left Column: Why Choose AIWorkoutNow? - Benefits, Stats */}
-            <aside className="md:col-span-2 lg:col-span-3 space-y-6 order-3 md:order-3 lg:order-1">
-              {/* Why Choose Us */}
-              <section className="bg-slate-50/50 rounded-2xl p-6 border-2 border-slate-200 shadow-lg">
-                <h2 className="text-xl font-bold text-slate-900 mb-5">Why Choose AIWorkoutNow?</h2>
-                <div className="space-y-4">
-                  <div className="bg-white rounded-xl p-5 shadow-md border border-slate-100 hover:shadow-lg transition-all">
-                    <div className="text-3xl mb-3">🎯</div>
-                    <h3 className="font-bold text-slate-900 mb-2 text-base">100% Personalized</h3>
-                    <p className="text-sm text-slate-600 leading-relaxed">Every workout is tailored to your fitness level, goals, and available equipment.</p>
-                  </div>
-                  <div className="bg-white rounded-xl p-5 shadow-md border border-slate-100 hover:shadow-lg transition-all">
-                    <div className="text-3xl mb-3">⚡</div>
-                    <h3 className="font-bold text-slate-900 mb-2 text-base">Instant Generation</h3>
-                    <p className="text-sm text-slate-600 leading-relaxed">Get professional-quality workout plans in seconds, not hours of research.</p>
-                  </div>
-                  <div className="bg-white rounded-xl p-5 shadow-md border border-slate-100 hover:shadow-lg transition-all">
-                    <div className="text-3xl mb-3">🏠</div>
-                    <h3 className="font-bold text-slate-900 mb-2 text-base">Home or Gym</h3>
-                    <p className="text-sm text-slate-600 leading-relaxed">Works with any equipment—from bodyweight to full gym setups.</p>
-                  </div>
-                  <div className="bg-white rounded-xl p-5 shadow-md border border-slate-100 hover:shadow-lg transition-all">
-                    <div className="text-3xl mb-3">🔒</div>
-                    <h3 className="font-bold text-slate-900 mb-2 text-base">No Commitment</h3>
-                    <p className="text-sm text-slate-600 leading-relaxed">Pay once. No subscriptions. No recurring charges. Ever.</p>
-                  </div>
-                </div>
-              </section>
-
-              {/* Stats - Enhanced Visual Hierarchy */}
-              <section className="bg-gradient-to-br from-blue-600 via-purple-600 to-blue-700 rounded-2xl p-6 text-white shadow-xl">
-                <div className="space-y-6">
-                  <div className="text-center pb-4 border-b border-white/20">
-                    <div className="text-4xl font-black mb-2">10,000+</div>
-                    <div className="text-sm font-semibold opacity-95 uppercase tracking-wide">Workouts Generated</div>
-                  </div>
-                  <div className="text-center pb-4 border-b border-white/20">
-                    <div className="text-4xl font-black mb-2">4.8★</div>
-                    <div className="text-sm font-semibold opacity-95 uppercase tracking-wide">User Rating</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-4xl font-black mb-2">98%</div>
-                    <div className="text-sm font-semibold opacity-95 uppercase tracking-wide">Satisfaction Rate</div>
-                  </div>
-                </div>
-              </section>
-            </aside>
-
-            {/* Center Column: Workout Generator Form */}
-            <section id="workout-generator" className="md:col-span-1 lg:col-span-6 order-1 md:order-1 lg:order-2">
-              {/* Workout Generator Form */}
-              <div className="bg-white shadow-2xl rounded-2xl border-2 border-slate-200 p-6 md:p-8 lg:p-10">
+      <main className="homeMain">
+        <div className="homeMainOverlay" aria-hidden="true" />
+        <div className="homeMainInner">
+          <div className="max-w-7xl mx-auto px-4">
+            {/* Primary experience */}
+            <section id="workout-generator" className="homeSection">
+              <header className="homeSectionHeader">
+                <h2 className="homeH2">Instant Workout Plan</h2>
+                <p className="homeLead">
+                  Tell us your level, goals, equipment, and time. Get a personalized workout plan in seconds.
+                </p>
+              </header>
+              <div className="bg-white shadow-2xl rounded-2xl border border-slate-200 p-6 md:p-8 lg:p-10">
                 <WorkoutGenerator
                   onGenerate={handleGenerateWorkout}
                   loading={loading}
@@ -346,80 +311,144 @@ function Home() {
                   disabled={!canGenerate && !checkingAccess}
                 />
               </div>
-
-              {/* Restore Credits Section - Always visible */}
-              {!checkingAccess && (
-                <div id="restore-credits-section" className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-6 mt-8">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="text-lg font-bold text-slate-800 mb-1">
-                        {!showRestoreCredits ? 'Access Your Credits from Another Device?' : 'Restore Credits'}
-                      </h3>
-                      <p className="text-sm text-slate-600">
-                        {!showRestoreCredits 
-                          ? 'Purchased credits on another device? Enter your email to restore them here.' 
-                          : 'Enter the email you used when purchasing to restore your credits.'}
-                      </p>
-                    </div>
-                  </div>
-                  {!showRestoreCredits ? (
-                    <button
-                      onClick={() => setShowRestoreCredits(true)}
-                      className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all hover:-translate-y-0.5"
-                    >
-                      Restore Credits
-                    </button>
-                  ) : (
-                    <RestoreCredits
-                      onCreditsRestored={() => {
-                        setShowRestoreCredits(false);
-                        checkAccessStatus();
-                      }}
-                    />
-                  )}
-                </div>
-              )}
-
-              {/* Trust Badges - Cleaner, More Prominent */}
-              <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-                <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
-                  <span className="text-2xl block mb-2">🔒</span>
-                  <span className="text-sm font-bold text-slate-800">Secure Payment</span>
-                </div>
-                <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
-                  <span className="text-2xl block mb-2">🚫</span>
-                  <span className="text-sm font-bold text-slate-800">No Subscription</span>
-                </div>
-                <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
-                  <span className="text-2xl block mb-2">⚡</span>
-                  <span className="text-sm font-bold text-slate-800">Instant Access</span>
-                </div>
-                <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
-                  <span className="text-2xl block mb-2">💯</span>
-                  <span className="text-sm font-bold text-slate-800">Money-Back Guarantee</span>
-                </div>
-              </section>
             </section>
 
-            {/* Right Column: Pricing Plans */}
-            <aside className="md:col-span-1 lg:col-span-3 order-2 md:order-2 lg:order-3">
-              <div className="bg-slate-50/50 rounded-2xl p-6 border-2 border-slate-200 shadow-lg">
-                <PricingPlans showHeader={true} vertical={true} />
-              </div>
-            </aside>
-          </div>
+            {/* Clean conversion section (no overlap) */}
+            <section className="homeSection homePanel">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+                {/* Left: benefits + compact stats */}
+                <aside className="lg:col-span-4 space-y-4 order-1">
+                  <div className="homeCard">
+                    <h2 className="homeH2Sm">Why people switch to AIWorkoutNow</h2>
+                    <ul className="homeBullets" role="list">
+                      <li><strong>Personalized workout plan</strong> tailored to your level, goals, and equipment.</li>
+                      <li><strong>Instant workout generator</strong>—no templates, no browsing.</li>
+                      <li><strong>No signup</strong> and <strong>one-time payment</strong> options (no subscription).</li>
+                      <li><strong>Gym or home</strong> workouts, beginner to advanced.</li>
+                    </ul>
+                  </div>
 
-          {/* SEO Content - Hidden but present for SEO */}
-          <section className="mt-8 hidden">
-            <h2>AI Workout Generator Without Signup</h2>
-            <p>Get personalized AI-generated workouts instantly without creating an account. Start with 3 free workouts and unlock more with one-time payments. No subscriptions, no commitments.</p>
-            <h2>Personalized Home & Gym Workouts</h2>
-            <p>Our AI creates custom workout plans tailored to your fitness level, available equipment, and personal goals. Whether you're at home or in the gym, get workouts that fit your needs.</p>
-            <h2>Best AI Fitness App for Busy People</h2>
-            <p>No time for long signup processes? AIWorkoutNow gives you instant access to professional-quality workout plans. Get started in seconds, not minutes.</p>
-          </section>
+                  <div className="homeCard homeStats">
+                    <div className="homeStat">
+                      <div className="homeStatValue">10,000+</div>
+                      <div className="homeStatLabel">workouts generated</div>
+                    </div>
+                    <div className="homeStat">
+                      <div className="homeStatValue">4.8★</div>
+                      <div className="homeStatLabel">user rating</div>
+                    </div>
+                    <div className="homeStat">
+                      <div className="homeStatValue">98%</div>
+                      <div className="homeStatLabel">satisfaction</div>
+                    </div>
+                  </div>
+                </aside>
+
+                {/* Right: pricing (mobile order: pricing before restore) */}
+                <aside className="lg:col-span-4 order-2 lg:order-3">
+                  <div className="homeCard">
+                    <PricingPlans showHeader={true} vertical={true} />
+                    <p className="homeTrustLine">Secure checkout • Instant access • One-time payment</p>
+                  </div>
+                </aside>
+
+                {/* Center: restore credits */}
+                <aside className="lg:col-span-4 order-3 lg:order-2">
+                  <div id="restore-credits-section" className="homeCard homeRestore">
+                    <h2 className="homeH2Sm">
+                      {!showRestoreCredits ? 'Restore credits on this device' : 'Restore credits'}
+                    </h2>
+                    <p className="homeMuted">
+                      Purchased on another device? Enter your email to restore workouts here—no account needed.
+                    </p>
+
+                    {!checkingAccess && !showRestoreCredits && (
+                      <button
+                        onClick={() => setShowRestoreCredits(true)}
+                        className="btn"
+                      >
+                        Restore Credits
+                      </button>
+                    )}
+
+                    {!checkingAccess && showRestoreCredits && (
+                      <RestoreCredits
+                        onCreditsRestored={() => {
+                          setShowRestoreCredits(false);
+                          checkAccessStatus(true);
+                        }}
+                      />
+                    )}
+
+                    <div className="homeChips" role="list" aria-label="Trust highlights">
+                      <span className="homeChip" role="listitem">🔒 Secure checkout</span>
+                      <span className="homeChip" role="listitem">🚫 No signup</span>
+                      <span className="homeChip" role="listitem">🧾 No subscription</span>
+                      <span className="homeChip" role="listitem">⚡ Instant access</span>
+                    </div>
+                  </div>
+                </aside>
+              </div>
+            </section>
+
+            {/* FAQ (for conversion + SEO) */}
+            <section className="homeSection">
+              <header className="homeSectionHeader">
+                <h2 className="homeH2">FAQ</h2>
+                <p className="homeMuted">Quick answers before you buy.</p>
+              </header>
+              <div className="homeFaq" role="list">
+                {[
+                  {
+                    q: 'Do I need to sign up?',
+                    a: 'No. You can generate workouts immediately—no account or login required.',
+                  },
+                  {
+                    q: 'Is this a subscription?',
+                    a: 'No. Purchases are one-time payments (no recurring charges).',
+                  },
+                  {
+                    q: 'How do I restore credits on another device?',
+                    a: 'Use “Restore Credits” and enter the email used at checkout. We’ll send a verification code to restore workouts on the new device.',
+                  },
+                  {
+                    q: 'What counts as a workout generation?',
+                    a: 'Each time you create a new workout plan, it uses 1 workout credit (unless you are using the free trial credits).',
+                  },
+                  {
+                    q: 'Refund policy',
+                    a: 'If you have an issue with a purchase, contact support and we’ll help you resolve it.',
+                  },
+                ].map((item) => (
+                  <details key={item.q} className="homeFaqItem" role="listitem">
+                    <summary className="homeFaqQ">{item.q}</summary>
+                    <div className="homeFaqA">{item.a}</div>
+                  </details>
+                ))}
+              </div>
+            </section>
+
+            {/* SEO content block (visible, above footer) */}
+            <section className="homeSection homeSeo">
+              <h2 className="homeH2">AI Workout Generator</h2>
+              <p className="homeMuted">
+                AIWorkoutNow is an <strong>AI workout generator</strong> that creates an <strong>instant workout plan</strong> tailored to your
+                goals, fitness level, and available equipment. Whether you train at home or in the gym, you can generate a
+                <strong> personalized workout plan</strong> in seconds—no signup required.
+              </p>
+              <p className="homeMuted">
+                Start free, then unlock more workouts with a <strong>one-time payment workout app</strong> model—no subscriptions, no recurring charges.
+              </p>
+              <h3 className="homeH3">Personalized Workout Plans in Seconds</h3>
+              <ul className="homeBullets" role="list">
+                <li>Beginner to advanced difficulty</li>
+                <li>Home or gym setups</li>
+                <li>Equipment-aware recommendations</li>
+                <li>Goals-based plans (strength, fat loss, endurance)</li>
+              </ul>
+            </section>
+          </div>
         </div>
-      </div>
       </main>
     </>
   );
