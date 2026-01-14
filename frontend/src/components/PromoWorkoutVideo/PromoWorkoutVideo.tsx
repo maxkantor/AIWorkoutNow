@@ -20,8 +20,9 @@ export default function PromoWorkoutVideo({
 
   return (
     <div className="promoMediaRoot" aria-label={ariaLabel}>
-      <div className="promoMediaCard">
+      <div className="promoMediaFrame">
         <div className="promoMediaViewport">
+          <div className="promoMediaLabel" aria-hidden="true">Preview</div>
           {!failed ? (
             <video
               className="promoMedia"
