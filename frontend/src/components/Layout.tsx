@@ -63,14 +63,10 @@ function Layout({ children }: LayoutProps) {
             <div className="hero-title-section">
               <div className="flex items-center justify-center gap-3 mb-3">
                 <span className="text-4xl md:text-5xl animate-pulse">💪</span>
-                <h1 className="text-[34px] md:text-[56px] lg:text-[64px] font-extrabold text-white tracking-tight">
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white">
                   Get Your Perfect Workout in Seconds
                 </h1>
               </div>
-
-              <p className="mx-auto max-w-3xl text-base md:text-lg text-white/95 font-medium leading-relaxed mb-5">
-                Built for real gym sessions: equipment-aware, goals-based, and customized to your time—instantly.
-              </p>
               
               {/* Primary CTA Button - Visually Dominant with Glow Effect */}
               <div className="mb-5">
@@ -93,27 +89,11 @@ function Layout({ children }: LayoutProps) {
             </div>
 
             {/* Trust Signals */}
-            <div className="flex flex-wrap md:flex-nowrap justify-center gap-2 md:gap-3 mb-3">
+            <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-3">
               <span className="px-3 py-1.5 bg-blue-50 text-slate-700 rounded-full text-xs md:text-sm font-medium shadow-sm">🎁 3 Free Workouts</span>
               <span className="px-3 py-1.5 bg-blue-50 text-slate-700 rounded-full text-xs md:text-sm font-medium shadow-sm">🚫 No Signup</span>
               <span className="px-3 py-1.5 bg-blue-50 text-slate-700 rounded-full text-xs md:text-sm font-medium shadow-sm">💳 One-Time Payment</span>
               <span className="px-3 py-1.5 bg-blue-50 text-slate-700 rounded-full text-xs md:text-sm font-medium shadow-sm">⚡ Instant Access</span>
-            </div>
-
-            {/* How it works */}
-            <div className="mx-auto max-w-3xl grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 mb-4">
-              <div className="bg-white/90 rounded-xl px-4 py-3 text-left shadow-sm border border-white/70">
-                <div className="text-xs font-extrabold tracking-wide uppercase text-slate-700">1</div>
-                <div className="text-sm font-bold text-slate-900">Choose level & time</div>
-              </div>
-              <div className="bg-white/90 rounded-xl px-4 py-3 text-left shadow-sm border border-white/70">
-                <div className="text-xs font-extrabold tracking-wide uppercase text-slate-700">2</div>
-                <div className="text-sm font-bold text-slate-900">Add goals/limitations</div>
-              </div>
-              <div className="bg-white/90 rounded-xl px-4 py-3 text-left shadow-sm border border-white/70">
-                <div className="text-xs font-extrabold tracking-wide uppercase text-slate-700">3</div>
-                <div className="text-sm font-bold text-slate-900">Get a workout instantly</div>
-              </div>
             </div>
 
             {/* Access Status with Restore Credits Button */}
