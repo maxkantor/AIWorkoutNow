@@ -105,21 +105,23 @@ public class StripeController : ControllerBase
                 plan = defaultPlan;
             }
 
-            // Canonicalize defaults to prevent stale/incorrect prices
-            if (plan.PlanId.Contains("10"))
+            // Canonicalize defaults to prevent stale/incorrect prices.
+            // IMPORTANT: check 100 before 10 to avoid substring collisions.
+            var planIdLower = plan.PlanId.ToLowerInvariant();
+            if (planIdLower.Contains("100-workouts") || planIdLower.Contains("default-100"))
             {
-                plan.Price = 1.99m;
-                plan.TokenCount = 10;
+                plan.Price = 7.99m;
+                plan.TokenCount = 100;
             }
-            else if (plan.PlanId.Contains("30"))
+            else if (planIdLower.Contains("30-workouts") || planIdLower.Contains("default-30"))
             {
                 plan.Price = 3.99m;
                 plan.TokenCount = 30;
             }
-            else if (plan.PlanId.Contains("100"))
+            else if (planIdLower.Contains("10-workouts") || planIdLower.Contains("default-10"))
             {
-                plan.Price = 7.99m;
-                plan.TokenCount = 100;
+                plan.Price = 1.99m;
+                plan.TokenCount = 10;
             }
 
             Console.WriteLine($"[StripeController] Plan found: {plan.Name}, Price: {plan.Price}, Currency: {plan.Currency}");
