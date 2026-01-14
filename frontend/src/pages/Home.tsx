@@ -21,9 +21,9 @@ function Home() {
   const [checkingAccess, setCheckingAccess] = useState(true);
   const { setHeroContent } = useHeroContext();
 
-  const seoTitle = "AIWorkoutNow - Free AI Workout Generator | Personalized Fitness Plans";
-  const seoDescription = "Get personalized AI-generated workouts instantly. No signup required. Free AI workout generator that creates custom fitness plans tailored to your goals, equipment, and schedule. Try 3 free workouts today!";
-  const seoKeywords = "AI workouts, workout generator, fitness AI, personalized workouts, no signup workouts, free workout generator, AI fitness, custom workout plans, home workouts, gym workouts, fitness app, workout planner, exercise generator, fitness coach AI";
+  const seoTitle = "AI Workout Generator (No Signup) | Personalized Workout Plan in Seconds";
+  const seoDescription =
+    "Generate an instant, personalized workout plan in seconds—no signup. Try 3 free workouts, then unlock more with a one-time payment. Gym or home, equipment-aware, goals-based.";
 
   useEffect(() => {
     checkAccessStatus();
@@ -198,87 +198,52 @@ function Home() {
       <Helmet>
         <title>{seoTitle}</title>
         <meta name="description" content={seoDescription} />
-        <meta name="keywords" content={seoKeywords} />
+        <link rel="canonical" href="https://aiworkoutnow.com/" />
+
+        {/* Open Graph / Twitter */}
         <meta property="og:title" content={seoTitle} />
         <meta property="og:description" content={seoDescription} />
-        <meta property="og:url" content="https://aiworkoutnow.com" />
+        <meta property="og:url" content="https://aiworkoutnow.com/" />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://aiworkoutnow.com/og-image.png" />
+        <meta property="og:image" content="https://aiworkoutnow.com/images/hero-bg.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={seoTitle} />
         <meta name="twitter:description" content={seoDescription} />
-        <meta name="twitter:image" content="https://aiworkoutnow.com/og-image.png" />
-        <link rel="canonical" href="https://aiworkoutnow.com" />
+        <meta name="twitter:image" content="https://aiworkoutnow.com/images/hero-bg.png" />
+
+        {/* Structured data */}
         <script type="application/ld+json">
         {JSON.stringify({
           "@context": "https://schema.org",
-          "@type": "WebApplication",
+          "@type": "WebSite",
           "name": "AIWorkoutNow",
-          "url": "https://aiworkoutnow.com",
-          "description": seoDescription,
-          "applicationCategory": "HealthApplication",
-          "operatingSystem": "Web",
-          "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "USD",
-            "description": "3 free workouts, then one-time payment options available"
-          },
-          "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.8",
-            "ratingCount": "150"
-          }
+          "url": "https://aiworkoutnow.com/"
         })}
         </script>
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity": [
-              {
-                "@type": "Question",
-                "name": "Is this a real trainer?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "No, this is an AI-generated workout plan. Our AI creates personalized workouts based on your preferences, but it's not a replacement for professional medical or fitness advice."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "Is this medical advice?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "No, AIWorkoutNow provides AI-generated workout plans for informational purposes only. Always consult with a healthcare professional before starting any new exercise program."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "Do I need an account?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "No, you don't need to create an account. You can use AIWorkoutNow immediately with 3 free workouts, no signup required."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "Is there a subscription?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "No, there are no subscriptions. You pay once for additional workouts or unlimited access. No recurring charges."
-                }
-              }
-            ]
+            "@type": "SoftwareApplication",
+            "name": "AIWorkoutNow",
+            "applicationCategory": "HealthApplication",
+            "operatingSystem": "Web",
+            "url": "https://aiworkoutnow.com/",
+            "description": seoDescription,
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "description": "3 free workouts, then one-time payment workout packs"
+            }
           })}
         </script>
       </Helmet>
       
-      <main className="min-h-screen py-6 relative" style={{
+      <main className="min-h-screen py-6 relative homeMainBg" style={{
         backgroundImage: "url('/images/main-bg.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        backgroundAttachment: "fixed"
+        backgroundRepeat: "no-repeat"
       }}>
         {/* Semi-transparent overlay to ensure content readability */}
         <div className="absolute inset-0 bg-white/30 pointer-events-none z-0"></div>
@@ -409,14 +374,17 @@ function Home() {
             </aside>
           </div>
 
-          {/* SEO Content - Hidden but present for SEO */}
-          <section className="mt-8 hidden">
-            <h2>AI Workout Generator Without Signup</h2>
-            <p>Get personalized AI-generated workouts instantly without creating an account. Start with 3 free workouts and unlock more with one-time payments. No subscriptions, no commitments.</p>
-            <h2>Personalized Home & Gym Workouts</h2>
-            <p>Our AI creates custom workout plans tailored to your fitness level, available equipment, and personal goals. Whether you're at home or in the gym, get workouts that fit your needs.</p>
-            <h2>Best AI Fitness App for Busy People</h2>
-            <p>No time for long signup processes? AIWorkoutNow gives you instant access to professional-quality workout plans. Get started in seconds, not minutes.</p>
+          {/* SEO Content (visible, below generator and above footer) */}
+          <section className="mt-10 bg-white/70 rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <h2 className="text-2xl font-extrabold text-slate-900 mb-3">AI Workout Generator</h2>
+            <p className="text-slate-700 leading-relaxed mb-3">
+              AIWorkoutNow is an <strong>AI workout generator</strong> that creates a <strong>personalized workout plan</strong> based on your fitness level,
+              goals, equipment, and time. Get an <strong>instant workout plan</strong> in seconds—no signup required.
+            </p>
+            <p className="text-slate-700 leading-relaxed mb-4">
+              Start free, then unlock more workouts with a <strong>one-time payment workout</strong> model. No subscriptions. No recurring charges.
+            </p>
+            <h3 className="text-lg font-bold text-slate-900">No Signup. One-Time Payment.</h3>
           </section>
         </div>
       </div>

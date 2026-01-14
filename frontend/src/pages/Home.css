@@ -2,6 +2,17 @@
   min-height: calc(100vh - 200px);
 }
 
+/* Background attachment only on desktop (performance) */
+.homeMainBg {
+  background-attachment: scroll;
+}
+
+@media (min-width: 1024px) {
+  .homeMainBg {
+    background-attachment: fixed;
+  }
+}
+
 .hero {
   text-align: center;
   padding: 3rem 0;
