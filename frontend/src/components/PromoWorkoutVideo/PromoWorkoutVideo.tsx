@@ -3,14 +3,12 @@ import './PromoWorkoutVideo.css';
 
 interface PromoWorkoutVideoProps {
   src?: string;
-  caption?: string;
   ariaLabel?: string;
   poster?: string;
 }
 
 export default function PromoWorkoutVideo({
   src = '/images/hipmachine.mp4',
-  caption = 'Real gym vibes • Instant AI workouts',
   ariaLabel = 'Workout promo video',
   poster = '/images/hero-bg.png',
 }: PromoWorkoutVideoProps) {
@@ -22,7 +20,6 @@ export default function PromoWorkoutVideo({
     <div className="promoMediaRoot" aria-label={ariaLabel}>
       <div className="promoMediaFrame">
         <div className="promoMediaViewport">
-          <div className="promoMediaLabel" aria-hidden="true">Preview</div>
           {!failed ? (
             <video
               className="promoMedia"
@@ -45,7 +42,6 @@ export default function PromoWorkoutVideo({
           )}
         </div>
       </div>
-      <div className="promoMediaCaption">{caption}</div>
     </div>
   );
 }
