@@ -241,9 +241,6 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
                 )}
               </button>
 
-              <div className="mt-2 text-xs text-slate-500 text-center">
-                🔒 Secure checkout • Instant access
-              </div>
             </article>
           ))}
         </div>
@@ -308,9 +305,6 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
                 {checkoutLoading === plan.planId ? 'Processing...' : getCta(plan.tokenCount)}
               </button>
 
-              <div className="mt-2 text-xs text-slate-500 text-center">
-                🔒 Secure checkout • Instant access
-              </div>
             </article>
           ))}
         </div>
