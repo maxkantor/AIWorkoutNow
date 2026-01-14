@@ -56,6 +56,8 @@ public class UserTokens
     public int TotalWorkouts { get; set; } // New: denominator for remaining/total
     public DateTime? ExpiresAt { get; set; }
     public bool IsActive { get; set; } = true; // For marking customers as inactive
+    // When an admin resets a balance, we record the timestamp so reconciliation can avoid re-granting old purchases.
+    public DateTime? LastResetAt { get; set; }
 }
 
 public class ProgressLog

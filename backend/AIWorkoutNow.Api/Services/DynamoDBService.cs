@@ -125,6 +125,10 @@ public class DynamoDBService : IDynamoDBService
         document["TotalWorkouts"] = tokens.TotalWorkouts;
         document["ExpiresAt"] = tokens.ExpiresAt?.ToString("O");
         document["IsActive"] = tokens.IsActive; // Save IsActive flag
+        if (tokens.LastResetAt.HasValue)
+        {
+            document["LastResetAt"] = tokens.LastResetAt.Value.ToString("O");
+        }
 
         await _dynamoDB.PutItemAsync(new PutItemRequest
         {
@@ -221,6 +225,10 @@ public class DynamoDBService : IDynamoDBService
         {
             tokens.ExpiresAt = DateTime.Parse(response.Item["ExpiresAt"].S);
         }
+        if (response.Item.ContainsKey("LastResetAt"))
+        {
+            tokens.LastResetAt = DateTime.Parse(response.Item["LastResetAt"].S);
+        }
 
         return tokens;
     }
@@ -244,6 +252,11 @@ public class DynamoDBService : IDynamoDBService
 
         var purchases = await GetUserPurchasesByDeviceIdAsync(deviceId);
         var completed = purchases.Where(p => p.Status == "completed").ToList();
+        if (tokens.LastResetAt.HasValue)
+        {
+            // Do not re-grant or re-count purchases that happened before the last admin reset.
+            completed = completed.Where(p => p.PurchasedAt > tokens.LastResetAt.Value).ToList();
+        }
 
         // Unlimited disabled: do not auto-promote to unlimited
 
@@ -430,24 +443,8 @@ public class DynamoDBService : IDynamoDBService
         tokens.TotalWorkouts = newCount;
         tokens.IsActive = true;
         tokens.ExpiresAt = null;
+        tokens.LastResetAt = DateTime.UtcNow;
         await SaveUserTokensAsync(tokens);
-
-        // Mark all purchases for this device as reset (so reconciliation won't re-grant)
-        try
-        {
-            var purchases = await GetUserPurchasesAsync(deviceId);
-            foreach (var p in purchases)
-            {
-                p.Status = "reset";
-                p.TokensGranted = 0;
-                p.IsUnlimited = false;
-                await SaveUserPurchaseAsync(p);
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[DynamoDBService] Error marking purchases as reset for {deviceId}: {ex.Message}");
-        }
 
         // Reset free usage: delete anonymous usage rows
         try
@@ -844,8 +841,11 @@ public class DynamoDBService : IDynamoDBService
         {
             var purchases = await GetUserPurchasesByDeviceIdAsync(deviceId);
             var targets = purchases.Where(p =>
-                string.Equals(p.Status, "completed", StringComparison.OrdinalIgnoreCase) &&
-                (string.IsNullOrEmpty(p.CustomerEmail) || string.IsNullOrEmpty(p.CustomerName) || !p.TokensGranted.HasValue || p.TokensGranted.Value <= 0)
+                (string.Equals(p.Status, "completed", StringComparison.OrdinalIgnoreCase) &&
+                 (string.IsNullOrEmpty(p.CustomerEmail) || string.IsNullOrEmpty(p.CustomerName) || !p.TokensGranted.HasValue || p.TokensGranted.Value <= 0))
+                // Historical bug: admin reset used to overwrite purchase.Status = "reset".
+                // We restore a real Stripe-derived status here (without granting tokens).
+                || string.Equals(p.Status, "reset", StringComparison.OrdinalIgnoreCase)
             ).ToList();
 
             if (!targets.Any())
@@ -863,6 +863,8 @@ public class DynamoDBService : IDynamoDBService
                 {
                     var sessionId = purchase.StripeSessionId;
                     var paymentIntentId = purchase.StripePaymentIntentId;
+                    string paymentStatus = "";
+                    string sessionStatus = "";
                     string? customerEmail = null;
                     string? customerName = null;
                     string? customerPhone = null;
@@ -898,6 +900,8 @@ public class DynamoDBService : IDynamoDBService
                         {
                             var content = await resp.Content.ReadAsStringAsync();
                             var data = System.Text.Json.JsonDocument.Parse(content).RootElement;
+                            if (data.TryGetProperty("payment_status", out var ps)) paymentStatus = ps.GetString() ?? "";
+                            if (data.TryGetProperty("status", out var ss)) sessionStatus = ss.GetString() ?? "";
                             if (data.TryGetProperty("customer_details", out var cd)) ExtractCustomerDetails(cd);
                             if (data.TryGetProperty("customer", out var customerIdElem))
                             {
@@ -929,6 +933,7 @@ public class DynamoDBService : IDynamoDBService
                         {
                             var content = await resp.Content.ReadAsStringAsync();
                             var data = System.Text.Json.JsonDocument.Parse(content).RootElement;
+                            if (data.TryGetProperty("status", out var ps)) paymentStatus = ps.GetString() ?? "";
                             if (data.TryGetProperty("charges", out var charges) && charges.TryGetProperty("data", out var arr) && arr.ValueKind == System.Text.Json.JsonValueKind.Array && arr.GetArrayLength() > 0)
                             {
                                 var charge = arr[0];
@@ -949,6 +954,26 @@ public class DynamoDBService : IDynamoDBService
                     {
                         var plan = await GetPricingPlanAsync(purchase.PlanId);
                         if (plan?.TokenCount != null) tokenGrant = plan.TokenCount.Value;
+                    }
+
+                    // Restore a meaningful status for records that were previously clobbered to "reset"
+                    if (string.Equals(purchase.Status, "reset", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (string.Equals(paymentStatus, "paid", StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(paymentStatus, "succeeded", StringComparison.OrdinalIgnoreCase))
+                        {
+                            purchase.Status = "completed";
+                        }
+                        else if (string.Equals(sessionStatus, "expired", StringComparison.OrdinalIgnoreCase) ||
+                                 string.Equals(paymentStatus, "canceled", StringComparison.OrdinalIgnoreCase) ||
+                                 string.Equals(paymentStatus, "canceled", StringComparison.OrdinalIgnoreCase))
+                        {
+                            purchase.Status = "canceled";
+                        }
+                        else
+                        {
+                            purchase.Status = "pending";
+                        }
                     }
 
                     purchase.CustomerEmail = customerEmail ?? purchase.CustomerEmail;

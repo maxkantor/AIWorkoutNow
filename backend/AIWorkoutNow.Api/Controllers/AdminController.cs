@@ -519,29 +519,85 @@ public class AdminController : ControllerBase
         {
             var stripeSecretKey = await _configService.GetStripeSecretKeyAsync();
 
-            // Reconcile + enrich all devices (paid only)
-            if (!string.IsNullOrEmpty(stripeSecretKey))
+            // Fetch raw UserPurchases (includes pending/failed/etc). We then optionally reconcile/enrich only
+            // the devices that appear in this purchases list to keep this endpoint fast and reliable.
+            var userPurchases = await _dynamoService.GetAllUserPurchasesAsync();
+
+            if (!string.IsNullOrEmpty(stripeSecretKey) && userPurchases.Count > 0)
             {
-                var allDevices = (await _dynamoService.GetAllCustomersAsync()).Select(c => c.DeviceId).Distinct(StringComparer.OrdinalIgnoreCase);
-                foreach (var device in allDevices)
+                var deviceIds = userPurchases
+                    .Select(p => p.DeviceId)
+                    .Where(d => !string.IsNullOrWhiteSpace(d))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Take(200)
+                    .ToList();
+
+                foreach (var deviceId in deviceIds)
                 {
-                    await _dynamoService.ApplyPendingPurchasesAsync(device, stripeSecretKey);
-                    await _dynamoService.EnrichPurchasesFromStripeAsync(device, stripeSecretKey);
+                    await _dynamoService.ApplyPendingPurchasesAsync(deviceId, stripeSecretKey);
+                    await _dynamoService.EnrichPurchasesFromStripeAsync(deviceId, stripeSecretKey);
                 }
+
+                // Re-read after enrichment
+                userPurchases = await _dynamoService.GetAllUserPurchasesAsync();
             }
 
-            // Completed-only, deduped, price-inferred
-            var purchases = await _dynamoService.GetAllStripePurchasesAsync();
+            // Map UserPurchase -> StripePurchase DTO expected by frontend
+            decimal InferPriceFromTokens(int tokens) => tokens switch
+            {
+                10 => 1.99m,
+                30 => 3.99m,
+                100 => 7.99m,
+                _ => 0m
+            };
+
+            var planCache = new Dictionary<string, PricingPlan?>(StringComparer.OrdinalIgnoreCase);
+            async Task<PricingPlan?> GetPlanCached(string planId)
+            {
+                if (string.IsNullOrWhiteSpace(planId)) return null;
+                if (planCache.TryGetValue(planId, out var existing)) return existing;
+                var plan = await _dynamoService.GetPricingPlanAsync(planId);
+                planCache[planId] = plan;
+                return plan;
+            }
+
+            var purchases = new List<StripePurchase>();
+            foreach (var up in userPurchases)
+            {
+                var plan = await GetPlanCached(up.PlanId);
+                var tokensPurchased = up.TokensGranted ?? plan?.TokenCount ?? (up.IsUnlimited ? 999999 : 0);
+                var amount = plan?.Price ?? InferPriceFromTokens(tokensPurchased);
+                var currency = plan?.Currency ?? "USD";
+                var packType = plan?.Name ?? up.PlanId;
+
+                purchases.Add(new StripePurchase
+                {
+                    PurchaseId = up.PurchaseId,
+                    DeviceId = up.DeviceId,
+                    StripeCustomerId = "",
+                    StripePaymentIntentId = up.StripePaymentIntentId,
+                    StripeSessionId = up.StripeSessionId,
+                    PackType = packType,
+                    Amount = amount,
+                    Currency = currency,
+                    TokensPurchased = tokensPurchased,
+                    Status = up.Status,
+                    CreatedAt = up.PurchasedAt,
+                    CompletedAt = string.Equals(up.Status, "completed", StringComparison.OrdinalIgnoreCase) ? up.PurchasedAt : null,
+                    CustomerEmail = up.CustomerEmail,
+                    CustomerName = up.CustomerName
+                });
+            }
+
             var completed = purchases.Where(p => string.Equals(p.Status, "completed", StringComparison.OrdinalIgnoreCase)).ToList();
             var totalRevenue = completed.Sum(p => p.Amount);
-            var totalPurchases = completed.Count;
 
             return Ok(new
             {
                 totalRevenue,
-                totalPurchases,
-                completedCount = totalPurchases,
-                purchases = completed.OrderByDescending(p => p.CreatedAt)
+                totalPurchases = purchases.Count,
+                completedCount = completed.Count,
+                purchases = purchases.OrderByDescending(p => p.CreatedAt)
             });
         }
         catch (Exception ex)
