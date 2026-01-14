@@ -178,20 +178,22 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
               }`}
               role="listitem"
             >
-              {getBadge(plan.tokenCount) && (
-                <div className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-extrabold tracking-wide ${
-                  isMostPopular(plan.tokenCount)
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                    : 'bg-slate-900 text-white'
-                }`}>
-                  {getBadge(plan.tokenCount)}
-                </div>
-              )}
-              
-              {/* Plan Name */}
-              <h3 className="mt-3 text-[18px] sm:text-[19px] font-semibold text-slate-900 text-center">
-                {plan.name}
-              </h3>
+              {/* Badge + Plan Name in one line */}
+              <div className="flex items-center justify-between gap-3">
+                {getBadge(plan.tokenCount) && (
+                  <div className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-extrabold tracking-wide whitespace-nowrap ${
+                    isMostPopular(plan.tokenCount)
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                      : 'bg-slate-900 text-white'
+                  }`}>
+                    {getBadge(plan.tokenCount)}
+                  </div>
+                )}
+
+                <h3 className="text-[15px] sm:text-[16px] font-extrabold text-slate-900 whitespace-nowrap">
+                  {plan.name}
+                </h3>
+              </div>
               
               {/* Price - Prominent */}
               <div className="text-center mt-3 mb-4">
