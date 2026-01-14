@@ -15,7 +15,7 @@
 
 /* 2) Viewport: aspect ratio + max-heights, fully controlled crop */
 .promoMediaViewport {
-  --media-object-position: 50% 18%;
+  --media-object-position: 50% 25%;
 
   width: 100%;
   border-radius: 18px;
@@ -28,7 +28,7 @@
   border: 1px solid rgba(226, 232, 240, 0.95);
   /* 4) Subtle depth on viewport (not heavy) */
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.10);
-  height: 230px; /* desktop required */
+  height: 220px; /* desktop required */
 }
 
 /* Optional subtle gym-blur layer (kept low opacity) */
@@ -72,9 +72,9 @@
   display: block;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .promoMediaViewport {
-    height: 190px; /* mobile required */
+    height: 200px; /* mobile required */
   }
 }
 
