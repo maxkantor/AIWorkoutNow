@@ -551,6 +551,16 @@ public class AdminController : ControllerBase
                 _ => 0m
             };
 
+            (string packName, int tokens, decimal price) InferPackFromPlanId(string? planId)
+            {
+                var id = (planId ?? "").ToLowerInvariant();
+                // IMPORTANT: order matters (100 before 10, 30 before 10)
+                if (id.Contains("100")) return ("100 Workouts", 100, 7.99m);
+                if (id.Contains("30")) return ("30 Workouts", 30, 3.99m);
+                if (id.Contains("10")) return ("10 Workouts", 10, 1.99m);
+                return ("Unknown Pack", 0, 0m);
+            }
+
             var planCache = new Dictionary<string, PricingPlan?>(StringComparer.OrdinalIgnoreCase);
             async Task<PricingPlan?> GetPlanCached(string planId)
             {
@@ -565,10 +575,16 @@ public class AdminController : ControllerBase
             foreach (var up in userPurchases)
             {
                 var plan = await GetPlanCached(up.PlanId);
-                var tokensPurchased = up.TokensGranted ?? plan?.TokenCount ?? (up.IsUnlimited ? 999999 : 0);
-                var amount = plan?.Price ?? InferPriceFromTokens(tokensPurchased);
+                var inferred = InferPackFromPlanId(up.PlanId);
+                var tokensPurchased = up.TokensGranted
+                                     ?? plan?.TokenCount
+                                     ?? (inferred.tokens > 0 ? inferred.tokens : (up.IsUnlimited ? 999999 : 0));
+
+                var amount = plan?.Price
+                            ?? (inferred.price > 0 ? inferred.price : InferPriceFromTokens(tokensPurchased));
+
                 var currency = plan?.Currency ?? "USD";
-                var packType = plan?.Name ?? up.PlanId;
+                var packType = plan?.Name ?? (inferred.tokens > 0 ? inferred.packName : up.PlanId);
 
                 purchases.Add(new StripePurchase
                 {
@@ -588,6 +604,11 @@ public class AdminController : ControllerBase
                     CustomerName = up.CustomerName
                 });
             }
+
+            // Remove pending rows from grid (they are noisy and users can abandon checkout frequently)
+            purchases = purchases
+                .Where(p => !string.Equals(p.Status, "pending", StringComparison.OrdinalIgnoreCase))
+                .ToList();
 
             var completed = purchases.Where(p => string.Equals(p.Status, "completed", StringComparison.OrdinalIgnoreCase)).ToList();
             var totalRevenue = completed.Sum(p => p.Amount);

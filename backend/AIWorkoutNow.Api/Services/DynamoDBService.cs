@@ -297,10 +297,20 @@ public class DynamoDBService : IDynamoDBService
             }
         }
 
-        if (purchasedTokens > tokens.TokensRemaining)
+        // IMPORTANT: Never overwrite TokensRemaining during reconciliation.
+        // TokensRemaining decreases when workouts are generated. If we "recompute" it from purchases,
+        // it will jump back up and users can generate workouts without spending tokens.
+        //
+        // Reconciliation is allowed to:
+        // - keep TotalWorkouts (denominator) in sync with purchases
+        // - ensure TotalWorkouts >= TokensRemaining
+        var desiredTotal = tokens.TotalWorkouts;
+        desiredTotal = Math.Max(desiredTotal, tokens.TokensRemaining);
+        desiredTotal = Math.Max(desiredTotal, purchasedTokens);
+
+        if (desiredTotal != tokens.TotalWorkouts)
         {
-            tokens.TokensRemaining = purchasedTokens;
-            tokens.TotalWorkouts = purchasedTokens;
+            tokens.TotalWorkouts = desiredTotal;
             tokens.ExpiresAt = null;
             tokens.IsActive = true;
             await SaveUserTokensAsync(tokens);
