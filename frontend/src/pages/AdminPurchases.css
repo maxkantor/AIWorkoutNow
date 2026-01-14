@@ -64,9 +64,10 @@
 
 .purchases-table {
   background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  overflow: auto; /* avoid clipping sticky headers in some browsers */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
 }
 
 .purchases-table table {
@@ -75,21 +76,24 @@
 }
 
 .purchases-table thead {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  background: #f8fafc;
+  color: #1f2937;
+  border-bottom: 1px solid #e5e7eb;
   display: table-header-group !important;
 }
 
 .purchases-table th {
   padding: 1rem;
   text-align: left;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  color: #111827 !important;
+  background: #f8fafc;
+  position: sticky;
+  top: 0;
+  z-index: 11;
 }
 
 .purchases-table td {
