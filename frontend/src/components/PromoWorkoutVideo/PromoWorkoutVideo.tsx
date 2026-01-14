@@ -19,12 +19,12 @@ export default function PromoWorkoutVideo({
   const fallbackText = useMemo(() => 'Workout promo video unavailable', []);
 
   return (
-    <div className="promoVideoCard" aria-label={ariaLabel}>
-      <div className="promoVideoInnerCard">
-        <div className="promoVideoFrame">
+    <div className="promoMediaRoot" aria-label={ariaLabel}>
+      <div className="promoMediaCard">
+        <div className="promoMediaViewport">
           {!failed ? (
             <video
-              className="promoVideo"
+              className="promoMedia"
               autoPlay
               loop
               muted
@@ -38,13 +38,13 @@ export default function PromoWorkoutVideo({
               <source src={src} type="video/mp4" />
             </video>
           ) : (
-            <div className="promoVideoFallback" role="img" aria-label={fallbackText}>
+            <div className="promoMediaFallback" role="img" aria-label={fallbackText}>
               {fallbackText}
             </div>
           )}
         </div>
-        <div className="promoVideoCaption">{caption}</div>
       </div>
+      <div className="promoMediaCaption">{caption}</div>
     </div>
   );
 }
