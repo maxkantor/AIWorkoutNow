@@ -135,7 +135,7 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
           {plans.map((plan) => (
             <article
               key={plan.planId}
-              className={`relative bg-white rounded-2xl border-2 p-6 transition-all flex flex-col ${
+              className={`relative bg-white rounded-2xl border-2 p-6 transition-all ${
                 plan.isRecommended 
                   ? 'border-blue-600 bg-gradient-to-br from-blue-50 via-white to-purple-50 shadow-xl ring-2 ring-blue-500/20 scale-[1.02]' 
                   : 'border-slate-200 shadow-md hover:shadow-lg hover:border-slate-300'
@@ -187,16 +187,9 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
                 </p>
               )}
 
-              {/* What you get (UI only) */}
-              <ul className="mb-5 text-sm text-slate-700 space-y-2" role="list" aria-label="What you get">
-                <li className="flex gap-2"><span aria-hidden="true">✅</span><span>Personalized workout plan</span></li>
-                <li className="flex gap-2"><span aria-hidden="true">✅</span><span>Equipment-aware recommendations</span></li>
-                <li className="flex gap-2"><span aria-hidden="true">✅</span><span>Instant access (no signup)</span></li>
-              </ul>
-
               {/* CTA Button */}
               <button
-                className={`w-full py-3.5 px-6 rounded-xl font-bold text-base transition-all duration-300 mt-auto ${
+                className={`w-full py-3.5 px-6 rounded-xl font-bold text-base transition-all duration-300 ${
                   plan.isRecommended
                     ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 text-white hover:shadow-2xl hover:shadow-blue-500/40 transform hover:-translate-y-1 hover:scale-[1.02]'
                     : 'bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-700'
@@ -214,10 +207,6 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
                   'Get Started'
                 )}
               </button>
-
-              <p className="mt-3 text-xs text-slate-500 text-center">
-                Secure checkout • One-time payment
-              </p>
             </article>
           ))}
         </div>
