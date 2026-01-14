@@ -13,6 +13,15 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const getBadge = (tokenCount?: number | null) => {
+    if (tokenCount === 10) return 'Starter';
+    if (tokenCount === 30) return 'Most Popular';
+    if (tokenCount === 100) return 'Best Value';
+    return null;
+  };
+
+  const isMostPopular = (tokenCount?: number | null) => tokenCount === 30;
+
   useEffect(() => {
     loadPlans();
   }, []);
@@ -136,50 +145,44 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
           {plans.map((plan) => (
             <article
               key={plan.planId}
-              className={`relative bg-white rounded-2xl border-2 p-6 transition-all ${
-                plan.isRecommended 
-                  ? 'border-blue-600 bg-gradient-to-br from-blue-50 via-white to-purple-50 shadow-xl ring-2 ring-blue-500/20 scale-[1.02]' 
+              className={`relative bg-white rounded-2xl border p-6 transition-all ${
+                isMostPopular(plan.tokenCount)
+                  ? 'border-blue-600 shadow-xl ring-1 ring-blue-500/20'
                   : 'border-slate-200 shadow-md hover:shadow-lg hover:border-slate-300'
               }`}
               role="listitem"
             >
-              {plan.isRecommended && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg">
-                  {plan.badgeText || '⭐ BEST VALUE'}
+              {getBadge(plan.tokenCount) && (
+                <div className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-extrabold tracking-wide ${
+                  isMostPopular(plan.tokenCount)
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                    : 'bg-slate-900 text-white'
+                }`}>
+                  {getBadge(plan.tokenCount)}
                 </div>
               )}
               
               {/* Plan Name */}
-              <h3 className={`text-xl font-bold mb-3 text-center ${plan.isRecommended ? 'text-slate-900' : 'text-slate-800'}`}>
+              <h3 className="mt-3 text-[19px] font-semibold text-slate-900 text-center">
                 {plan.name}
               </h3>
               
               {/* Price - Prominent */}
-              <div className="text-center mb-4">
+              <div className="text-center mt-3 mb-4">
                 <div className="flex items-baseline justify-center gap-1">
-                  <span className={`text-4xl font-extrabold ${plan.isRecommended ? 'text-blue-600' : 'text-slate-800'}`}>
+                  <span className="text-[42px] leading-none font-extrabold text-slate-900">
                     ${plan.price.toFixed(2)}
                   </span>
                 </div>
-                <span className="text-xs text-slate-500 font-medium uppercase tracking-wide block mt-1">One-Time Payment</span>
               </div>
 
-              {/* Value Proposition */}
-              <div className="mb-4 pb-4 border-b border-slate-200">
-                {plan.isUnlimited ? (
-                  <div className="flex items-center justify-center gap-2 text-slate-700">
-                    <span className="text-2xl">∞</span>
-                    <span className="text-base font-semibold">
-                      Unlimited Workouts
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center gap-2 text-slate-700">
-                    <span className="text-xl">💪</span>
-                    <span className="text-base font-semibold">{plan.tokenCount} Workouts</span>
-                  </div>
-                )}
-              </div>
+              {/* Benefits (replace repeated workouts copy) */}
+              <ul className="mt-3 mb-5 text-[13px] leading-5 text-slate-700 space-y-2">
+                <li className="flex gap-2"><span aria-hidden="true">✅</span><span>Instant access</span></li>
+                <li className="flex gap-2"><span aria-hidden="true">✅</span><span>No signup</span></li>
+                <li className="flex gap-2"><span aria-hidden="true">✅</span><span>Pay once</span></li>
+                <li className="flex gap-2"><span aria-hidden="true">✅</span><span>Restore credits anytime</span></li>
+              </ul>
 
               {/* Micro Copy - Simplified */}
               {plan.microCopy && (
@@ -190,11 +193,7 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
 
               {/* CTA Button */}
               <button
-                className={`w-full py-3.5 px-6 rounded-xl font-bold text-base transition-all duration-300 ${
-                  plan.isRecommended
-                    ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 text-white hover:shadow-2xl hover:shadow-blue-500/40 transform hover:-translate-y-1 hover:scale-[1.02]'
-                    : 'bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-700'
-                } disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
+                className="w-full py-3.5 px-6 rounded-xl font-extrabold text-base transition-all duration-300 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg hover:shadow-blue-500/20 focus:outline-none focus:ring-4 focus:ring-blue-500/30 disabled:opacity-60 disabled:cursor-not-allowed"
                 onClick={() => handlePurchase(plan)}
                 disabled={checkoutLoading === plan.planId}
                 aria-label={`Purchase ${plan.name} plan for $${plan.price.toFixed(2)}`}
@@ -216,45 +215,39 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
           {plans.map((plan) => (
             <article
               key={plan.planId}
-              className={`relative bg-white rounded-lg border-2 p-4 transition-all ${
-                plan.isRecommended 
-                  ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-white shadow-md' 
+              className={`relative bg-white rounded-lg border p-4 transition-all ${
+                isMostPopular(plan.tokenCount)
+                  ? 'border-blue-600 shadow-lg ring-1 ring-blue-500/20'
                   : 'border-slate-200 shadow-sm hover:shadow-md'
               }`}
               role="listitem"
             >
-              {plan.isRecommended && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                  {plan.badgeText || '⭐ Most Popular'}
+              {getBadge(plan.tokenCount) && (
+                <div className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-extrabold ${
+                  isMostPopular(plan.tokenCount)
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                    : 'bg-slate-900 text-white'
+                }`}>
+                  {getBadge(plan.tokenCount)}
                 </div>
               )}
               
-              <h3 className="text-lg font-semibold text-slate-800 mb-2 text-center">
+              <h3 className="mt-3 text-[18px] font-semibold text-slate-900 mb-2 text-center">
                 {plan.name}
               </h3>
               
               <div className="text-center mb-3">
-                <span className="text-2xl font-bold text-blue-600">
+                <span className="text-[38px] leading-none font-extrabold text-slate-900">
                   ${plan.price.toFixed(2)}
                 </span>
-                <span className="text-xs text-slate-500 uppercase ml-1">one-time</span>
               </div>
 
-              <div className="mb-3">
-                {plan.isUnlimited ? (
-                  <div className="flex items-center justify-center gap-2 text-slate-700">
-                    <span className="text-xl">∞</span>
-                    <span className="text-sm font-medium">
-                      Unlimited workouts
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center gap-2 text-slate-700">
-                    <span className="text-lg">💪</span>
-                    <span className="text-sm font-medium">{plan.tokenCount} workouts</span>
-                  </div>
-                )}
-              </div>
+              <ul className="mb-4 text-[13px] leading-5 text-slate-700 space-y-2">
+                <li className="flex gap-2"><span aria-hidden="true">✅</span><span>Instant access</span></li>
+                <li className="flex gap-2"><span aria-hidden="true">✅</span><span>No signup</span></li>
+                <li className="flex gap-2"><span aria-hidden="true">✅</span><span>Pay once</span></li>
+                <li className="flex gap-2"><span aria-hidden="true">✅</span><span>Restore credits anytime</span></li>
+              </ul>
 
               {plan.microCopy && (
                 <p className="text-xs text-slate-500 text-center italic mb-3">
@@ -263,11 +256,7 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
               )}
 
               <button
-                className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all ${
-                  plan.isRecommended
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg transform hover:-translate-y-0.5'
-                    : 'bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white'
-                } disabled:opacity-60 disabled:cursor-not-allowed`}
+                className="w-full py-2.75 px-4 rounded-lg font-extrabold text-sm transition-all bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg hover:shadow-blue-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
                 onClick={() => handlePurchase(plan)}
                 disabled={checkoutLoading === plan.planId}
                 aria-label={`Purchase ${plan.name} plan`}
