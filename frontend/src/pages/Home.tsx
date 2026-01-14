@@ -3,7 +3,6 @@ import { Helmet } from 'react-helmet-async';
 import WorkoutGenerator from '../components/WorkoutGenerator';
 import PricingPlans from '../components/PricingPlans';
 import RestoreCredits from '../components/RestoreCredits';
-import PromoWorkoutVideo from '../components/PromoWorkoutVideo/PromoWorkoutVideo';
 import { getDeviceId, setTokenBalance as updateTokenStorage } from '../utils/storage';
 import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus } from '../services/api';
 import { useHeroContext } from '../components/Layout';
@@ -430,7 +429,6 @@ function Home() {
             {/* Right Column: Pricing Plans */}
             <aside className="md:col-span-1 lg:col-span-3 order-2 md:order-2 lg:order-3">
               <div className="bg-slate-50/50 rounded-2xl p-6 border-2 border-slate-200 shadow-lg">
-                <PromoWorkoutVideo />
                 <PricingPlans showHeader={true} vertical={true} />
               </div>
             </aside>
