@@ -6,21 +6,11 @@ import './AdminLogin.css';
 
 function AdminLogin() {
   const [email, setEmail] = useState(() => localStorage.getItem('admin_email') || '');
-  const [password, setPassword] = useState(() => {
-    const stored = localStorage.getItem('admin_password');
-    if (!stored) return '';
-    try {
-      return atob(stored);
-    } catch {
-      return '';
-    }
-  });
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberEmail, setRememberEmail] = useState(() => !!localStorage.getItem('admin_email'));
-  const [rememberPassword, setRememberPassword] = useState(() => !!localStorage.getItem('admin_password'));
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showForgot, setShowForgot] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,16 +22,8 @@ function AdminLogin() {
   }, [email, rememberEmail]);
 
   useEffect(() => {
-    if (!rememberPassword) {
-      localStorage.removeItem('admin_password');
-      return;
-    }
-    try {
-      localStorage.setItem('admin_password', btoa(password));
-    } catch {
-      // ignore encoding issues
-    }
-  }, [password, rememberPassword]);
+    // Do not persist password client-side.
+  }, []);
 
   const validateEmail = (val: string) => /\S+@\S+\.\S+/.test(val.trim());
   const isEmailValid = validateEmail(email);
@@ -62,11 +44,6 @@ function AdminLogin() {
         localStorage.setItem('admin_email', email.trim());
       } else {
         localStorage.removeItem('admin_email');
-      }
-      if (rememberPassword) {
-        localStorage.setItem('admin_password', btoa(password));
-      } else {
-        localStorage.removeItem('admin_password');
       }
       navigate('/admin/dashboard');
     } catch (err: any) {
@@ -138,17 +115,6 @@ function AdminLogin() {
                 />
                 <span>Remember me</span>
               </label>
-              <label className="remember">
-                <input
-                  type="checkbox"
-                  checked={rememberPassword}
-                  onChange={(e) => setRememberPassword(e.target.checked)}
-                />
-                <span>Remember password</span>
-              </label>
-              <button type="button" className="link-button" onClick={() => setShowForgot(true)}>
-                Forgot password?
-              </button>
             </div>
 
             {error && (
@@ -170,18 +136,6 @@ function AdminLogin() {
             <div className="subnote">Authorized admins only.</div>
           </form>
         </div>
-
-        {showForgot && (
-          <div className="modal-backdrop" role="dialog" aria-modal="true">
-            <div className="modal">
-              <h2>Reset access</h2>
-              <p>Contact site owner to reset admin credentials.</p>
-              <button className="modal-close" onClick={() => setShowForgot(false)}>
-                Close
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </>
   );
