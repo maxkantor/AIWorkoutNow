@@ -1,4 +1,27 @@
-const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'https://api.aiworkoutnow.com';
+function normalizeBaseUrl(url: string) {
+  return url.replace(/\/+$/, '');
+}
+
+function getApiBaseUrl() {
+  const envUrlRaw = ((import.meta as any).env?.VITE_API_URL as string | undefined)?.trim();
+  const defaultApi = 'https://vs86hpajvb.execute-api.us-east-1.amazonaws.com';
+
+  // If env var is missing, use default API Gateway URL.
+  if (!envUrlRaw) return defaultApi;
+
+  // Guardrail: if someone mistakenly sets VITE_API_URL to the frontend origin,
+  // it will 404 on /user-access-status and /generate-workout. Fall back to API Gateway.
+  if (typeof window !== 'undefined') {
+    const origin = window.location.origin;
+    if (envUrlRaw === origin || envUrlRaw.startsWith(origin + '/')) {
+      return defaultApi;
+    }
+  }
+
+  return normalizeBaseUrl(envUrlRaw);
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 export interface WorkoutPreferences {
   fitnessLevel: string;
@@ -255,12 +278,16 @@ export async function getPricingPlans(): Promise<PricingPlan[]> {
     if (!response.ok) {
       let errorMessage = 'Failed to fetch pricing plans';
       try {
-        const errorData = await response.json();
-        errorMessage = errorData.message || errorData.error || errorMessage;
-        console.error('[API] Pricing plans error response:', errorData);
+        const raw = await response.text();
+        try {
+          const errorData = JSON.parse(raw);
+          errorMessage = errorData.message || errorData.error || errorMessage;
+          console.error('[API] Pricing plans error response:', errorData);
+        } catch {
+          console.error('[API] Pricing plans raw error response:', raw);
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
       } catch (e) {
-        const text = await response.text();
-        console.error('[API] Pricing plans raw error response:', text);
         errorMessage = `HTTP ${response.status}: ${response.statusText}`;
       }
       throw new Error(errorMessage);
