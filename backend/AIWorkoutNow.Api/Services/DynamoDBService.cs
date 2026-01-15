@@ -97,24 +97,50 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task IncrementAnonymousUsageAsync(string deviceId, string date)
     {
-        await _dynamoDB.UpdateItemAsync(new UpdateItemRequest
+        try
         {
-            TableName = _anonymousUsageTable,
-            Key = new Dictionary<string, AttributeValue>
+            await _dynamoDB.UpdateItemAsync(new UpdateItemRequest
             {
-                { "DeviceId", new AttributeValue { S = deviceId } },
-                { "Date", new AttributeValue { S = date } }
-            },
-            UpdateExpression = "ADD #count :inc",
-            ExpressionAttributeNames = new Dictionary<string, string>
+                TableName = _anonymousUsageTable,
+                Key = new Dictionary<string, AttributeValue>
+                {
+                    { "DeviceId", new AttributeValue { S = deviceId } },
+                    { "Date", new AttributeValue { S = date } }
+                },
+                UpdateExpression = "ADD #count :inc",
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    { "#count", "Count" }
+                },
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    { ":inc", new AttributeValue { N = "1" } }
+                }
+            });
+        }
+        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+        {
+            // Free-tier usage depends on this table. Create if missing then retry once.
+            await CreateTableIfMissingAsync(_anonymousUsageTable, "DeviceId", "Date");
+            await _dynamoDB.UpdateItemAsync(new UpdateItemRequest
             {
-                { "#count", "Count" }
-            },
-            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-            {
-                { ":inc", new AttributeValue { N = "1" } }
-            }
-        });
+                TableName = _anonymousUsageTable,
+                Key = new Dictionary<string, AttributeValue>
+                {
+                    { "DeviceId", new AttributeValue { S = deviceId } },
+                    { "Date", new AttributeValue { S = date } }
+                },
+                UpdateExpression = "ADD #count :inc",
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    { "#count", "Count" }
+                },
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    { ":inc", new AttributeValue { N = "1" } }
+                }
+            });
+        }
     }
 
     public async Task SaveUserTokensAsync(UserTokens tokens)
@@ -3045,6 +3071,54 @@ public class DynamoDBService : IDynamoDBService
 
             await WaitForActiveTableAsync(tableName);
             Console.WriteLine($"[DynamoDBService] Created table {tableName} with hash key {hashKeyName}");
+        }
+        catch (Amazon.DynamoDBv2.Model.ResourceInUseException)
+        {
+            // Table already exists or being created; safe to ignore
+        }
+        catch (Amazon.Runtime.AmazonServiceException ex) when (string.Equals(ex.ErrorCode, "AccessDeniedException", StringComparison.OrdinalIgnoreCase))
+        {
+            // Assume the table exists but IAM blocks Describe/Create. Be quiet to avoid noisy logs.
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Failed to create table {tableName}: {ex.Message}");
+        }
+    }
+
+    private async Task CreateTableIfMissingAsync(string tableName, string hashKeyName, string rangeKeyName)
+    {
+        try
+        {
+            // First try describe (avoids ListTables permission)
+            try
+            {
+                await _dynamoDB.DescribeTableAsync(tableName);
+                return; // table exists
+            }
+            catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+            {
+                // proceed to create
+            }
+
+            await _dynamoDB.CreateTableAsync(new CreateTableRequest
+            {
+                TableName = tableName,
+                AttributeDefinitions = new List<AttributeDefinition>
+                {
+                    new AttributeDefinition(hashKeyName, ScalarAttributeType.S),
+                    new AttributeDefinition(rangeKeyName, ScalarAttributeType.S)
+                },
+                KeySchema = new List<KeySchemaElement>
+                {
+                    new KeySchemaElement(hashKeyName, KeyType.HASH),
+                    new KeySchemaElement(rangeKeyName, KeyType.RANGE)
+                },
+                BillingMode = BillingMode.PAY_PER_REQUEST
+            });
+
+            await WaitForActiveTableAsync(tableName);
+            Console.WriteLine($"[DynamoDBService] Created table {tableName} with hash key {hashKeyName} and range key {rangeKeyName}");
         }
         catch (Amazon.DynamoDBv2.Model.ResourceInUseException)
         {

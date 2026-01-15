@@ -174,10 +174,19 @@ public class WorkoutController : ControllerBase
             {
                 Console.WriteLine("[WorkoutController] Incrementing free workout usage...");
                 var today = DateTime.UtcNow.Date.ToString("yyyy-MM-dd");
-                await _dynamoService.IncrementAnonymousUsageAsync(deviceId, today);
-                var totalUsed = await _dynamoService.GetTotalFreeWorkoutsAsync(deviceId);
-                workout.TokensRemaining = 3 - totalUsed; // Show remaining free workouts
-                Console.WriteLine($"[WorkoutController] Free workouts remaining: {workout.TokensRemaining}");
+                try
+                {
+                    await _dynamoService.IncrementAnonymousUsageAsync(deviceId, today);
+                    var totalUsed = await _dynamoService.GetTotalFreeWorkoutsAsync(deviceId);
+                    workout.TokensRemaining = 3 - totalUsed; // Show remaining free workouts
+                    Console.WriteLine($"[WorkoutController] Free workouts remaining: {workout.TokensRemaining}");
+                }
+                catch (Exception ex)
+                {
+                    // Don't fail a successfully generated workout just because usage tracking failed.
+                    Console.WriteLine($"[WorkoutController] Failed to update free usage: {ex.Message}");
+                    workout.TokensRemaining = null;
+                }
             }
             else
             {
