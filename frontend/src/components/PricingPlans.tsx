@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getPricingPlans, createCheckoutSession, PricingPlan } from '../services/api';
 import { getDeviceId } from '../utils/storage';
+import PlanBadge, { PlanBadgeVariant } from './PlanBadge';
 
 interface PricingPlansProps {
   showHeader?: boolean;
@@ -13,10 +14,10 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const getBadge = (tokenCount?: number | null) => {
-    if (tokenCount === 10) return 'Starter';
-    if (tokenCount === 30) return 'Most Popular';
-    if (tokenCount === 100) return 'Best Value';
+  const getBadgeVariant = (tokenCount?: number | null): PlanBadgeVariant | null => {
+    if (tokenCount === 10) return 'starter';
+    if (tokenCount === 30) return 'popular';
+    if (tokenCount === 100) return 'value';
     return null;
   };
 
@@ -180,14 +181,10 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
             >
               {/* Badge + Plan Name in one line */}
               <div className="flex items-center gap-2 whitespace-nowrap">
-                {getBadge(plan.tokenCount) && (
-                  <div className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-extrabold tracking-wide whitespace-nowrap ${
-                    isMostPopular(plan.tokenCount)
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                      : 'bg-slate-900 text-white'
-                  }`}>
-                    {getBadge(plan.tokenCount)}
-                  </div>
+                {getBadgeVariant(plan.tokenCount) && (
+                  <PlanBadge
+                    variant={getBadgeVariant(plan.tokenCount)!}
+                  />
                 )}
 
                 <h3 className="text-[15px] sm:text-[16px] font-extrabold text-slate-900 whitespace-nowrap">
@@ -258,14 +255,10 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
               }`}
               role="listitem"
             >
-              {getBadge(plan.tokenCount) && (
-                <div className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-extrabold ${
-                  isMostPopular(plan.tokenCount)
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                    : 'bg-slate-900 text-white'
-                }`}>
-                  {getBadge(plan.tokenCount)}
-                </div>
+              {getBadgeVariant(plan.tokenCount) && (
+                <PlanBadge
+                  variant={getBadgeVariant(plan.tokenCount)!}
+                />
               )}
               
               <h3 className="mt-3 text-[18px] font-semibold text-slate-900 mb-2 text-center">

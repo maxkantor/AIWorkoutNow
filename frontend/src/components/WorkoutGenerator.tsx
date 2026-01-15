@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import WorkoutDisplay from './WorkoutDisplay';
+import WorkoutProgressEmoji from './WorkoutProgressEmoji';
 import './WorkoutGenerator.css';
 
 interface WorkoutGeneratorProps {
@@ -136,8 +137,10 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = fals
         <button type="submit" className="btn" disabled={disabled || loading}>
           {loading ? (
             <span>
-              <span className="exercising-emoji">🏋️</span> Generating Workout...
+              Generating... <WorkoutProgressEmoji isLoading={loading} />
             </span>
+          ) : error ? (
+            'Try again'
           ) : (
             'Generate AI Workout'
           )}
