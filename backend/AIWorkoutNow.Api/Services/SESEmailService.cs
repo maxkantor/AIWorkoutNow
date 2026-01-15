@@ -33,9 +33,16 @@ public class SESEmailService : IEmailService
     {
         var prefix = GetTablePrefix();
         // Prefer TABLE_PREFIX path, but support legacy /aiworkoutnow path (older stacks)
+        // Support both naming conventions:
+        // - /{prefix}/ses-admin-email (current)
+        // - /{prefix}/admin-email (older stacks / scripts)
         var admin = await GetSSMParameter($"/{prefix}/ses-admin-email", "SES_ADMIN_EMAIL", "");
         if (!string.IsNullOrWhiteSpace(admin)) return admin;
+        admin = await GetSSMParameter($"/{prefix}/admin-email", "SES_ADMIN_EMAIL", "");
+        if (!string.IsNullOrWhiteSpace(admin)) return admin;
         admin = await GetSSMParameter("/aiworkoutnow/ses-admin-email", "SES_ADMIN_EMAIL", "");
+        if (!string.IsNullOrWhiteSpace(admin)) return admin;
+        admin = await GetSSMParameter("/aiworkoutnow/admin-email", "SES_ADMIN_EMAIL", "");
         if (!string.IsNullOrWhiteSpace(admin)) return admin;
         return "admin@aiworkoutnow.com";
     }
@@ -67,6 +74,7 @@ public class SESEmailService : IEmailService
     private async Task SendEmailInternalAsync(string to, string subject, string body, string? replyTo)
     {
         var fromEmail = await GetFromEmailAsync();
+        Console.WriteLine($"[SESEmailService] Sending email. To={to}, From={fromEmail}, Subject={subject}");
         var request = new Amazon.SimpleEmail.Model.SendEmailRequest
         {
             Source = fromEmail,
@@ -90,7 +98,16 @@ public class SESEmailService : IEmailService
             request.ReplyToAddresses = new List<string> { replyTo };
         }
 
-        await _sesClient.SendEmailAsync(request);
+        try
+        {
+            var resp = await _sesClient.SendEmailAsync(request);
+            Console.WriteLine($"[SESEmailService] Email sent. MessageId={resp?.MessageId ?? "(null)"}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SESEmailService] Failed to send email. To={to}, From={fromEmail}, Subject={subject}, Error={ex.GetType().Name}: {ex.Message}");
+            throw;
+        }
     }
 
     public async Task SendContactNotificationAsync(ContactMessage message)
