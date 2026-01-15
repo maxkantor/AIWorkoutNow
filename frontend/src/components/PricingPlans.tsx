@@ -255,15 +255,14 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
               }`}
               role="listitem"
             >
-              {getBadgeVariant(plan.tokenCount) && (
-                <PlanBadge
-                  variant={getBadgeVariant(plan.tokenCount)!}
-                />
-              )}
-              
-              <h3 className="mt-3 text-[18px] font-semibold text-slate-900 mb-2 text-center">
-                {plan.name}
-              </h3>
+              <div className="flex items-center gap-2">
+                {getBadgeVariant(plan.tokenCount) && (
+                  <PlanBadge variant={getBadgeVariant(plan.tokenCount)!} />
+                )}
+                <h3 className="text-[18px] font-semibold text-slate-900">
+                  {plan.name}
+                </h3>
+              </div>
               
               <div className="text-center mb-3">
                 <div className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1">
