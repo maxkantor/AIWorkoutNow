@@ -116,8 +116,9 @@ function Home() {
         const freeWorkouts = await getFreeWorkoutsRemaining(deviceId);
         console.log('[Home] Free workouts:', freeWorkouts.remaining);
         setFreeWorkoutsRemaining(freeWorkouts.remaining);
-        setRemainingWorkouts(freeWorkouts.remaining);
-        setTotalWorkouts(freeWorkouts.remaining);
+        // IMPORTANT: Free tier is always out of 3 total. Keep remaining/total null so the hero uses the free badge.
+        setRemainingWorkouts(null);
+        setTotalWorkouts(null);
         setTokenBalance(null);
       }
       return status;

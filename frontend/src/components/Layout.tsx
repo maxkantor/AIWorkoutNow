@@ -113,6 +113,12 @@ function Layout({ children }: LayoutProps) {
                         </span>
                       )}
                     </div>
+                  ) : (freeWorkoutsRemaining !== undefined &&
+                      (accessStatus?.tokensRemaining ?? tokenBalance ?? 0) <= 0 &&
+                      accessStatus?.hasUnlimitedAccess !== true) ? (
+                    <div className="inline-block px-4 py-2 bg-green-100 text-green-800 rounded-lg font-semibold text-xs md:text-sm shadow-sm">
+                      Free workouts remaining: {freeWorkoutsRemaining} / 3
+                    </div>
                   ) : ((remainingWorkouts !== null && remainingWorkouts !== undefined && totalWorkouts !== null && totalWorkouts !== undefined) ||
                       (accessStatus?.tokensRemaining !== undefined && accessStatus.tokensRemaining > 0 && accessStatus.tokensRemaining < 999999) ||
                       (tokenBalance !== null && tokenBalance !== undefined && tokenBalance > 0 && tokenBalance < 999999)) ? (
@@ -123,10 +129,6 @@ function Layout({ children }: LayoutProps) {
                         const total = totalWorkouts ?? remaining;
                         return `💪 Remaining Workouts: ${remaining}/${total}`;
                       })()}
-                    </div>
-                  ) : freeWorkoutsRemaining !== undefined && freeWorkoutsRemaining > 0 ? (
-                    <div className="inline-block px-4 py-2 bg-green-100 text-green-800 rounded-lg font-semibold text-xs md:text-sm shadow-sm">
-                      Free workouts remaining: {freeWorkoutsRemaining} / 3
                     </div>
                   ) : freeWorkoutsRemaining !== undefined && freeWorkoutsRemaining === 0 ? (
                     <div className="inline-block px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg font-semibold text-xs md:text-sm shadow-sm">
