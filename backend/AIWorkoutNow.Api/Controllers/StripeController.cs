@@ -12,6 +12,7 @@ public class StripeController : ControllerBase
 {
     private readonly IDynamoDBService _dynamoService;
     private readonly IConfigService _configService;
+    private readonly IEmailService _emailService;
 
         private static PricingPlan BuildDefaultPlan(string planId, string? currencyOverride = null, string? stripePriceIdOverride = null)
         {
@@ -41,10 +42,11 @@ public class StripeController : ControllerBase
             };
         }
 
-    public StripeController(IDynamoDBService dynamoService, IConfigService configService)
+    public StripeController(IDynamoDBService dynamoService, IConfigService configService, IEmailService emailService)
     {
         _dynamoService = dynamoService;
         _configService = configService;
+        _emailService = emailService;
     }
 
     [HttpPost("create-checkout-session")]
@@ -293,6 +295,9 @@ public class StripeController : ControllerBase
 
                 if (!string.IsNullOrEmpty(deviceId) && !string.IsNullOrEmpty(planId))
                 {
+                    // Track whether this webhook transitions the purchase to completed (so we send 1 admin email total)
+                    var purchaseWasCompleted = false;
+
                     // Find purchase by session ID
                     var purchases = await _dynamoService.GetUserPurchasesAsync(deviceId);
                     var purchase = purchases.FirstOrDefault(p => p.StripeSessionId == sessionId);
@@ -354,6 +359,7 @@ public class StripeController : ControllerBase
                     {
                         Console.WriteLine($"[StripeController] Found existing purchase: {purchase.PurchaseId}");
                         purchase.StripePaymentIntentId = paymentIntentId;
+                        purchaseWasCompleted = string.Equals(purchase.Status, "completed", StringComparison.OrdinalIgnoreCase);
                         
                         // CRITICAL FIX: If PurchasedAt is wrong (was set to webhook time instead of payment time), fix it
                         if (purchase.PurchasedAt == default || purchase.PurchasedAt > DateTime.UtcNow.AddMinutes(-5))
@@ -508,6 +514,26 @@ public class StripeController : ControllerBase
 
                     // Save purchase record (may fail if table doesn't exist, but that's OK)
                     await _dynamoService.SaveUserPurchaseAsync(purchase);
+
+                    // Notify admin on first completion only (best-effort; never fail webhook)
+                    if (!purchaseWasCompleted && string.Equals(purchase.Status, "completed", StringComparison.OrdinalIgnoreCase))
+                    {
+                        try
+                        {
+                            PricingPlan? planForEmail = null;
+                            try { planForEmail = await _dynamoService.GetPricingPlanAsync(planId ?? string.Empty); } catch { /* ignore */ }
+                            if (planForEmail == null && !string.IsNullOrEmpty(planId))
+                            {
+                                planForEmail = BuildDefaultPlan(planId);
+                            }
+
+                            await _emailService.SendPurchaseNotificationAsync(purchase, planForEmail);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[StripeController] Admin purchase email failed (non-critical): {ex.Message}");
+                        }
+                    }
 
                     // Link email to visitor ID for cross-device access
                     if (!string.IsNullOrEmpty(customerEmail))

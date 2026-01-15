@@ -583,11 +583,24 @@ public class DynamoDBService : IDynamoDBService
         document["Message"] = message.Message;
         document["CreatedAt"] = message.CreatedAt.ToString("O");
 
-        await _dynamoDB.PutItemAsync(new PutItemRequest
+        try
         {
-            TableName = _contactMessagesTable,
-            Item = document.ToAttributeMap()
-        });
+            await _dynamoDB.PutItemAsync(new PutItemRequest
+            {
+                TableName = _contactMessagesTable,
+                Item = document.ToAttributeMap()
+            });
+        }
+        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+        {
+            // Restore credits + contact flows depend on this table. Create if missing then retry once.
+            await CreateTableIfMissingAsync(_contactMessagesTable, "MessageId");
+            await _dynamoDB.PutItemAsync(new PutItemRequest
+            {
+                TableName = _contactMessagesTable,
+                Item = document.ToAttributeMap()
+            });
+        }
     }
 
     public async Task<AdminStats> GetAdminStatsAsync()
@@ -1106,37 +1119,61 @@ public class DynamoDBService : IDynamoDBService
         document["CreatedAt"] = reply.CreatedAt.ToString("O");
         document["Sent"] = reply.Sent;
 
-        await _dynamoDB.PutItemAsync(new PutItemRequest
+        try
         {
-            TableName = repliesTable,
-            Item = document.ToAttributeMap()
-        });
+            await _dynamoDB.PutItemAsync(new PutItemRequest
+            {
+                TableName = repliesTable,
+                Item = document.ToAttributeMap()
+            });
+        }
+        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+        {
+            await CreateTableIfMissingAsync(repliesTable, "ReplyId");
+            await _dynamoDB.PutItemAsync(new PutItemRequest
+            {
+                TableName = repliesTable,
+                Item = document.ToAttributeMap()
+            });
+        }
     }
 
     public async Task<List<ContactReply>> GetContactRepliesAsync(string messageId)
     {
         var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
         var repliesTable = $"{tablePrefix}-ContactReplies";
-        
-        var response = await _dynamoDB.ScanAsync(new ScanRequest
+        try
         {
-            TableName = repliesTable,
-            FilterExpression = "MessageId = :msgId",
-            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            var response = await _dynamoDB.ScanAsync(new ScanRequest
             {
-                { ":msgId", new AttributeValue { S = messageId } }
-            }
-        });
+                TableName = repliesTable,
+                FilterExpression = "MessageId = :msgId",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    { ":msgId", new AttributeValue { S = messageId } }
+                }
+            });
 
-        return response.Items.Select(item => new ContactReply
+            return response.Items.Select(item => new ContactReply
+            {
+                ReplyId = item["ReplyId"].S,
+                MessageId = item["MessageId"].S,
+                AdminId = item["AdminId"].S,
+                ReplyText = item["ReplyText"].S,
+                CreatedAt = DateTime.Parse(item["CreatedAt"].S),
+                Sent = item.ContainsKey("Sent") && item["Sent"].BOOL
+            }).OrderBy(r => r.CreatedAt).ToList();
+        }
+        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
-            ReplyId = item["ReplyId"].S,
-            MessageId = item["MessageId"].S,
-            AdminId = item["AdminId"].S,
-            ReplyText = item["ReplyText"].S,
-            CreatedAt = DateTime.Parse(item["CreatedAt"].S),
-            Sent = item.ContainsKey("Sent") && item["Sent"].BOOL
-        }).OrderBy(r => r.CreatedAt).ToList();
+            await CreateTableIfMissingAsync(repliesTable, "ReplyId");
+            return new List<ContactReply>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Error getting contact replies: {ex.Message}");
+            return new List<ContactReply>();
+        }
     }
 
     public async Task SaveStripePurchaseAsync(StripePurchase purchase)
@@ -2300,10 +2337,21 @@ public class DynamoDBService : IDynamoDBService
                 Item = document.ToAttributeMap()
             });
         }
-        catch (ResourceNotFoundException)
+        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
-            Console.WriteLine($"[DynamoDBService] EmailVerification table does not exist: {_emailVerificationTable}");
-            throw;
+            Console.WriteLine($"[DynamoDBService] EmailVerification table does not exist: {_emailVerificationTable}. Creating...");
+            await CreateTableIfMissingAsync(_emailVerificationTable, "Email");
+            await _dynamoDB.PutItemAsync(new PutItemRequest
+            {
+                TableName = _emailVerificationTable,
+                Item = new Document
+                {
+                    ["Email"] = code.Email.ToLowerInvariant(),
+                    ["Code"] = code.Code,
+                    ["ExpiresAt"] = code.ExpiresAt.ToString("O"),
+                    ["Attempts"] = code.Attempts
+                }.ToAttributeMap()
+            });
         }
     }
 
@@ -2374,10 +2422,21 @@ public class DynamoDBService : IDynamoDBService
                 Item = document.ToAttributeMap()
             });
         }
-        catch (ResourceNotFoundException)
+        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
-            Console.WriteLine($"[DynamoDBService] EmailVisitorMapping table does not exist: {_emailVisitorMappingTable}");
-            throw;
+            Console.WriteLine($"[DynamoDBService] EmailVisitorMapping table does not exist: {_emailVisitorMappingTable}. Creating...");
+            await CreateTableIfMissingAsync(_emailVisitorMappingTable, "Email");
+            await _dynamoDB.PutItemAsync(new PutItemRequest
+            {
+                TableName = _emailVisitorMappingTable,
+                Item = new Document
+                {
+                    ["Email"] = mapping.Email.ToLowerInvariant(),
+                    ["VisitorIds"] = string.Join(",", mapping.VisitorIds),
+                    ["CreatedAt"] = mapping.CreatedAt.ToString("O"),
+                    ["UpdatedAt"] = mapping.UpdatedAt.ToString("O")
+                }.ToAttributeMap()
+            });
         }
     }
 

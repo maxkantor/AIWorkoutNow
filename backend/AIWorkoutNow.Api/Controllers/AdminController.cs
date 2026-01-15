@@ -302,12 +302,8 @@ public class AdminController : ControllerBase
 
             try
             {
-                // Send email reply
-                await _emailService.SendEmailAsync(
-                    message.Email,
-                    $"Re: Your message to AIWorkoutNow",
-                    request.ReplyText
-                );
+                // Send email reply (Reply-To set to admin email from SSM)
+                await _emailService.SendContactReplyToCustomerAsync(message, request.ReplyText);
 
                 reply.Sent = true;
                 await _dynamoService.SaveContactReplyAsync(reply);

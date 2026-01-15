@@ -15,9 +15,19 @@ public class SESEmailService : IEmailService
         _sesClient = new AmazonSimpleEmailServiceClient();
     }
     
+    private static string GetTablePrefix()
+        => Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+
     private async Task<string> GetFromEmailAsync()
     {
-        return await GetSSMParameter("/aiworkoutnow/ses-from-email", "SES_FROM_EMAIL", "noreply@aiworkoutnow.com");
+        var prefix = GetTablePrefix();
+        return await GetSSMParameter($"/{prefix}/ses-from-email", "SES_FROM_EMAIL", "noreply@aiworkoutnow.com");
+    }
+
+    private async Task<string> GetAdminEmailAsync()
+    {
+        var prefix = GetTablePrefix();
+        return await GetSSMParameter($"/{prefix}/ses-admin-email", "SES_ADMIN_EMAIL", "admin@aiworkoutnow.com");
     }
 
     private async Task<string> GetSSMParameter(string parameterName, string fallbackEnvVar, string defaultValue)
@@ -41,6 +51,11 @@ public class SESEmailService : IEmailService
 
     public async Task SendEmailAsync(string to, string subject, string body)
     {
+        await SendEmailInternalAsync(to, subject, body, replyTo: null);
+    }
+
+    private async Task SendEmailInternalAsync(string to, string subject, string body, string? replyTo)
+    {
         var fromEmail = await GetFromEmailAsync();
         var request = new Amazon.SimpleEmail.Model.SendEmailRequest
         {
@@ -60,16 +75,22 @@ public class SESEmailService : IEmailService
             }
         };
 
+        if (!string.IsNullOrWhiteSpace(replyTo))
+        {
+            request.ReplyToAddresses = new List<string> { replyTo };
+        }
+
         await _sesClient.SendEmailAsync(request);
     }
 
     public async Task SendContactNotificationAsync(ContactMessage message)
     {
-        var adminEmail = await GetSSMParameter("/aiworkoutnow/ses-admin-email", "SES_ADMIN_EMAIL", "admin@aiworkoutnow.com");
+        var adminEmail = await GetAdminEmailAsync();
         var subject = $"New Contact Form Submission: {message.Subject}";
         var body = $@"New contact form submission:
 
 From: {message.Email}
+Name: {message.Name}
 Subject: {message.Subject}
 Date: {message.CreatedAt:yyyy-MM-dd HH:mm:ss} UTC
 
@@ -94,6 +115,55 @@ Best regards,
 AIWorkoutNow Team";
 
         await SendEmailAsync(email, subject, body);
+    }
+
+    public async Task SendPurchaseNotificationAsync(UserPurchase purchase, PricingPlan? plan = null)
+    {
+        var adminEmail = await GetAdminEmailAsync();
+
+        var planName = plan?.Name ?? purchase.PlanId;
+        var tokens = purchase.TokensGranted ?? plan?.TokenCount;
+        var amount = plan?.Price;
+        var currency = plan?.Currency ?? "USD";
+
+        var subject = $"New Purchase: {planName}";
+        var body = $@"New purchase completed:
+
+Plan: {planName} ({purchase.PlanId})
+Amount: {(amount.HasValue ? $"{amount.Value:F2} {currency}" : $"(unknown) {currency}")}
+Tokens Granted: {(tokens.HasValue ? tokens.Value.ToString() : "unknown")}
+
+Customer:
+Email: {purchase.CustomerEmail ?? "(unknown)"}
+Name: {purchase.CustomerName ?? "(unknown)"}
+Phone: {purchase.CustomerPhone ?? "(unknown)"}
+Address: {purchase.CustomerAddressLine1 ?? ""} {purchase.CustomerCity ?? ""} {purchase.CustomerState ?? ""} {purchase.CustomerPostalCode ?? ""} {purchase.CustomerCountry ?? ""}
+
+DeviceId: {purchase.DeviceId}
+Stripe Session: {purchase.StripeSessionId}
+Payment Intent: {purchase.StripePaymentIntentId}
+Purchased At (UTC): {purchase.PurchasedAt:yyyy-MM-dd HH:mm:ss}";
+
+        await SendEmailAsync(adminEmail, subject, body);
+    }
+
+    public async Task SendContactReplyToCustomerAsync(ContactMessage originalMessage, string replyText)
+    {
+        var adminEmail = await GetAdminEmailAsync();
+        var subject = $"Re: {originalMessage.Subject}";
+
+        var body = $@"{replyText}
+
+---
+Original message:
+From: {originalMessage.Name} <{originalMessage.Email}>
+Subject: {originalMessage.Subject}
+Date: {originalMessage.CreatedAt:yyyy-MM-dd HH:mm:ss} UTC
+
+{originalMessage.Message}";
+
+        // Use Reply-To admin email so the customer can respond back to you.
+        await SendEmailInternalAsync(originalMessage.Email, subject, body, replyTo: adminEmail);
     }
 }
 
