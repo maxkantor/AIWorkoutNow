@@ -21,13 +21,23 @@ public class SESEmailService : IEmailService
     private async Task<string> GetFromEmailAsync()
     {
         var prefix = GetTablePrefix();
-        return await GetSSMParameter($"/{prefix}/ses-from-email", "SES_FROM_EMAIL", "noreply@aiworkoutnow.com");
+        // Prefer TABLE_PREFIX path, but support legacy /aiworkoutnow path (older stacks)
+        var from = await GetSSMParameter($"/{prefix}/ses-from-email", "SES_FROM_EMAIL", "");
+        if (!string.IsNullOrWhiteSpace(from)) return from;
+        from = await GetSSMParameter("/aiworkoutnow/ses-from-email", "SES_FROM_EMAIL", "");
+        if (!string.IsNullOrWhiteSpace(from)) return from;
+        return "noreply@aiworkoutnow.com";
     }
 
     private async Task<string> GetAdminEmailAsync()
     {
         var prefix = GetTablePrefix();
-        return await GetSSMParameter($"/{prefix}/ses-admin-email", "SES_ADMIN_EMAIL", "admin@aiworkoutnow.com");
+        // Prefer TABLE_PREFIX path, but support legacy /aiworkoutnow path (older stacks)
+        var admin = await GetSSMParameter($"/{prefix}/ses-admin-email", "SES_ADMIN_EMAIL", "");
+        if (!string.IsNullOrWhiteSpace(admin)) return admin;
+        admin = await GetSSMParameter("/aiworkoutnow/ses-admin-email", "SES_ADMIN_EMAIL", "");
+        if (!string.IsNullOrWhiteSpace(admin)) return admin;
+        return "admin@aiworkoutnow.com";
     }
 
     private async Task<string> GetSSMParameter(string parameterName, string fallbackEnvVar, string defaultValue)

@@ -16,6 +16,9 @@ export class AIWorkoutNowStack extends cdk.Stack {
   public readonly progressLogsTable: dynamodb.Table;
   public readonly adminUsersTable: dynamodb.Table;
   public readonly contactMessagesTable: dynamodb.Table;
+  public readonly emailVerificationTable: dynamodb.Table;
+  public readonly emailVisitorMappingTable: dynamodb.Table;
+  public readonly contactRepliesTable: dynamodb.Table;
 
   constructor(scope: Construct, id: string, props: AIWorkoutNowStackProps = {}) {
     super(scope, id, props);
@@ -79,6 +82,32 @@ export class AIWorkoutNowStack extends cdk.Stack {
     });
     cdk.Tags.of(this.contactMessagesTable).add('TablePrefix', tablePrefix);
 
+    // Email verification tables (required for Restore Credits)
+    this.emailVerificationTable = new dynamodb.Table(this, 'EmailVerificationTable', {
+      tableName: `${tablePrefix}-EmailVerification`,
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      partitionKey: { name: 'Email', type: dynamodb.AttributeType.STRING },
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+    cdk.Tags.of(this.emailVerificationTable).add('TablePrefix', tablePrefix);
+
+    this.emailVisitorMappingTable = new dynamodb.Table(this, 'EmailVisitorMappingTable', {
+      tableName: `${tablePrefix}-EmailVisitorMapping`,
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      partitionKey: { name: 'Email', type: dynamodb.AttributeType.STRING },
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+    cdk.Tags.of(this.emailVisitorMappingTable).add('TablePrefix', tablePrefix);
+
+    // Contact replies table (admin reply history)
+    this.contactRepliesTable = new dynamodb.Table(this, 'ContactRepliesTable', {
+      tableName: `${tablePrefix}-ContactReplies`,
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      partitionKey: { name: 'ReplyId', type: dynamodb.AttributeType.STRING },
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+    cdk.Tags.of(this.contactRepliesTable).add('TablePrefix', tablePrefix);
+
     // Lambda Execution Role
     this.lambdaExecutionRole = new iam.Role(this, 'LambdaExecutionRole', {
       roleName: `${tablePrefix}-LambdaExecutionRole`,
@@ -96,6 +125,7 @@ export class AIWorkoutNowStack extends cdk.Stack {
           'dynamodb:PutItem',
           'dynamodb:GetItem',
           'dynamodb:UpdateItem',
+          'dynamodb:DeleteItem',
           'dynamodb:Query',
           'dynamodb:Scan',
         ],
@@ -106,6 +136,9 @@ export class AIWorkoutNowStack extends cdk.Stack {
           this.progressLogsTable.tableArn,
           this.adminUsersTable.tableArn,
           this.contactMessagesTable.tableArn,
+          this.emailVerificationTable.tableArn,
+          this.emailVisitorMappingTable.tableArn,
+          this.contactRepliesTable.tableArn,
         ],
       })
     );
@@ -117,6 +150,7 @@ export class AIWorkoutNowStack extends cdk.Stack {
         actions: ['ssm:GetParameter', 'ssm:GetParameters'],
         resources: [
           `arn:aws:ssm:${this.region}:${this.account}:parameter/aiworkoutnow/*`,
+          `arn:aws:ssm:${this.region}:${this.account}:parameter/${tablePrefix}/*`,
         ],
       })
     );

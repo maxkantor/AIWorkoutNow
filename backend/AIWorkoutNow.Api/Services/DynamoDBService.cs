@@ -382,14 +382,18 @@ public class DynamoDBService : IDynamoDBService
         {
             var prefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
             var activitiesTable = $"{prefix}-CustomerActivities";
-            var resp = await _dynamoDB.QueryAsync(new QueryRequest
+            // NOTE: CustomerActivities table is keyed by ActivityId in some deployments,
+            // so querying by DeviceId will fail with "missed key schema element".
+            // Use a filtered scan here (small scope) to avoid CloudWatch noise and compute last activity.
+            var resp = await _dynamoDB.ScanAsync(new ScanRequest
             {
                 TableName = activitiesTable,
-                KeyConditionExpression = "DeviceId = :deviceId",
+                FilterExpression = "DeviceId = :deviceId",
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
                     {":deviceId", new AttributeValue { S = deviceId } }
-                }
+                },
+                Limit = 200
             });
 
             foreach (var item in resp.Items)
@@ -399,6 +403,14 @@ public class DynamoDBService : IDynamoDBService
                 if (type == "workout_generated") generatedWorkouts += 1;
                 if (!lastActivity.HasValue || ts > lastActivity.Value) lastActivity = ts;
             }
+        }
+        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+        {
+            // Table missing; keep balance functional without noisy logs.
+        }
+        catch (Amazon.Runtime.AmazonServiceException ex) when (string.Equals(ex.ErrorCode, "ValidationException", StringComparison.OrdinalIgnoreCase))
+        {
+            // Schema mismatch or filter issues; keep balance functional without noisy logs.
         }
         catch (Exception ex)
         {

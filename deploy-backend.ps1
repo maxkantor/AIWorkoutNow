@@ -20,16 +20,12 @@ Write-Host "Account: $AccountId"
 Write-Host "Region: $Region"
 Write-Host ""
 
-# Deploy CDK stack first if not deployed
-Write-Host "📦 Checking CDK infrastructure..." -ForegroundColor Yellow
+# Deploy/Update CDK stack (always) so infra changes (tables/permissions) are applied
+Write-Host "📦 Deploying CDK infrastructure..." -ForegroundColor Yellow
 Push-Location "infrastructure/cdk"
 try {
-    $StackExists = aws cloudformation describe-stacks --stack-name AIWorkoutNowStack --region $Region 2>$null
-    if (-not $StackExists) {
-        Write-Host "Deploying CDK stack..." -ForegroundColor Yellow
-        npm run build
-        npx cdk deploy --require-approval never
-    }
+    npm run build
+    npx cdk deploy --require-approval never
 }
 finally {
     Pop-Location
@@ -53,20 +49,16 @@ if (-not $RoleArn -or $RoleArn -eq "None") {
 
 Push-Location "backend"
 try {
-    # Check if pre-built package exists, otherwise build it
+    # Always rebuild deployment package so Lambda runs the latest code
     $ZipPath = "lambda-deployment.zip"
-    if (-not (Test-Path $ZipPath)) {
-        Write-Host "🔨 Building Lambda deployment package..." -ForegroundColor Yellow
-        if (Test-Path "build-lambda-package.ps1") {
-            .\build-lambda-package.ps1
-        } elseif (Test-Path "build-lambda-package.sh") {
-            bash build-lambda-package.sh
-        } else {
-            Write-Host "❌ Build script not found" -ForegroundColor Red
-            exit 1
-        }
+    Write-Host "🔨 Building Lambda deployment package..." -ForegroundColor Yellow
+    if (Test-Path "build-lambda-package.ps1") {
+        .\build-lambda-package.ps1
+    } elseif (Test-Path "build-lambda-package.sh") {
+        bash build-lambda-package.sh
     } else {
-        Write-Host "✅ Using existing Lambda deployment package: $ZipPath" -ForegroundColor Green
+        Write-Host "❌ Build script not found" -ForegroundColor Red
+        exit 1
     }
     
     Write-Host ""

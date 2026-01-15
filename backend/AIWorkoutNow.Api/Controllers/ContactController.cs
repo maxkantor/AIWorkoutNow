@@ -75,7 +75,19 @@ public class ContactController : ControllerBase
                 CreatedAt = DateTime.UtcNow
             };
 
-            await _dynamoService.SaveContactMessageAsync(message);
+            var savedToDynamo = true;
+            try
+            {
+                await _dynamoService.SaveContactMessageAsync(message);
+            }
+            catch (Exception ex)
+            {
+                // Don't hard-fail the contact form if Dynamo persistence is broken/misconfigured.
+                // We still want to notify the admin via email.
+                savedToDynamo = false;
+                Console.WriteLine($"[ContactController] Failed to save contact message to DynamoDB: {ex.GetType().Name} - {ex.Message}");
+                Console.WriteLine($"[ContactController] Stack trace: {ex.StackTrace}");
+            }
 
             // Track activity (use email as deviceId for contact submissions)
             try
@@ -112,10 +124,16 @@ public class ContactController : ControllerBase
                 // Don't fail the request if email fails - message is already saved
             }
 
-            return Ok(new { message = "Contact form submitted successfully" });
+            return Ok(new
+            {
+                message = "Contact form submitted successfully",
+                saved = savedToDynamo
+            });
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"[ContactController] SubmitContact error: {ex.GetType().Name} - {ex.Message}");
+            Console.WriteLine($"[ContactController] Stack trace: {ex.StackTrace}");
             return StatusCode(500, new { message = "Failed to submit contact form", error = ex.Message });
         }
     }
