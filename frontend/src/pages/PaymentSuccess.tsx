@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { getUserAccessStatus, verifyPayment, UserAccessStatus } from '../services/api';
-import { getDeviceId } from '../utils/storage';
+import { getDeviceId, setDeviceId } from '../utils/storage';
 import './PaymentSuccess.css';
 
 function PaymentSuccess() {
@@ -12,6 +12,7 @@ function PaymentSuccess() {
   const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
   const sessionId = searchParams.get('session_id');
+  const deviceIdFromUrl = searchParams.get('deviceId');
 
   useEffect(() => {
     const processPayment = async () => {
@@ -21,7 +22,11 @@ function PaymentSuccess() {
       }
 
       try {
-        const deviceId = getDeviceId();
+        if (deviceIdFromUrl) {
+          // Persist deviceId passed through Stripe redirect so we don't "lose" credits when domain/origin changes.
+          setDeviceId(deviceIdFromUrl);
+        }
+        const deviceId = deviceIdFromUrl || getDeviceId();
         
         // First, verify payment and grant tokens if needed
         setVerifying(true);
@@ -74,7 +79,7 @@ function PaymentSuccess() {
     };
 
     processPayment();
-  }, [sessionId, navigate]);
+  }, [sessionId, deviceIdFromUrl, navigate]);
 
   const handleGoHome = () => {
     navigate('/');

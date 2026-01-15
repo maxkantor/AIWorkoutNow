@@ -158,8 +158,11 @@ public class StripeController : ControllerBase
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", stripeSecretKey);
 
             var frontendBaseUrl = _configService.GetFrontendBaseUrl();
-            var successUrl = $"{frontendBaseUrl}/payment-success?session_id={{CHECKOUT_SESSION_ID}}";
-            var cancelUrl = $"{frontendBaseUrl}/"; // Redirect directly to home, no cancellation screen
+            // CRITICAL: Persist deviceId through Stripe redirect so credits always attach to the correct device,
+            // even if the site domain/origin changes (custom domain vs amplifyapp).
+            var deviceIdParam = Uri.EscapeDataString(request.DeviceId);
+            var successUrl = $"{frontendBaseUrl}/payment-success?session_id={{CHECKOUT_SESSION_ID}}&deviceId={deviceIdParam}";
+            var cancelUrl = $"{frontendBaseUrl}/?deviceId={deviceIdParam}"; // Redirect directly to home, no cancellation screen
 
             // Create checkout session with amount directly (no need for pre-created products/prices)
             var amountInCents = (int)(plan.Price * 100); // Convert to cents

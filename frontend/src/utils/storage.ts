@@ -12,6 +12,11 @@ export function getDeviceId(): string {
   return deviceId;
 }
 
+export function setDeviceId(deviceId: string) {
+  if (!deviceId) return;
+  localStorage.setItem(DEVICE_ID_KEY, deviceId);
+}
+
 function generateDeviceId(): string {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 15);
