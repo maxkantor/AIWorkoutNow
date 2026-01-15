@@ -142,21 +142,25 @@ function Home() {
       // ULTRA AGGRESSIVE FIX: Use API status, not localStorage, to determine if user is free
       // Refresh access status first to get latest data
       const latestStatus = await checkAccessStatus(true);
+      const status = latestStatus ?? accessStatus;
+      const hasUnlimited = status?.hasUnlimitedAccess === true;
+      const freeRemaining = status?.freeWorkoutsRemaining ?? freeWorkoutsRemaining;
+      const tokensRemaining = status?.tokensRemaining ?? tokenBalance ?? 0;
       
       // Determine if free user based on API response, not localStorage
       const isFreeUser =
-        ((latestStatus?.tokensRemaining ?? 0) <= 0) &&
-        !latestStatus?.hasUnlimitedAccess &&
-        (latestStatus?.freeWorkoutsRemaining ?? 0) > 0;
+        tokensRemaining <= 0 &&
+        !hasUnlimited &&
+        freeRemaining > 0;
       
       // If no workouts remaining, just return without generating
-      if (isFreeUser && (latestStatus?.freeWorkoutsRemaining ?? 0) <= 0 && !latestStatus?.hasUnlimitedAccess) {
+      if (isFreeUser && freeRemaining <= 0 && !hasUnlimited) {
         setError('No free workouts remaining. Please purchase more workouts to continue.');
           setLoading(false);
           return;
         }
       
-      if (!isFreeUser && (latestStatus?.tokensRemaining ?? 0) <= 0 && !latestStatus?.hasUnlimitedAccess) {
+      if (!isFreeUser && tokensRemaining <= 0 && !hasUnlimited && freeRemaining <= 0) {
         setError('No workouts remaining. Please purchase more workouts to continue.');
         setLoading(false);
         return;
@@ -169,7 +173,7 @@ function Home() {
       if (result.tokensRemaining !== undefined) {
         if (isFreeUser) {
           // Free workout was used
-          setFreeWorkoutsRemaining(Math.max(0, (latestStatus?.freeWorkoutsRemaining ?? freeWorkoutsRemaining) - 1));
+          setFreeWorkoutsRemaining(Math.max(0, freeRemaining - 1));
         } else {
           // Paid token was used - update immediately
         setTokenBalance(result.tokensRemaining);
