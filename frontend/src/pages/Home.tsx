@@ -71,7 +71,7 @@ function Home() {
     });
   }, [freeWorkoutsRemaining, accessStatus, tokenBalance, checkingAccess, remainingWorkouts, totalWorkouts, setHeroContent]);
 
-  const checkAccessStatus = async (forceRefresh: boolean = false) => {
+  const checkAccessStatus = async (forceRefresh: boolean = false): Promise<UserAccessStatus | null> => {
     try {
       setCheckingAccess(true);
       const deviceId = getDeviceId();
@@ -120,11 +120,13 @@ function Home() {
         setTotalWorkouts(freeWorkouts.remaining);
         setTokenBalance(null);
       }
+      return status;
     } catch (err) {
       console.error('Failed to check access status:', err);
       setFreeWorkoutsRemaining(3);
       setRemainingWorkouts(null);
       setTotalWorkouts(null);
+      return null;
     } finally {
       setCheckingAccess(false);
     }
@@ -139,21 +141,22 @@ function Home() {
       
       // ULTRA AGGRESSIVE FIX: Use API status, not localStorage, to determine if user is free
       // Refresh access status first to get latest data
-      await checkAccessStatus(true);
+      const latestStatus = await checkAccessStatus(true);
       
       // Determine if free user based on API response, not localStorage
-      const isFreeUser = (accessStatus?.tokensRemaining === 0 || accessStatus?.tokensRemaining === undefined) && 
-                         !accessStatus?.hasUnlimitedAccess &&
-                         (accessStatus?.freeWorkoutsRemaining ?? 0) > 0;
+      const isFreeUser =
+        ((latestStatus?.tokensRemaining ?? 0) <= 0) &&
+        !latestStatus?.hasUnlimitedAccess &&
+        (latestStatus?.freeWorkoutsRemaining ?? 0) > 0;
       
       // If no workouts remaining, just return without generating
-      if (isFreeUser && (accessStatus?.freeWorkoutsRemaining ?? 0) <= 0 && !accessStatus?.hasUnlimitedAccess) {
+      if (isFreeUser && (latestStatus?.freeWorkoutsRemaining ?? 0) <= 0 && !latestStatus?.hasUnlimitedAccess) {
         setError('No free workouts remaining. Please purchase more workouts to continue.');
           setLoading(false);
           return;
         }
       
-      if (!isFreeUser && (accessStatus?.tokensRemaining ?? 0) <= 0 && !accessStatus?.hasUnlimitedAccess) {
+      if (!isFreeUser && (latestStatus?.tokensRemaining ?? 0) <= 0 && !latestStatus?.hasUnlimitedAccess) {
         setError('No workouts remaining. Please purchase more workouts to continue.');
         setLoading(false);
         return;
@@ -166,7 +169,7 @@ function Home() {
       if (result.tokensRemaining !== undefined) {
         if (isFreeUser) {
           // Free workout was used
-          setFreeWorkoutsRemaining(Math.max(0, (accessStatus?.freeWorkoutsRemaining ?? freeWorkoutsRemaining) - 1));
+          setFreeWorkoutsRemaining(Math.max(0, (latestStatus?.freeWorkoutsRemaining ?? freeWorkoutsRemaining) - 1));
         } else {
           // Paid token was used - update immediately
         setTokenBalance(result.tokensRemaining);
