@@ -918,6 +918,30 @@ public class DynamoDBService : IDynamoDBService
                     int tokenGrant = purchase.TokensGranted ?? 0;
                     string paymentStatus = "";
                     string sessionStatus = "";
+                    string? customerEmail = null;
+                    string? customerName = null;
+                    string? customerPhone = null;
+                    string? customerAddress1 = null;
+                    string? customerCity = null;
+                    string? customerState = null;
+                    string? customerPostal = null;
+                    string? customerCountry = null;
+
+                    void ExtractCustomerDetails(System.Text.Json.JsonElement elem)
+                    {
+                        if (elem.ValueKind != System.Text.Json.JsonValueKind.Object) return;
+                        if (elem.TryGetProperty("email", out var e)) customerEmail = e.GetString();
+                        if (elem.TryGetProperty("name", out var n)) customerName = n.GetString();
+                        if (elem.TryGetProperty("phone", out var ph)) customerPhone = ph.GetString();
+                        if (elem.TryGetProperty("address", out var addr) && addr.ValueKind == System.Text.Json.JsonValueKind.Object)
+                        {
+                            if (addr.TryGetProperty("line1", out var line1)) customerAddress1 = line1.GetString();
+                            if (addr.TryGetProperty("city", out var city)) customerCity = city.GetString();
+                            if (addr.TryGetProperty("state", out var state)) customerState = state.GetString();
+                            if (addr.TryGetProperty("postal_code", out var postal)) customerPostal = postal.GetString();
+                            if (addr.TryGetProperty("country", out var country)) customerCountry = country.GetString();
+                        }
+                    }
 
                     // Prefer session lookup
                     if (!string.IsNullOrEmpty(sessionId))
@@ -929,6 +953,14 @@ public class DynamoDBService : IDynamoDBService
                             var data = System.Text.Json.JsonDocument.Parse(content).RootElement;
                             if (data.TryGetProperty("payment_status", out var ps)) paymentStatus = ps.GetString() ?? "";
                             if (data.TryGetProperty("status", out var ss)) sessionStatus = ss.GetString() ?? "";
+                            if (data.TryGetProperty("payment_intent", out var pi))
+                            {
+                                paymentIntentId = pi.GetString() ?? paymentIntentId;
+                            }
+                            if (data.TryGetProperty("customer_details", out var cd))
+                            {
+                                ExtractCustomerDetails(cd);
+                            }
                             if (data.TryGetProperty("metadata", out var meta) && meta.ValueKind == System.Text.Json.JsonValueKind.Object)
                             {
                                 if (string.IsNullOrEmpty(planId) && meta.TryGetProperty("planId", out var pid))
@@ -950,6 +982,18 @@ public class DynamoDBService : IDynamoDBService
                             var content = await resp.Content.ReadAsStringAsync();
                             var data = System.Text.Json.JsonDocument.Parse(content).RootElement;
                             if (data.TryGetProperty("status", out var ps)) paymentStatus = ps.GetString() ?? "";
+                            // Pull customer details from charges when using payment intent
+                            if (data.TryGetProperty("charges", out var charges) &&
+                                charges.TryGetProperty("data", out var arr) &&
+                                arr.ValueKind == System.Text.Json.JsonValueKind.Array &&
+                                arr.GetArrayLength() > 0)
+                            {
+                                var charge = arr[0];
+                                if (charge.TryGetProperty("billing_details", out var bd))
+                                {
+                                    ExtractCustomerDetails(bd);
+                                }
+                            }
                             if (data.TryGetProperty("metadata", out var meta) && meta.ValueKind == System.Text.Json.JsonValueKind.Object)
                             {
                                 if (string.IsNullOrEmpty(planId) && meta.TryGetProperty("planId", out var pid))
@@ -985,6 +1029,18 @@ public class DynamoDBService : IDynamoDBService
                         purchase.Status = "completed";
                         purchase.PlanId = planId ?? purchase.PlanId;
                         purchase.TokensGranted = tokenGrant;
+                        if (!string.IsNullOrWhiteSpace(paymentIntentId))
+                        {
+                            purchase.StripePaymentIntentId = paymentIntentId;
+                        }
+                        purchase.CustomerEmail = customerEmail ?? purchase.CustomerEmail;
+                        purchase.CustomerName = customerName ?? purchase.CustomerName;
+                        purchase.CustomerPhone = customerPhone ?? purchase.CustomerPhone;
+                        purchase.CustomerAddressLine1 = customerAddress1 ?? purchase.CustomerAddressLine1;
+                        purchase.CustomerCity = customerCity ?? purchase.CustomerCity;
+                        purchase.CustomerState = customerState ?? purchase.CustomerState;
+                        purchase.CustomerPostalCode = customerPostal ?? purchase.CustomerPostalCode;
+                        purchase.CustomerCountry = customerCountry ?? purchase.CustomerCountry;
                         await SaveUserPurchaseAsync(purchase);
                     }
                     else if (string.Equals(sessionStatus, "expired", StringComparison.OrdinalIgnoreCase) ||

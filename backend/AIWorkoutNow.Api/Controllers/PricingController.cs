@@ -384,6 +384,8 @@ public class PricingController : ControllerBase
                 if (!string.IsNullOrEmpty(stripeSecret))
                 {
                     await _dynamoService.ApplyPendingPurchasesAsync(deviceId, stripeSecret);
+                    // Ensure purchases have customer_details before emailing admin.
+                    await _dynamoService.EnrichPurchasesFromStripeAsync(deviceId, stripeSecret);
                     // Purchases may be completed via this path (without webhook). Send admin email once.
                     await NotifyAdminForUnnotifiedCompletedPurchasesAsync(deviceId);
                 }
