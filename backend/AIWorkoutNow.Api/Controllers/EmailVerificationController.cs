@@ -173,10 +173,12 @@ public class EmailVerificationController : ControllerBase
                 await _dynamoService.MergeCreditsFromVisitorIdsAsync(request.DeviceId, allVisitorIds);
             }
 
-            // CRITICAL FIX: Grant tokens from ALL purchases for this email
-            // If multiple purchases exist, use the latest expiration date, but sum all tokens
-            // If any purchase is unlimited, grant unlimited with latest expiration
-            if (purchasesByEmail.Any())
+            // IMPORTANT: If we merged linked devices, we already consolidated balances and zeroed sources.
+            // Do NOT re-grant historical purchases here (prevents "old 100-pack" from coming back after an admin reset).
+            //
+            // If there are no linked devices, we can fall back to reconstructing from purchases-by-email,
+            // but we must respect admin resets: only consider purchases AFTER LastResetAt.
+            if (!allVisitorIds.Any() && purchasesByEmail.Any())
             {
                 Console.WriteLine($"[EmailVerificationController] Processing {purchasesByEmail.Count} purchases for {request.Email}");
 
@@ -184,6 +186,16 @@ public class EmailVerificationController : ControllerBase
                 DateTime? latestExpiration = null;
                 bool purchaseIsUnlimited = false;
                 var purchasesToCopy = new List<UserPurchase>();
+
+                var currentTokens = await _dynamoService.GetUserTokensAsync(request.DeviceId);
+                var resetCutoff = currentTokens?.LastResetAt;
+                if (resetCutoff.HasValue)
+                {
+                    purchasesByEmail = purchasesByEmail
+                        .Where(p => p.PurchasedAt > resetCutoff.Value)
+                        .ToList();
+                    Console.WriteLine($"[EmailVerificationController] Admin reset detected at {resetCutoff.Value:o}. Considering {purchasesByEmail.Count} purchases after reset.");
+                }
 
                 // Process all purchases for this email
                 foreach (var purchase in purchasesByEmail)
@@ -231,14 +243,13 @@ public class EmailVerificationController : ControllerBase
 
                 if (finalTokensToGrant > 0)
                 {
-                    // Get current tokens for this device
-                    var currentTokens = await _dynamoService.GetUserTokensAsync(request.DeviceId);
                     if (currentTokens != null)
                     {
                         // Update tokens - if unlimited or if current is less, update
                         if (finalTokensToGrant >= 999999 || currentTokens.TokensRemaining < finalTokensToGrant)
                         {
                             currentTokens.TokensRemaining = finalTokensToGrant;
+                            currentTokens.TotalWorkouts = finalTokensToGrant;
                             if (latestExpiration.HasValue || purchaseIsUnlimited)
                             {
                                 currentTokens.ExpiresAt = latestExpiration;
