@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
 import WorkoutGenerator from '../components/WorkoutGenerator';
 import PricingPlans from '../components/PricingPlans';
 import RestoreCredits from '../components/RestoreCredits';
 import PromoWorkoutVideo from '../components/PromoWorkoutVideo/PromoWorkoutVideo';
+import SEO from '../components/SEO';
 import { getDeviceId, setTokenBalance as updateTokenStorage } from '../utils/storage';
 import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus } from '../services/api';
 import { useHeroContext } from '../components/Layout';
@@ -205,108 +205,87 @@ function Home() {
 
   return (
     <>
-      <Helmet>
-        <title>{seoTitle}</title>
-        <meta name="description" content={seoDescription} />
-        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <link rel="canonical" href="https://aiworkoutnow.com/" />
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        canonicalUrl="https://aiworkoutnow.com/"
+        jsonLd={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'AIWorkoutNow',
+            url: 'https://aiworkoutnow.com/',
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'AIWorkoutNow',
+            url: 'https://aiworkoutnow.com/',
+            logo: 'https://aiworkoutnow.com/favicon.svg',
+            contactPoint: {
+              '@type': 'ContactPoint',
+              contactType: 'Customer Support',
+              url: 'https://aiworkoutnow.com/contact',
+            },
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            name: 'AIWorkoutNow',
+            applicationCategory: 'HealthApplication',
+            operatingSystem: 'Web',
+            url: 'https://aiworkoutnow.com/',
+            description: seoDescription,
+            offers: {
+              '@type': 'Offer',
+              price: '0',
+              priceCurrency: 'USD',
+              description: '3 free workouts, then one-time payment workout packs',
+            },
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: [
+              {
+                '@type': 'Question',
+                name: 'How does an AI workout generator work?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'You select your level, time, and equipment. AIWorkoutNow generates a personalized workout plan instantly based on your inputs.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'Do I need to sign up?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'No. You can generate workouts immediately—no account or login required.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'Is this a subscription?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'No. Purchases are one-time payments (no recurring charges).',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'Can I restore workouts on another device?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Use “Restore Workouts” and enter the email used at checkout. We’ll send a verification code.',
+                },
+              },
+            ],
+          },
+        ]}
+      />
 
-        {/* Open Graph / Twitter */}
-        <meta property="og:title" content="AIWorkoutNow" />
-        <meta property="og:description" content="Get Your Perfect Workout in Seconds" />
-        <meta property="og:url" content="https://aiworkoutnow.com/" />
-        <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://aiworkoutnow.com/images/og-image.png" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:site_name" content="AIWorkoutNow" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content="https://aiworkoutnow.com/" />
-        <meta name="twitter:title" content="AIWorkoutNow" />
-        <meta name="twitter:description" content="Get Your Perfect Workout in Seconds" />
-        <meta name="twitter:image" content="https://aiworkoutnow.com/images/og-image.png" />
-
-        {/* Structured data */}
-        <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          "name": "AIWorkoutNow",
-          "url": "https://aiworkoutnow.com/"
-        })}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Organization",
-            "name": "AIWorkoutNow",
-            "url": "https://aiworkoutnow.com/",
-            "logo": "https://aiworkoutnow.com/favicon.svg",
-            "contactPoint": {
-              "@type": "ContactPoint",
-              "contactType": "Customer Support",
-              "url": "https://aiworkoutnow.com/contact"
-            }
-          })}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "SoftwareApplication",
-            "name": "AIWorkoutNow",
-            "applicationCategory": "HealthApplication",
-            "operatingSystem": "Web",
-            "url": "https://aiworkoutnow.com/",
-            "description": seoDescription,
-            "offers": {
-              "@type": "Offer",
-              "price": "0",
-              "priceCurrency": "USD",
-              "description": "3 free workouts, then one-time payment workout packs"
-            }
-          })}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity": [
-              {
-                "@type": "Question",
-                "name": "Do I need to sign up?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "No. You can generate workouts immediately—no account or login required."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "Is this a subscription?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "No. Purchases are one-time payments (no recurring charges)."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "How do I restore credits on another device?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "Use “Restore Credits” and enter the email used at checkout. We’ll send a verification code."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "What counts as a workout generation?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "Each time you create a new workout plan, it uses 1 workout credit (unless you’re using free trial credits)."
-                }
-              }
-            ]
-          })}
-        </script>
-      </Helmet>
+      {/* One H1 for SEO without changing the visual hero headline */}
+      <h1 className="sr-only">AI Workout Generator — Get Your Perfect Workout in Seconds</h1>
       
       <main className="min-h-screen py-6 relative homeMainBg" style={{
         backgroundImage: "url('/images/main-bg.png')",

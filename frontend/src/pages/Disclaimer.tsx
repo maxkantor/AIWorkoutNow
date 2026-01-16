@@ -1,5 +1,5 @@
-import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
+import SEO from '../components/SEO';
 import './Disclaimer.css';
 
 function Disclaimer() {
@@ -7,16 +7,11 @@ function Disclaimer() {
   
   return (
     <>
-      <Helmet>
-        <title>Disclaimer - AIWorkoutNow | Fitness Advice & Safety</title>
-        <meta name="description" content="Read AIWorkoutNow's disclaimer regarding fitness advice and workout recommendations. Important safety information for users." />
-        <meta name="keywords" content="fitness disclaimer, workout safety, exercise disclaimer, fitness advice disclaimer" />
-        <meta property="og:title" content="Disclaimer - AIWorkoutNow" />
-        <meta property="og:description" content="Read AIWorkoutNow's disclaimer regarding fitness advice and workout recommendations." />
-        <meta property="og:url" content="https://aiworkoutnow.com/disclaimer" />
-        <link rel="canonical" href="https://aiworkoutnow.com/disclaimer" />
-        <meta name="robots" content="index, follow" />
-      </Helmet>
+      <SEO
+        title="Disclaimer | AIWorkoutNow"
+        description="Important safety and medical disclaimer for AIWorkoutNow workout recommendations. Workouts are informational and not medical advice."
+        canonicalUrl="https://aiworkoutnow.com/disclaimer"
+      />
       
       <div className="disclaimer-page">
         <div className="container">

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../components/SEO';
 import './PaymentCancel.css';
 
 function PaymentCancel() {
@@ -22,10 +22,12 @@ function PaymentCancel() {
 
   return (
     <>
-      <Helmet>
-        <title>Payment Cancelled - AIWorkoutNow</title>
-        <meta name="description" content="Your payment was cancelled. You can try again anytime." />
-      </Helmet>
+      <SEO
+        title="Payment Cancelled | AIWorkoutNow"
+        description="Payment cancelled."
+        canonicalUrl="https://aiworkoutnow.com/payment-cancel"
+        robots="noindex, nofollow"
+      />
 
       <div className="payment-cancel-container">
         <div className="payment-cancel-card">

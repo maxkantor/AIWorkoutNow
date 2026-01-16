@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
+import SEO from '../components/SEO';
 import { submitContact } from '../services/api';
 import './Contact.css';
 
@@ -83,15 +83,11 @@ function Contact() {
 
   return (
     <>
-      <Helmet>
-        <title>Contact Us - AIWorkoutNow | Get Support & Help</title>
-        <meta name="description" content="Get in touch with AIWorkoutNow. We're here to help with your fitness journey. Contact our support team for questions, feedback, or assistance." />
-        <meta name="keywords" content="contact AIWorkoutNow, fitness support, workout help, customer service, AI fitness support" />
-        <meta property="og:title" content="Contact Us - AIWorkoutNow" />
-        <meta property="og:description" content="Get in touch with AIWorkoutNow. We're here to help with your fitness journey." />
-        <meta property="og:url" content="https://aiworkoutnow.com/contact" />
-        <link rel="canonical" href="https://aiworkoutnow.com/contact" />
-      </Helmet>
+      <SEO
+        title="Contact | AIWorkoutNow"
+        description="Contact AIWorkoutNow support for help, feedback, or questions about the AI workout generator and workout credits."
+        canonicalUrl="https://aiworkoutnow.com/contact"
+      />
       
       <div className="contact-page">
         <div className="container">

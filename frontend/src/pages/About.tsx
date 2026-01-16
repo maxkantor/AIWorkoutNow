@@ -1,5 +1,5 @@
-import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
+import SEO from '../components/SEO';
 import './About.css';
 
 function About() {
@@ -7,15 +7,11 @@ function About() {
   
   return (
     <>
-      <Helmet>
-        <title>About Us - AIWorkoutNow | AI-Powered Fitness Companion</title>
-        <meta name="description" content="Learn about AIWorkoutNow - your AI-powered fitness companion providing personalized workouts instantly. No signup required. Get started with 3 free workouts today." />
-        <meta name="keywords" content="about AIWorkoutNow, AI fitness app, workout generator, personalized fitness, fitness technology" />
-        <meta property="og:title" content="About Us - AIWorkoutNow" />
-        <meta property="og:description" content="Learn about AIWorkoutNow - your AI-powered fitness companion providing personalized workouts instantly." />
-        <meta property="og:url" content="https://aiworkoutnow.com/about" />
-        <link rel="canonical" href="https://aiworkoutnow.com/about" />
-      </Helmet>
+      <SEO
+        title="About | AIWorkoutNow — AI Workout Generator (No Signup)"
+        description="Learn about AIWorkoutNow and how our AI workout generator creates personalized workout plans instantly for home or gym—no signup required."
+        canonicalUrl="https://aiworkoutnow.com/about"
+      />
       
       <div className="about-page">
         <div className="container">

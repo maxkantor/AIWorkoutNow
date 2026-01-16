@@ -24,6 +24,14 @@ function Footer() {
             <h4>Support</h4>
             <ul role="list">
               <li><Link to="/contact">Contact Us</Link></li>
+              <li><Link to="/faq">FAQ</Link></li>
+            </ul>
+          </nav>
+          <nav className="footer-section" aria-label="Explore links">
+            <h4>Explore</h4>
+            <ul role="list">
+              <li><Link to="/ai-workout-generator">AI Workout Generator</Link></li>
+              <li><Link to="/workout-plans">Workout Plans</Link></li>
             </ul>
           </nav>
         </div>

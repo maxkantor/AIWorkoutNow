@@ -1,5 +1,5 @@
-import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
+import SEO from '../components/SEO';
 import './Privacy.css';
 
 function Privacy() {
@@ -7,16 +7,11 @@ function Privacy() {
   
   return (
     <>
-      <Helmet>
-        <title>Privacy Policy - AIWorkoutNow | Data Protection & Privacy</title>
-        <meta name="description" content="Read AIWorkoutNow's privacy policy to understand how we collect, use, and protect your data. We respect your privacy and keep your information secure." />
-        <meta name="keywords" content="privacy policy, data protection, AIWorkoutNow privacy, fitness app privacy, user data security" />
-        <meta property="og:title" content="Privacy Policy - AIWorkoutNow" />
-        <meta property="og:description" content="Read AIWorkoutNow's privacy policy to understand how we collect, use, and protect your data." />
-        <meta property="og:url" content="https://aiworkoutnow.com/privacy" />
-        <link rel="canonical" href="https://aiworkoutnow.com/privacy" />
-        <meta name="robots" content="index, follow" />
-      </Helmet>
+      <SEO
+        title="Privacy Policy | AIWorkoutNow"
+        description="Read AIWorkoutNow's privacy policy to understand how we collect, use, and protect your data when you use our AI workout generator."
+        canonicalUrl="https://aiworkoutnow.com/privacy"
+      />
       
       <div className="privacy-page">
         <div className="container">

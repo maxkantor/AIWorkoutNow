@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../components/SEO';
 import { getUserAccessStatus, verifyPayment, UserAccessStatus } from '../services/api';
 import { getDeviceId, setDeviceId } from '../utils/storage';
 import './PaymentSuccess.css';
@@ -87,10 +87,12 @@ function PaymentSuccess() {
 
   return (
     <>
-      <Helmet>
-        <title>Payment Successful - AIWorkoutNow</title>
-        <meta name="description" content="Your payment was successful. Start generating AI workouts now!" />
-      </Helmet>
+      <SEO
+        title="Payment Successful | AIWorkoutNow"
+        description="Payment successful."
+        canonicalUrl="https://aiworkoutnow.com/payment-success"
+        robots="noindex, nofollow"
+      />
 
       <div className="payment-success-container">
         <div className="payment-success-card">

@@ -68,9 +68,9 @@ function Layout({ children }: LayoutProps) {
             <div className="hero-title-section">
               <div className="flex items-center justify-center gap-3 mb-3">
                 <span className="text-4xl md:text-5xl animate-pulse">💪</span>
-                <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white">
+                <p className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white">
                   Get Your Perfect Workout in Seconds
-                </h1>
+                </p>
               </div>
               
               {/* Primary CTA Button - Visually Dominant with Glow Effect */}
