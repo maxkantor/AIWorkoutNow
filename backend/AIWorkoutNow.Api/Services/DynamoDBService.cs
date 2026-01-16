@@ -377,6 +377,10 @@ public class DynamoDBService : IDynamoDBService
 
         var purchasesCount = distinctCompleted.Count;
         var totalSpentCents = 0;
+        // Purchase-derived totals (deduped):
+        // - purchasedTokensAllTime: used for sanity-clamping corrupt TotalWorkouts values (e.g., 430)
+        // - purchasedTokensAfterReset: used for post-reset calculations (if LastResetAt is set)
+        var purchasedTokensAllTime = 0;
         var purchasedTokensTotal = 0;
         var purchasedUnlimited = false;
         foreach (var p in distinctCompleted)
@@ -389,17 +393,19 @@ public class DynamoDBService : IDynamoDBService
             if (plan != null)
             {
                 totalSpentCents += (int)Math.Round(plan.Price * 100);
+                if (p.IsUnlimited || plan.IsUnlimited)
+                {
+                    purchasedUnlimited = true;
+                }
+                else if (plan.TokenCount.HasValue)
+                {
+                    purchasedTokensAllTime += plan.TokenCount.Value;
+                }
                 // Only count purchases after an admin reset (if any) for denominator reconstruction.
                 if (!tokens.LastResetAt.HasValue || p.PurchasedAt > tokens.LastResetAt.Value)
                 {
-                    if (p.IsUnlimited || plan.IsUnlimited)
-                    {
-                        purchasedUnlimited = true;
-                    }
-                    else if (plan.TokenCount.HasValue)
-                    {
+                    if (!p.IsUnlimited && !plan.IsUnlimited && plan.TokenCount.HasValue)
                         purchasedTokensTotal += plan.TokenCount.Value;
-                    }
                 }
             }
             else
@@ -411,6 +417,12 @@ public class DynamoDBService : IDynamoDBService
                     if (tg == 10) totalSpentCents += 199; // default 10-pack
                     else if (tg == 30) totalSpentCents += 399; // default 30-pack
                     else if (tg == 100) totalSpentCents += 799; // default 100-pack
+                }
+
+                if (p.IsUnlimited) purchasedUnlimited = true;
+                else if (p.TokensGranted.HasValue && p.TokensGranted.Value > 0)
+                {
+                    purchasedTokensAllTime += p.TokensGranted.Value;
                 }
 
                 if (!tokens.LastResetAt.HasValue || p.PurchasedAt > tokens.LastResetAt.Value)
@@ -491,11 +503,15 @@ public class DynamoDBService : IDynamoDBService
             var reconstructedTotal = purchasedUnlimited ? 999999 : (baseline + purchasedTokensTotal);
             if (reconstructedTotal < remainingWorkouts) reconstructedTotal = remainingWorkouts;
 
-            // If stored total is wildly higher than reconstructed total, prefer reconstructed.
+            // If stored total is wildly higher than reconstructed totals, clamp it.
             totalWorkouts = tokens.TotalWorkouts;
             if (reconstructedTotal > 0 && totalWorkouts > reconstructedTotal * 2)
             {
                 totalWorkouts = reconstructedTotal;
+            }
+            if (purchasedTokensAllTime > 0 && totalWorkouts > purchasedTokensAllTime * 2)
+            {
+                totalWorkouts = purchasedUnlimited ? 999999 : purchasedTokensAllTime;
             }
             if (totalWorkouts < remainingWorkouts) totalWorkouts = remainingWorkouts;
         }

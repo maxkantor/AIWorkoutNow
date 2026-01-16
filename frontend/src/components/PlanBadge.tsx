@@ -10,7 +10,7 @@ const VARIANT_STYLES: Record<PlanBadgeVariant, { label: string; icon?: string; c
     label: 'Quick Start',
     icon: '🚀',
     className:
-      'bg-slate-100 text-slate-800 border border-slate-200 shadow-sm',
+      'bg-sky-100 text-sky-900 border border-sky-200 shadow-sm',
   },
   popular: {
     label: 'Most Popular',
