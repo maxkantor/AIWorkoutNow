@@ -168,8 +168,8 @@ public class AdminControllerTests
         {
             _mockDynamoService.Setup(x => x.GetUserTokensAsync(deviceId))
                 .ReturnsAsync(new UserTokens { DeviceId = deviceId, TokensRemaining = 10 });
-            _mockDynamoService.Setup(x => x.ResetUserTokensAsync(deviceId, request.NewTokenCount))
-                .Returns(Task.CompletedTask);
+            _mockDynamoService.Setup(x => x.ResetBalanceAsync(deviceId, request.NewTokenCount, request.Reason))
+                .ReturnsAsync(new BalanceDto { DeviceId = deviceId, PaidWorkoutsRemaining = request.NewTokenCount, TotalWorkouts = request.NewTokenCount });
             _mockDynamoService.Setup(x => x.SaveCustomerActivityAsync(It.Is<CustomerActivity>(
                 a => a.DeviceId == deviceId && a.ActivityType == "tokens_reset")))
                 .Returns(Task.CompletedTask);
@@ -186,7 +186,7 @@ public class AdminControllerTests
 
         foreach (var deviceId in deviceIds)
         {
-            _mockDynamoService.Verify(x => x.ResetUserTokensAsync(deviceId, 25), Times.Once);
+            _mockDynamoService.Verify(x => x.ResetBalanceAsync(deviceId, 25, "Bulk reset"), Times.Once);
         }
     }
 

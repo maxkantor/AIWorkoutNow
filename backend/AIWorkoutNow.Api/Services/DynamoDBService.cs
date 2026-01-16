@@ -2859,6 +2859,7 @@ public class DynamoDBService : IDynamoDBService
             TotalWorkouts = 0,
             ExpiresAt = null
         };
+        var resetCutoff = targetTokens.LastResetAt;
 
         // Transfer semantics:
         // - Sum remaining balances across devices and move them to the target device.
@@ -2878,6 +2879,28 @@ public class DynamoDBService : IDynamoDBService
             if (sourceTokens != null && (sourceTokens.TokensRemaining > 0 || sourceTokens.TotalWorkouts > 0))
             {
                 Console.WriteLine($"[DynamoDBService] Considering merge from {visitorId} with {sourceTokens.TokensRemaining} tokens");
+
+                // GLOBAL RESET SAFETY:
+                // If target device has LastResetAt, do not allow older (pre-reset) balances from other devices
+                // to "come back" during restore. Instead, treat them as stale and zero them out.
+                if (resetCutoff.HasValue &&
+                    (!sourceTokens.LastResetAt.HasValue || sourceTokens.LastResetAt.Value < resetCutoff.Value))
+                {
+                    try
+                    {
+                        sourceTokens.TokensRemaining = 0;
+                        sourceTokens.TotalWorkouts = 0;
+                        sourceTokens.ExpiresAt = null;
+                        sourceTokens.LastResetAt = resetCutoff;
+                        await SaveUserTokensAsync(sourceTokens);
+                        Console.WriteLine($"[DynamoDBService] Skipped merge from {visitorId} due to admin reset cutoff {resetCutoff.Value:o}; zeroed stale balance");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[DynamoDBService] Failed to zero stale source device {visitorId}: {ex.Message}");
+                    }
+                    continue;
+                }
                 
                 // If source has unlimited (999999), preserve unlimited status
                 if (sourceTokens.TokensRemaining >= 999999)

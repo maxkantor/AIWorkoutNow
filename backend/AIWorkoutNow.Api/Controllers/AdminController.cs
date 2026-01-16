@@ -354,6 +354,27 @@ public class AdminController : ControllerBase
             Console.WriteLine($"[AdminController] ResetTokens called for device: {deviceId}");
             Console.WriteLine($"[AdminController] Request: NewTokenCount={request.NewTokenCount}, PreviousTokenCount={request.PreviousTokenCount}, Reason={request.Reason}");
             
+            // GLOBAL PER EMAIL: if this device is linked to an email, reset all devices under that email.
+            try
+            {
+                var mapping = await _dynamoService.GetEmailByVisitorIdAsync(deviceId);
+                if (mapping != null && !string.IsNullOrWhiteSpace(mapping.Email) && mapping.VisitorIds.Any())
+                {
+                    Console.WriteLine($"[AdminController] ResetTokens: device {deviceId} is linked to {mapping.Email}; resetting {mapping.VisitorIds.Count} device(s) globally");
+                    BalanceDto? primary = null;
+                    foreach (var vid in mapping.VisitorIds.Distinct(StringComparer.OrdinalIgnoreCase))
+                    {
+                        var b = await _dynamoService.ResetBalanceAsync(vid, request.NewTokenCount, request.Reason ?? $"Admin reset (email: {mapping.Email})");
+                        if (string.Equals(vid, deviceId, StringComparison.OrdinalIgnoreCase)) primary = b;
+                    }
+                    return Ok(primary ?? await _dynamoService.GetBalanceAsync(deviceId));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[AdminController] ResetTokens: global-by-email lookup failed (non-critical): {ex.Message}");
+            }
+
             // Get previous token count if not provided
             int previousCount = request.PreviousTokenCount;
             if (previousCount == 0)
@@ -486,8 +507,8 @@ public class AdminController : ControllerBase
                 {
                     var tokens = await _dynamoService.GetUserTokensAsync(deviceId);
                     var previousCount = tokens?.TokensRemaining ?? 0;
-                    
-                    await _dynamoService.ResetUserTokensAsync(deviceId, request.NewTokenCount);
+                    // Use ResetBalanceAsync so LastResetAt is set and restore logic respects this reset.
+                    await _dynamoService.ResetBalanceAsync(deviceId, request.NewTokenCount, request.Reason ?? $"Admin reset by email: {email}");
                     
                     // Log activity
                     await _dynamoService.SaveCustomerActivityAsync(new CustomerActivity

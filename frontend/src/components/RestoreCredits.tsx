@@ -81,7 +81,7 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
   return (
     <div className="restore-credits-container">
       <div className="restore-credits-card">
-        <h2 className="restore-credits-title">Restore Credits from Another Device</h2>
+        <h2 className="restore-credits-title">Restore Workouts from Another Device</h2>
         <p className="restore-credits-description">
           Enter the email address you used when purchasing credits. We'll send you a verification code to restore your credits on this device.
         </p>
@@ -154,7 +154,7 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
                 disabled={loading || code.length !== 6}
                 className="cta-button"
               >
-                {loading ? 'Verifying...' : 'Verify & Restore Credits'}
+              {loading ? 'Verifying...' : 'Verify & Restore Workouts'}
               </button>
               <button
                 onClick={handleReset}
@@ -206,7 +206,7 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
               )}
             </div>
             <button onClick={handleReset} className="cta-button">
-              Restore More Credits
+              Restore More Workouts
             </button>
           </div>
         )}
