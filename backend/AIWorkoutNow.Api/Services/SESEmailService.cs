@@ -9,6 +9,7 @@ namespace AIWorkoutNow.Api.Services;
 public class SESEmailService : IEmailService
 {
     private readonly IAmazonSimpleEmailService _sesClient;
+    private const string BrandName = "AIWorkoutNow";
 
     public SESEmailService()
     {
@@ -74,10 +75,12 @@ public class SESEmailService : IEmailService
     private async Task SendEmailInternalAsync(string to, string subject, string body, string? replyTo)
     {
         var fromEmail = await GetFromEmailAsync();
+        // Use a friendly display name; improves trust and reduces spoofing heuristics in some inboxes.
+        var source = $"{BrandName} <{fromEmail}>";
         Console.WriteLine($"[SESEmailService] Sending email. To={to}, From={fromEmail}, Subject={subject}");
         var request = new Amazon.SimpleEmail.Model.SendEmailRequest
         {
-            Source = fromEmail,
+            Source = source,
             Destination = new Amazon.SimpleEmail.Model.Destination
             {
                 ToAddresses = new List<string> { to }
@@ -129,17 +132,15 @@ Message:
 
     public async Task SendVerificationCodeAsync(string email, string code)
     {
-        var subject = "Your AIWorkoutNow Verification Code";
-        var body = $@"Hello,
+        // Deliverability: short, specific subject; code early; avoid overly "marketing" phrasing.
+        var subject = $"AIWorkoutNow code: {code}";
+        var body = $@"Your AIWorkoutNow verification code is: {code}
 
-Your verification code for AIWorkoutNow is: {code}
+This code expires in 10 minutes.
 
-This code will expire in 10 minutes.
+If you didn't request this, you can ignore this email.
 
-If you didn't request this code, please ignore this email.
-
-Best regards,
-AIWorkoutNow Team";
+— AIWorkoutNow";
 
         await SendEmailAsync(email, subject, body);
     }

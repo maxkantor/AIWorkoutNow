@@ -214,17 +214,17 @@ function Home() {
         {/* Open Graph / Twitter */}
         <meta property="og:title" content="AIWorkoutNow" />
         <meta property="og:description" content="Get Your Perfect Workout in Seconds" />
-        <meta property="og:url" content="https://AIWorkoutNow.com/" />
+        <meta property="og:url" content="https://aiworkoutnow.com/" />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://AIWorkoutNow.com/images/og-image.png" />
+        <meta property="og:image" content="https://aiworkoutnow.com/images/og-image.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:site_name" content="AIWorkoutNow" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content="https://AIWorkoutNow.com/" />
+        <meta name="twitter:url" content="https://aiworkoutnow.com/" />
         <meta name="twitter:title" content="AIWorkoutNow" />
         <meta name="twitter:description" content="Get Your Perfect Workout in Seconds" />
-        <meta name="twitter:image" content="https://AIWorkoutNow.com/images/og-image.png" />
+        <meta name="twitter:image" content="https://aiworkoutnow.com/images/og-image.png" />
 
         {/* Structured data */}
         <script type="application/ld+json">
