@@ -57,6 +57,11 @@ function Layout({ children }: LayoutProps) {
       {/* Hero Section - Hide on admin pages */}
       {!isAdminPage && (
       <section className="hero-section">
+        {/* Decorative side fills for wide screens (do not affect layout) */}
+        <div className="hero-sides" aria-hidden="true">
+          <div className="hero-side hero-side-left" />
+          <div className="hero-side hero-side-right" />
+        </div>
         <div className="hero-container">
           <div className="hero-content">
             {/* Main Title */}

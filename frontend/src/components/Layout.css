@@ -18,7 +18,7 @@
   background-size: min(1255px, 100%) auto;
   background-position: center top;
   background-repeat: no-repeat;
-  /* Fallback color (should be mostly hidden by the blurred backdrop layer) */
+  /* Fallback color (visible as side bars on wide screens) */
   background-color: #0b0f14;
   min-height: 320px;
   max-height: 380px;
@@ -30,6 +30,33 @@
   margin: 0;
   padding: 0;
   width: 100%;
+}
+
+.hero-sides {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  display: flex;
+  justify-content: space-between;
+}
+
+.hero-side {
+  height: 100%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center top;
+}
+
+/* Fill the left/right "black squares" that appear on very wide screens */
+.hero-side-left {
+  width: clamp(0px, calc((100% - 1255px) / 2), 9999px);
+  background-image: url('/images/hero-bg-girl.png');
+}
+
+.hero-side-right {
+  width: clamp(0px, calc((100% - 1255px) / 2), 9999px);
+  background-image: url('/images/hero-bg-man.png');
 }
 
 
@@ -60,23 +87,7 @@
 }
 
 .hero-section::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  /* Fill the whole hero area so there are no black side bars/lines.
-     This is intentionally blurred (quality is less noticeable) while the main image stays crisp. */
-  background-image: url('/images/hero-bg.png');
-  background-size: cover;
-  background-position: center 35%;
-  background-repeat: no-repeat;
-  filter: blur(18px);
-  transform: scale(1.06);
-  opacity: 0.95;
-  z-index: 0;
-  pointer-events: none;
+  content: none;
 }
 
 .hero-container {
@@ -226,11 +237,6 @@
     background-size: min(1255px, 100%) auto;
   }
 
-  .hero-section::after {
-    background-position: center 25%;
-    filter: blur(14px);
-  }
-
   .hero-section::before {
     background: linear-gradient(
       to bottom,
@@ -266,10 +272,6 @@
     background-size: min(1255px, 100%) auto;
   }
 
-  .hero-section::after {
-    background-position: center 32%;
-  }
-
   .hero-container {
     padding: 2.5rem 1.5rem;
   }
@@ -284,10 +286,6 @@
     background-size: min(1255px, 100%) auto;
   }
 
-  .hero-section::after {
-    background-position: center 35%;
-  }
-
   .hero-container {
     padding: 2rem 1.5rem;
   }
@@ -300,10 +298,6 @@
     max-height: 360px;
     background-size: min(1255px, 100%) auto;
     background-position: center top;
-  }
-
-  .hero-section::after {
-    background-position: center 35%;
   }
 
   .hero-container {
