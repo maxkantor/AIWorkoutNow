@@ -126,8 +126,8 @@ function Layout({ children }: LayoutProps) {
                       {(() => {
                         const paid = accessStatus?.tokensRemaining ?? tokenBalance ?? 0;
                         const remaining = remainingWorkouts ?? paid;
-                        const total = totalWorkouts ?? remaining;
-                        return `💪 Remaining Workouts: ${remaining}/${total}`;
+                        // Show only the remaining count. The denominator can become confusing (e.g., cumulative totals after restores/purchases).
+                        return `💪 Remaining Workouts: ${remaining}`;
                       })()}
                     </div>
                   ) : freeWorkoutsRemaining !== undefined && freeWorkoutsRemaining === 0 ? (
