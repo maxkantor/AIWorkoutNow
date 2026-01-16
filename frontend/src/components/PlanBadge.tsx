@@ -7,7 +7,8 @@ interface PlanBadgeProps {
 
 const VARIANT_STYLES: Record<PlanBadgeVariant, { label: string; icon?: string; className: string }> = {
   starter: {
-    label: 'Starter',
+    label: 'Quick Start',
+    icon: '🚀',
     className:
       'bg-slate-100 text-slate-800 border border-slate-200 shadow-sm',
   },
