@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { adminLogin } from '../services/api';
+import { adminLogin, getAdminStats } from '../services/api';
 import './AdminLogin.css';
 
 function AdminLogin() {
@@ -15,6 +15,27 @@ function AdminLogin() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  // If we already have a token (and it is still valid), skip the login screen.
+  useEffect(() => {
+    const token = localStorage.getItem('admin_token');
+    if (!token) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        await getAdminStats(token);
+        if (!cancelled) navigate('/admin/dashboard');
+      } catch {
+        // Token expired/invalid
+        localStorage.removeItem('admin_token');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
 
   useEffect(() => {
     if (!rememberEmail) {
