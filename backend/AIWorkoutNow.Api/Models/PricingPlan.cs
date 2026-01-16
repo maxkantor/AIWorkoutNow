@@ -39,4 +39,6 @@ public class UserPurchase
     public string? CustomerState { get; set; }
     public string? CustomerPostalCode { get; set; }
     public string? CustomerCountry { get; set; }
+    // Used to make admin purchase notifications idempotent (send once per completed purchase).
+    public DateTime? AdminNotifiedAt { get; set; }
 }

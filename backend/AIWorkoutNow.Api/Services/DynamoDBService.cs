@@ -1218,6 +1218,19 @@ public class DynamoDBService : IDynamoDBService
             }
             
             Console.WriteLine($"[DynamoDBService] Retrieved {messages.Count} contact messages");
+
+            // If the dedicated ContactMessages table exists but is empty (common when the table was created
+            // after submissions already happened), fall back to activities so Admin UI shows history.
+            if (messages.Count == 0)
+            {
+                var fromActivities = await GetContactMessagesFromActivitiesAsync(limit: 1000);
+                if (fromActivities.Count > 0)
+                {
+                    Console.WriteLine($"[DynamoDBService] ContactMessages empty; returning {fromActivities.Count} contacts from activities");
+                    return fromActivities;
+                }
+            }
+
             return messages.OrderByDescending(m => m.CreatedAt).ToList();
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
@@ -1247,7 +1260,10 @@ public class DynamoDBService : IDynamoDBService
             });
 
             if (!response.Item.Any())
-                return null;
+            {
+                // If table exists but item isn't present, fall back to activities (older submissions).
+                return await GetContactMessageFromActivitiesAsync(messageId);
+            }
 
             return new ContactMessage
             {
@@ -2372,6 +2388,8 @@ public class DynamoDBService : IDynamoDBService
             document["CustomerPostalCode"] = purchase.CustomerPostalCode;
         if (!string.IsNullOrEmpty(purchase.CustomerCountry))
             document["CustomerCountry"] = purchase.CustomerCountry;
+        if (purchase.AdminNotifiedAt.HasValue)
+            document["AdminNotifiedAt"] = purchase.AdminNotifiedAt.Value.ToString("O");
 
         try
         {
@@ -2438,7 +2456,8 @@ public class DynamoDBService : IDynamoDBService
                 TokensGranted = item.ContainsKey("TokensGranted") ? int.Parse(item["TokensGranted"].N) : null,
                 IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL,
                 CustomerEmail = item.ContainsKey("CustomerEmail") ? item["CustomerEmail"].S : null,
-                CustomerName = item.ContainsKey("CustomerName") ? item["CustomerName"].S : null
+                CustomerName = item.ContainsKey("CustomerName") ? item["CustomerName"].S : null,
+                AdminNotifiedAt = item.ContainsKey("AdminNotifiedAt") ? DateTime.Parse(item["AdminNotifiedAt"].S) : null
             };
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
@@ -2488,7 +2507,8 @@ public class DynamoDBService : IDynamoDBService
                         TokensGranted = item.ContainsKey("TokensGranted") ? int.Parse(item["TokensGranted"].N) : null,
                         IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL,
                         CustomerEmail = item.ContainsKey("CustomerEmail") ? item["CustomerEmail"].S : null,
-                        CustomerName = item.ContainsKey("CustomerName") ? item["CustomerName"].S : null
+                        CustomerName = item.ContainsKey("CustomerName") ? item["CustomerName"].S : null,
+                        AdminNotifiedAt = item.ContainsKey("AdminNotifiedAt") ? DateTime.Parse(item["AdminNotifiedAt"].S) : null
                     });
                 }
                 catch (Exception ex)
@@ -2553,7 +2573,8 @@ public class DynamoDBService : IDynamoDBService
                     CustomerCity = item.ContainsKey("CustomerCity") ? item["CustomerCity"].S : null,
                     CustomerState = item.ContainsKey("CustomerState") ? item["CustomerState"].S : null,
                     CustomerPostalCode = item.ContainsKey("CustomerPostalCode") ? item["CustomerPostalCode"].S : null,
-                    CustomerCountry = item.ContainsKey("CustomerCountry") ? item["CustomerCountry"].S : null
+                CustomerCountry = item.ContainsKey("CustomerCountry") ? item["CustomerCountry"].S : null,
+                AdminNotifiedAt = item.ContainsKey("AdminNotifiedAt") ? DateTime.Parse(item["AdminNotifiedAt"].S) : null
             }).OrderByDescending(p => p.PurchasedAt).ToList();
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)

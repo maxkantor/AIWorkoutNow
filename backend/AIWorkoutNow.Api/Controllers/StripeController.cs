@@ -101,25 +101,6 @@ public class StripeController : ControllerBase
                 plan = defaultPlan;
             }
 
-            // Canonicalize defaults to prevent stale/incorrect prices.
-            // IMPORTANT: check 100 before 10 to avoid substring collisions.
-            var planIdLower = plan.PlanId.ToLowerInvariant();
-            if (planIdLower.Contains("100-workouts") || planIdLower.Contains("default-100"))
-            {
-                plan.Price = 7.99m;
-                plan.TokenCount = 100;
-            }
-            else if (planIdLower.Contains("30-workouts") || planIdLower.Contains("default-30"))
-            {
-                plan.Price = 3.99m;
-                plan.TokenCount = 30;
-            }
-            else if (planIdLower.Contains("10-workouts") || planIdLower.Contains("default-10"))
-            {
-                plan.Price = 1.99m;
-                plan.TokenCount = 10;
-            }
-
             Console.WriteLine($"[StripeController] Plan found: {plan.Name}, Price: {plan.Price}, Currency: {plan.Currency}");
 
             // Get Stripe secret key from SSM
@@ -529,8 +510,12 @@ public class StripeController : ControllerBase
                             {
                                 planForEmail = BuildDefaultPlan(planId);
                             }
-
-                            await _emailService.SendPurchaseNotificationAsync(purchase, planForEmail);
+                            if (!purchase.AdminNotifiedAt.HasValue)
+                            {
+                                await _emailService.SendPurchaseNotificationAsync(purchase, planForEmail);
+                                purchase.AdminNotifiedAt = DateTime.UtcNow;
+                                await _dynamoService.SaveUserPurchaseAsync(purchase);
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -724,6 +709,23 @@ public class StripeController : ControllerBase
                     }
                 }
                 
+                // If the purchase was completed before we had admin notifications, send once (idempotent).
+                if (!existingPurchase.AdminNotifiedAt.HasValue)
+                {
+                    try
+                    {
+                        var planForEmail = await _dynamoService.GetPricingPlanAsync(existingPurchase.PlanId);
+                        await _emailService.SendPurchaseNotificationAsync(existingPurchase, planForEmail);
+                        existingPurchase.AdminNotifiedAt = DateTime.UtcNow;
+                        await _dynamoService.SaveUserPurchaseAsync(existingPurchase);
+                        Console.WriteLine("[StripeController] Admin purchase email sent (verify-payment existing purchase)");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[StripeController] Admin purchase email failed (verify-payment existing purchase, non-critical): {ex.Message}");
+                    }
+                }
+
                 return Ok(new { verified = true, alreadyProcessed = true });
             }
 
@@ -933,8 +935,13 @@ public class StripeController : ControllerBase
                 // Notify admin for verify-payment flow too (best-effort; never fail request)
                 try
                 {
-                    await _emailService.SendPurchaseNotificationAsync(purchase, plan);
-                    Console.WriteLine("[StripeController] Admin purchase email sent (verify-payment)");
+                    if (!purchase.AdminNotifiedAt.HasValue)
+                    {
+                        await _emailService.SendPurchaseNotificationAsync(purchase, plan);
+                        purchase.AdminNotifiedAt = DateTime.UtcNow;
+                        await _dynamoService.SaveUserPurchaseAsync(purchase);
+                        Console.WriteLine("[StripeController] Admin purchase email sent (verify-payment)");
+                    }
                 }
                 catch (Exception ex)
                 {
