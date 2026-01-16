@@ -122,12 +122,15 @@ function Layout({ children }: LayoutProps) {
                   ) : ((remainingWorkouts !== null && remainingWorkouts !== undefined && totalWorkouts !== null && totalWorkouts !== undefined) ||
                       (accessStatus?.tokensRemaining !== undefined && accessStatus.tokensRemaining > 0 && accessStatus.tokensRemaining < 999999) ||
                       (tokenBalance !== null && tokenBalance !== undefined && tokenBalance > 0 && tokenBalance < 999999)) ? (
-                    <div className="inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-semibold text-xs md:text-sm shadow-sm">
+                    <div
+                      className="inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-semibold text-xs md:text-sm shadow-sm"
+                      title="X/Y shows remaining workouts / lifetime total workouts granted. Admin resets can change X without changing lifetime total."
+                    >
                       {(() => {
                         const paid = accessStatus?.tokensRemaining ?? tokenBalance ?? 0;
                         const remaining = remainingWorkouts ?? paid;
-                        // Show only the remaining count. The denominator can become confusing (e.g., cumulative totals after restores/purchases).
-                        return `💪 Remaining Workouts: ${remaining}`;
+                        const total = totalWorkouts ?? remaining;
+                        return `💪 Remaining Workouts: ${remaining}/${total}`;
                       })()}
                     </div>
                   ) : freeWorkoutsRemaining !== undefined && freeWorkoutsRemaining === 0 ? (
