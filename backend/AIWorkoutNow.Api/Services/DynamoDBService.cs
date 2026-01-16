@@ -20,6 +20,7 @@ public class DynamoDBService : IDynamoDBService
     private readonly string _emailVisitorMappingTable;
 
     private const int DefaultTokensPerPack = 10;
+    private static readonly HashSet<string> _loggedMissingPlans = new(StringComparer.OrdinalIgnoreCase);
 
     public DynamoDBService(IAmazonDynamoDB dynamoDB)
     {
@@ -37,6 +38,51 @@ public class DynamoDBService : IDynamoDBService
         _contactMessagesTable = Environment.GetEnvironmentVariable("CONTACT_MESSAGES_TABLE") ?? $"{tablePrefix}-ContactMessages";
         _emailVerificationTable = Environment.GetEnvironmentVariable("EMAIL_VERIFICATION_TABLE") ?? $"{tablePrefix}-EmailVerification";
         _emailVisitorMappingTable = Environment.GetEnvironmentVariable("EMAIL_VISITOR_MAPPING_TABLE") ?? $"{tablePrefix}-EmailVisitorMapping";
+    }
+
+    private static bool ReadBool(Dictionary<string, AttributeValue> item, string key, bool defaultValue)
+    {
+        if (!item.TryGetValue(key, out var v) || v == null) return defaultValue;
+        try
+        {
+            // BOOL
+            if (v.IsBOOLSet) return v.BOOL;
+        }
+        catch { /* ignore */ }
+        // Number "1"/"0"
+        if (!string.IsNullOrEmpty(v.N))
+        {
+            return v.N != "0";
+        }
+        // String "true"/"false"/"1"/"0"
+        if (!string.IsNullOrEmpty(v.S))
+        {
+            if (string.Equals(v.S, "true", StringComparison.OrdinalIgnoreCase)) return true;
+            if (string.Equals(v.S, "false", StringComparison.OrdinalIgnoreCase)) return false;
+            if (v.S == "1") return true;
+            if (v.S == "0") return false;
+        }
+        return defaultValue;
+    }
+
+    private static int? ReadInt(Dictionary<string, AttributeValue> item, string key)
+    {
+        if (!item.TryGetValue(key, out var v) || v == null) return null;
+        if (!string.IsNullOrEmpty(v.N) && int.TryParse(v.N, out var n)) return n;
+        if (!string.IsNullOrEmpty(v.S) && int.TryParse(v.S, out var s)) return s;
+        return null;
+    }
+
+    private static int? InferTokenCountFromPlanId(string planId)
+    {
+        var id = (planId ?? string.Empty).ToLowerInvariant();
+        if (id.Contains("unlimited")) return 999999;
+        if (id.Contains("100")) return 100;
+        if (id.Contains("70")) return 70;
+        if (id.Contains("30")) return 30;
+        if (id.Contains("25")) return 25;
+        if (id.Contains("10")) return 10;
+        return null;
     }
 
     public async Task SaveWorkoutAsync(Workout workout)
@@ -312,14 +358,22 @@ public class DynamoDBService : IDynamoDBService
                 }
                 else
                 {
-                    purchasedTokens += DefaultTokensPerPack;
-                    Console.WriteLine($"[DynamoDBService] ReconcileTokens - Plan {p.PlanId} missing TokenCount, defaulting TokensGranted to {DefaultTokensPerPack}");
+                    var inferred = InferTokenCountFromPlanId(p.PlanId) ?? DefaultTokensPerPack;
+                    purchasedTokens += inferred == 999999 ? 0 : inferred;
+                    if (_loggedMissingPlans.Add(p.PlanId))
+                    {
+                        Console.WriteLine($"[DynamoDBService] ReconcileTokens - Plan {p.PlanId} missing TokenCount, inferred {inferred}");
+                    }
                 }
             }
             catch (Exception exPlan)
             {
-                purchasedTokens += DefaultTokensPerPack;
-                Console.WriteLine($"[DynamoDBService] ReconcileTokens - Plan lookup failed for {p.PlanId}: {exPlan.Message}. Defaulting TokensGranted to {DefaultTokensPerPack}");
+                var inferred = InferTokenCountFromPlanId(p.PlanId) ?? DefaultTokensPerPack;
+                purchasedTokens += inferred == 999999 ? 0 : inferred;
+                if (_loggedMissingPlans.Add(p.PlanId))
+                {
+                    Console.WriteLine($"[DynamoDBService] ReconcileTokens - Plan lookup failed for {p.PlanId}: {exPlan.Message}. Inferred {inferred}");
+                }
             }
         }
 
@@ -1998,7 +2052,7 @@ public class DynamoDBService : IDynamoDBService
                 try
                 {
                     // Only include active plans
-                    var isActive = item.ContainsKey("IsActive") ? item["IsActive"].BOOL : true;
+                    var isActive = ReadBool(item, "IsActive", true);
                     if (!isActive) continue;
 
                     var plan = new PricingPlan
@@ -2007,11 +2061,11 @@ public class DynamoDBService : IDynamoDBService
                         Name = item.ContainsKey("Name") ? item["Name"].S : "Unknown",
                         Price = item.ContainsKey("Price") ? (item["Price"].N != null ? decimal.Parse(item["Price"].N) : decimal.Parse(item["Price"].S)) : 0,
                         Currency = item.ContainsKey("Currency") ? item["Currency"].S : "USD",
-                        TokenCount = item.ContainsKey("TokenCount") && item["TokenCount"].N != null ? int.Parse(item["TokenCount"].N) : 0,
-                        IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL,
-                        UnlimitedDays = item.ContainsKey("UnlimitedDays") && item["UnlimitedDays"].N != null ? int.Parse(item["UnlimitedDays"].N) : null,
+                        TokenCount = ReadInt(item, "TokenCount") ?? 0,
+                        IsUnlimited = ReadBool(item, "IsUnlimited", false),
+                        UnlimitedDays = ReadInt(item, "UnlimitedDays"),
                         DisplayOrder = item.ContainsKey("DisplayOrder") && item["DisplayOrder"].N != null ? int.Parse(item["DisplayOrder"].N) : 0,
-                        IsRecommended = item.ContainsKey("IsRecommended") && item["IsRecommended"].BOOL,
+                        IsRecommended = ReadBool(item, "IsRecommended", false),
                         BadgeText = item.ContainsKey("BadgeText") ? item["BadgeText"].S : null,
                         MicroCopy = item.ContainsKey("MicroCopy") ? item["MicroCopy"].S : null,
                         IsActive = isActive,
@@ -2063,6 +2117,11 @@ public class DynamoDBService : IDynamoDBService
     {
         try
         {
+            // Fast path: legacy/default plan IDs used historically by the frontend and Stripe.
+            // Prevents noisy logs and wrong token inference (e.g., 100-pack defaulting to 10).
+            var legacy = GetDefaultPricingPlans().FirstOrDefault(p => string.Equals(p.PlanId, planId, StringComparison.OrdinalIgnoreCase));
+            if (legacy != null) return legacy;
+
             var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
             var plansTable = $"{tablePrefix}-PricingPlans";
             
@@ -2084,14 +2143,14 @@ public class DynamoDBService : IDynamoDBService
             Name = item["Name"].S,
                     Price = item.ContainsKey("Price") ? (item["Price"].N != null ? decimal.Parse(item["Price"].N) : decimal.Parse(item["Price"].S)) : 0,
             Currency = item["Currency"].S,
-            TokenCount = item.ContainsKey("TokenCount") ? int.Parse(item["TokenCount"].N) : null,
-            IsUnlimited = item.ContainsKey("IsUnlimited") && item["IsUnlimited"].BOOL,
-            UnlimitedDays = item.ContainsKey("UnlimitedDays") ? int.Parse(item["UnlimitedDays"].N) : null,
+            TokenCount = ReadInt(item, "TokenCount"),
+            IsUnlimited = ReadBool(item, "IsUnlimited", false),
+            UnlimitedDays = ReadInt(item, "UnlimitedDays"),
             DisplayOrder = int.Parse(item["DisplayOrder"].N),
-            IsRecommended = item.ContainsKey("IsRecommended") && item["IsRecommended"].BOOL,
+            IsRecommended = ReadBool(item, "IsRecommended", false),
             BadgeText = item.ContainsKey("BadgeText") ? item["BadgeText"].S : null,
             MicroCopy = item.ContainsKey("MicroCopy") ? item["MicroCopy"].S : null,
-            IsActive = item.ContainsKey("IsActive") ? item["IsActive"].BOOL : true,
+            IsActive = ReadBool(item, "IsActive", true),
             StripePriceId = item.ContainsKey("StripePriceId") ? item["StripePriceId"].S : string.Empty,
             CreatedAt = DateTime.Parse(item["CreatedAt"].S),
                     UpdatedAt = item.ContainsKey("UpdatedAt") ? DateTime.Parse(item["UpdatedAt"].S) : null
@@ -2099,15 +2158,19 @@ public class DynamoDBService : IDynamoDBService
             }
             
             // Plan not found in DB, check default plans
-            Console.WriteLine($"[DynamoDBService] Plan {planId} not found in DB, checking default plans");
-            var defaultPlans = GetDefaultPricingPlans();
-            return defaultPlans.FirstOrDefault(p => p.PlanId == planId);
+            if (_loggedMissingPlans.Add(planId))
+            {
+                Console.WriteLine($"[DynamoDBService] Plan {planId} not found in DB, falling back to inferred defaults");
+            }
+            return null;
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
-            Console.WriteLine($"[DynamoDBService] PricingPlans table does not exist, checking default plans for: {planId}");
-            var defaultPlans = GetDefaultPricingPlans();
-            return defaultPlans.FirstOrDefault(p => p.PlanId == planId);
+            if (_loggedMissingPlans.Add(planId))
+            {
+                Console.WriteLine($"[DynamoDBService] PricingPlans table missing; falling back to inferred defaults for: {planId}");
+            }
+            return GetDefaultPricingPlans().FirstOrDefault(p => string.Equals(p.PlanId, planId, StringComparison.OrdinalIgnoreCase));
         }
         catch (Exception ex)
         {
@@ -2769,6 +2832,50 @@ public class DynamoDBService : IDynamoDBService
     {
         return new List<PricingPlan>
         {
+            // Legacy IDs still referenced by older frontend deployments / Stripe purchases
+            new PricingPlan
+            {
+                PlanId = "default-10-workouts",
+                Name = "10 Workouts",
+                Price = 1.99m,
+                Currency = "USD",
+                TokenCount = 10,
+                IsUnlimited = false,
+                DisplayOrder = 1,
+                IsRecommended = false,
+                IsActive = true,
+                StripePriceId = string.Empty,
+                CreatedAt = DateTime.UtcNow
+            },
+            new PricingPlan
+            {
+                PlanId = "default-30-workouts",
+                Name = "30 Workouts",
+                Price = 3.99m,
+                Currency = "USD",
+                TokenCount = 30,
+                IsUnlimited = false,
+                DisplayOrder = 2,
+                IsRecommended = true,
+                BadgeText = "⭐ Most Popular",
+                IsActive = true,
+                StripePriceId = string.Empty,
+                CreatedAt = DateTime.UtcNow
+            },
+            new PricingPlan
+            {
+                PlanId = "default-100-workouts",
+                Name = "100 Workouts",
+                Price = 7.99m,
+                Currency = "USD",
+                TokenCount = 100,
+                IsUnlimited = false,
+                DisplayOrder = 3,
+                IsRecommended = false,
+                IsActive = true,
+                StripePriceId = string.Empty,
+                CreatedAt = DateTime.UtcNow
+            },
             new PricingPlan
             {
                 PlanId = "default-starter-boost",
@@ -2806,7 +2913,8 @@ public class DynamoDBService : IDynamoDBService
                 Name = "Power User",
                 Price = 5.99m,
                 Currency = "USD",
-                TokenCount = 70,
+                // Prefer the modern 100-pack; keep Power User as fallback if it's still in the DB.
+                TokenCount = 100,
                 IsUnlimited = false,
                 DisplayOrder = 3,
                 IsRecommended = false,

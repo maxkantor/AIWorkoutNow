@@ -7,8 +7,12 @@ using Amazon.Lambda.AspNetCoreServer.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Reduce CloudWatch noise: DataProtection warnings are expected in Lambda and not actionable for this API.
+builder.Logging.AddFilter("Microsoft.AspNetCore.DataProtection", LogLevel.Error);
 
 // CRITICAL: Use Lambda hosting for provided.al2023 runtime
 // This integrates with Lambda Runtime Interface Client
