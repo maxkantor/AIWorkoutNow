@@ -2568,12 +2568,18 @@ public class DynamoDBService : IDynamoDBService
         {
             DeviceId = targetDeviceId,
             TokensRemaining = 0,
+            TotalWorkouts = 0,
             ExpiresAt = null
         };
 
-        // IDP-safe merge: take the maximum token balance across linked devices (no additive sum)
-        int maxTokens = targetTokens.TokensRemaining;
+        // Transfer semantics:
+        // - Sum remaining balances across devices and move them to the target device.
+        // - Zero source device balances to avoid double-spend.
+        // - Preserve unlimited if any device is unlimited.
+        int sumRemaining = targetTokens.TokensRemaining;
+        int sumTotal = targetTokens.TotalWorkouts;
         DateTime? latestExpiration = targetTokens.ExpiresAt;
+        bool anyUnlimited = targetTokens.TokensRemaining >= 999999;
 
         // Merge tokens from all source visitor IDs
         foreach (var visitorId in sourceVisitorIds)
@@ -2581,14 +2587,14 @@ public class DynamoDBService : IDynamoDBService
             if (visitorId == targetDeviceId) continue; // Skip self
 
             var sourceTokens = await GetUserTokensAsync(visitorId);
-            if (sourceTokens != null && sourceTokens.TokensRemaining > 0)
+            if (sourceTokens != null && (sourceTokens.TokensRemaining > 0 || sourceTokens.TotalWorkouts > 0))
             {
                 Console.WriteLine($"[DynamoDBService] Considering merge from {visitorId} with {sourceTokens.TokensRemaining} tokens");
                 
                 // If source has unlimited (999999), preserve unlimited status
                 if (sourceTokens.TokensRemaining >= 999999)
                 {
-                    maxTokens = 999999;
+                    anyUnlimited = true;
                     // Use the latest expiration date
                     if (sourceTokens.ExpiresAt.HasValue && 
                         (!latestExpiration.HasValue || sourceTokens.ExpiresAt.Value > latestExpiration.Value))
@@ -2596,13 +2602,14 @@ public class DynamoDBService : IDynamoDBService
                         latestExpiration = sourceTokens.ExpiresAt;
                     }
                 }
-                else if (maxTokens < 999999)
+                else if (!anyUnlimited)
                 {
-                    // Take the maximum non-unlimited token balance across linked devices (no additive sum)
-                    if (sourceTokens.TokensRemaining > maxTokens)
+                    sumRemaining += Math.Max(0, sourceTokens.TokensRemaining);
+                    sumTotal += Math.Max(0, sourceTokens.TotalWorkouts);
+                    // Keep the latest expiration if any (for non-unlimited packs)
+                    if (sourceTokens.ExpiresAt.HasValue &&
+                        (!latestExpiration.HasValue || sourceTokens.ExpiresAt.Value > latestExpiration.Value))
                     {
-                        maxTokens = sourceTokens.TokensRemaining;
-                        // carry over expiration only if it exists and target isn't unlimited
                         latestExpiration = sourceTokens.ExpiresAt;
                     }
                 }
@@ -2635,15 +2642,30 @@ public class DynamoDBService : IDynamoDBService
                         Console.WriteLine($"[DynamoDBService] Copied purchase {purchase.PurchaseId} to target device");
                     }
                 }
+
+                // Zero-out source device so balances are consolidated and not spendable twice.
+                try
+                {
+                    sourceTokens.TokensRemaining = 0;
+                    sourceTokens.TotalWorkouts = 0;
+                    sourceTokens.ExpiresAt = null;
+                    await SaveUserTokensAsync(sourceTokens);
+                    Console.WriteLine($"[DynamoDBService] Zeroed source device tokens for {visitorId} after merge");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[DynamoDBService] Failed to zero source device {visitorId}: {ex.Message}");
+                }
             }
         }
 
         // Update target device tokens
-        targetTokens.TokensRemaining = maxTokens;
+        targetTokens.TokensRemaining = anyUnlimited ? 999999 : sumRemaining;
+        targetTokens.TotalWorkouts = anyUnlimited ? 999999 : sumTotal;
         targetTokens.ExpiresAt = latestExpiration;
         await SaveUserTokensAsync(targetTokens);
         
-        Console.WriteLine($"[DynamoDBService] Merged credits complete - Target device now has {maxTokens} tokens, expires: {latestExpiration}");
+        Console.WriteLine($"[DynamoDBService] Merged credits complete - Target device now has {targetTokens.TokensRemaining}/{targetTokens.TotalWorkouts} tokens, expires: {latestExpiration}");
     }
 
     public async Task ResetFreeWorkoutCountAsync(string deviceId)
