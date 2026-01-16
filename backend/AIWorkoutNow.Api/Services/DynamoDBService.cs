@@ -377,6 +377,8 @@ public class DynamoDBService : IDynamoDBService
 
         var purchasesCount = distinctCompleted.Count;
         var totalSpentCents = 0;
+        var purchasedTokensTotal = 0;
+        var purchasedUnlimited = false;
         foreach (var p in distinctCompleted)
         {
             if (p.TokensGranted.HasValue && p.TokensGranted.Value > 0)
@@ -387,6 +389,18 @@ public class DynamoDBService : IDynamoDBService
             if (plan != null)
             {
                 totalSpentCents += (int)Math.Round(plan.Price * 100);
+                // Only count purchases after an admin reset (if any) for denominator reconstruction.
+                if (!tokens.LastResetAt.HasValue || p.PurchasedAt > tokens.LastResetAt.Value)
+                {
+                    if (p.IsUnlimited || plan.IsUnlimited)
+                    {
+                        purchasedUnlimited = true;
+                    }
+                    else if (plan.TokenCount.HasValue)
+                    {
+                        purchasedTokensTotal += plan.TokenCount.Value;
+                    }
+                }
             }
             else
             {
@@ -397,6 +411,15 @@ public class DynamoDBService : IDynamoDBService
                     if (tg == 10) totalSpentCents += 199; // default 10-pack
                     else if (tg == 30) totalSpentCents += 399; // default 30-pack
                     else if (tg == 100) totalSpentCents += 799; // default 100-pack
+                }
+
+                if (!tokens.LastResetAt.HasValue || p.PurchasedAt > tokens.LastResetAt.Value)
+                {
+                    if (p.IsUnlimited) purchasedUnlimited = true;
+                    else if (p.TokensGranted.HasValue && p.TokensGranted.Value > 0)
+                    {
+                        purchasedTokensTotal += p.TokensGranted.Value;
+                    }
                 }
             }
         }
@@ -456,7 +479,25 @@ public class DynamoDBService : IDynamoDBService
         if (tokens.TotalWorkouts > 0)
         {
             remainingWorkouts = tokens.TokensRemaining;
+            // Reconstruct a sane denominator to avoid showing inflated totals (e.g., 109/430).
+            // If there's been an admin reset, treat tokens.TotalWorkouts as "baseline + purchases after reset".
+            var baseline = 0;
+            if (tokens.LastResetAt.HasValue)
+            {
+                baseline = tokens.TotalWorkouts - purchasedTokensTotal;
+                if (baseline < 0 || baseline > 100000) baseline = 0;
+            }
+
+            var reconstructedTotal = purchasedUnlimited ? 999999 : (baseline + purchasedTokensTotal);
+            if (reconstructedTotal < remainingWorkouts) reconstructedTotal = remainingWorkouts;
+
+            // If stored total is wildly higher than reconstructed total, prefer reconstructed.
             totalWorkouts = tokens.TotalWorkouts;
+            if (reconstructedTotal > 0 && totalWorkouts > reconstructedTotal * 2)
+            {
+                totalWorkouts = reconstructedTotal;
+            }
+            if (totalWorkouts < remainingWorkouts) totalWorkouts = remainingWorkouts;
         }
         else
         {
