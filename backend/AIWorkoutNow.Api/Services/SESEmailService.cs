@@ -10,6 +10,8 @@ public class SESEmailService : IEmailService
 {
     private readonly IAmazonSimpleEmailService _sesClient;
     private const string BrandName = "AIWorkoutNow";
+    private static bool _loggedAdminEmailResolution = false;
+    private static bool _loggedFromEmailResolution = false;
 
     public SESEmailService()
     {
@@ -27,6 +29,11 @@ public class SESEmailService : IEmailService
         if (!string.IsNullOrWhiteSpace(from)) return from;
         from = await GetSSMParameter("/aiworkoutnow/ses-from-email", "SES_FROM_EMAIL", "");
         if (!string.IsNullOrWhiteSpace(from)) return from;
+        if (!_loggedFromEmailResolution)
+        {
+            _loggedFromEmailResolution = true;
+            Console.WriteLine("[SESEmailService] From email not found in SSM/env; using default noreply@aiworkoutnow.com");
+        }
         return "noreply@aiworkoutnow.com";
     }
 
@@ -45,6 +52,11 @@ public class SESEmailService : IEmailService
         if (!string.IsNullOrWhiteSpace(admin)) return admin;
         admin = await GetSSMParameter("/aiworkoutnow/admin-email", "SES_ADMIN_EMAIL", "");
         if (!string.IsNullOrWhiteSpace(admin)) return admin;
+        if (!_loggedAdminEmailResolution)
+        {
+            _loggedAdminEmailResolution = true;
+            Console.WriteLine("[SESEmailService] Admin email not found in SSM/env; using default admin@aiworkoutnow.com");
+        }
         return "admin@aiworkoutnow.com";
     }
 

@@ -101,6 +101,9 @@ public class ContactController : ControllerBase
                     Details = new Dictionary<string, object>
                     {
                         { "email", request.Email },
+                        { "name", request.Name },
+                        { "subject", request.Subject },
+                        { "message", request.Message },
                         { "messageLength", request.Message.Length }
                     }
                 });

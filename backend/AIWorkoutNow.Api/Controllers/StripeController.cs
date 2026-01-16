@@ -930,6 +930,17 @@ public class StripeController : ControllerBase
                     Console.WriteLine($"[StripeController] Failed to save purchase record (non-critical): {ex.Message}");
                 }
 
+                // Notify admin for verify-payment flow too (best-effort; never fail request)
+                try
+                {
+                    await _emailService.SendPurchaseNotificationAsync(purchase, plan);
+                    Console.WriteLine("[StripeController] Admin purchase email sent (verify-payment)");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[StripeController] Admin purchase email failed (verify-payment, non-critical): {ex.Message}");
+                }
+
                 // Link email to visitor ID for cross-device access
                 if (!string.IsNullOrEmpty(customerEmail))
                 {

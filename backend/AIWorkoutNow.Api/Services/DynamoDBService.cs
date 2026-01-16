@@ -3,6 +3,7 @@ using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using AIWorkoutNow.Api.Models;
+using System.Text.Json;
 
 namespace AIWorkoutNow.Api.Services;
 
@@ -21,6 +22,9 @@ public class DynamoDBService : IDynamoDBService
 
     private const int DefaultTokensPerPack = 10;
     private static readonly HashSet<string> _loggedMissingPlans = new(StringComparer.OrdinalIgnoreCase);
+    private static bool DebugPlansEnabled =>
+        string.Equals(Environment.GetEnvironmentVariable("DEBUG_PLANS"), "1", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(Environment.GetEnvironmentVariable("DEBUG_PLANS"), "true", StringComparison.OrdinalIgnoreCase);
 
     public DynamoDBService(IAmazonDynamoDB dynamoDB)
     {
@@ -354,26 +358,25 @@ public class DynamoDBService : IDynamoDBService
                 if (plan?.TokenCount != null && plan.TokenCount.Value > 0)
                 {
                     purchasedTokens += plan.TokenCount.Value;
-                    Console.WriteLine($"[DynamoDBService] ReconcileTokens - Backfilled TokensGranted from plan {p.PlanId} => {plan.TokenCount}");
+                    if (DebugPlansEnabled)
+                    {
+                        Console.WriteLine($"[DynamoDBService] DEBUG_PLANS: ReconcileTokens backfilled TokensGranted from plan {p.PlanId} => {plan.TokenCount}");
+                    }
                 }
                 else
                 {
                     var inferred = InferTokenCountFromPlanId(p.PlanId) ?? DefaultTokensPerPack;
                     purchasedTokens += inferred == 999999 ? 0 : inferred;
-                    if (_loggedMissingPlans.Add(p.PlanId))
-                    {
-                        Console.WriteLine($"[DynamoDBService] ReconcileTokens - Plan {p.PlanId} missing TokenCount, inferred {inferred}");
-                    }
+                    if (DebugPlansEnabled && _loggedMissingPlans.Add(p.PlanId))
+                        Console.WriteLine($"[DynamoDBService] DEBUG_PLANS: ReconcileTokens plan {p.PlanId} missing TokenCount; inferred {inferred}");
                 }
             }
             catch (Exception exPlan)
             {
                 var inferred = InferTokenCountFromPlanId(p.PlanId) ?? DefaultTokensPerPack;
                 purchasedTokens += inferred == 999999 ? 0 : inferred;
-                if (_loggedMissingPlans.Add(p.PlanId))
-                {
-                    Console.WriteLine($"[DynamoDBService] ReconcileTokens - Plan lookup failed for {p.PlanId}: {exPlan.Message}. Inferred {inferred}");
-                }
+                if (DebugPlansEnabled && _loggedMissingPlans.Add(p.PlanId))
+                    Console.WriteLine($"[DynamoDBService] DEBUG_PLANS: ReconcileTokens plan lookup failed for {p.PlanId}: {exPlan.Message}. Inferred {inferred}");
             }
         }
 
@@ -1219,8 +1222,8 @@ public class DynamoDBService : IDynamoDBService
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
-            Console.WriteLine("[DynamoDBService] ContactMessages table does not exist, returning empty list");
-            return new List<ContactMessage>();
+            Console.WriteLine("[DynamoDBService] ContactMessages table does not exist; falling back to contact_submitted activities");
+            return await GetContactMessagesFromActivitiesAsync(limit: 1000);
         }
         catch (Exception ex)
         {
@@ -1232,27 +1235,157 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task<ContactMessage?> GetContactMessageAsync(string messageId)
     {
-        var response = await _dynamoDB.GetItemAsync(new GetItemRequest
+        try
         {
-            TableName = _contactMessagesTable,
-            Key = new Dictionary<string, AttributeValue>
+            var response = await _dynamoDB.GetItemAsync(new GetItemRequest
             {
-                { "MessageId", new AttributeValue { S = messageId } }
-            }
-        });
+                TableName = _contactMessagesTable,
+                Key = new Dictionary<string, AttributeValue>
+                {
+                    { "MessageId", new AttributeValue { S = messageId } }
+                }
+            });
 
-        if (!response.Item.Any())
-            return null;
+            if (!response.Item.Any())
+                return null;
 
-        return new ContactMessage
+            return new ContactMessage
+            {
+                MessageId = response.Item["MessageId"].S,
+                Name = response.Item.ContainsKey("Name") ? response.Item["Name"].S : string.Empty,
+                Email = response.Item["Email"].S,
+                Subject = response.Item.ContainsKey("Subject") ? response.Item["Subject"].S : string.Empty,
+                Message = response.Item["Message"].S,
+                CreatedAt = DateTime.Parse(response.Item["CreatedAt"].S)
+            };
+        }
+        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
-            MessageId = response.Item["MessageId"].S,
-            Name = response.Item.ContainsKey("Name") ? response.Item["Name"].S : string.Empty,
-            Email = response.Item["Email"].S,
-            Subject = response.Item.ContainsKey("Subject") ? response.Item["Subject"].S : string.Empty,
-            Message = response.Item["Message"].S,
-            CreatedAt = DateTime.Parse(response.Item["CreatedAt"].S)
-        };
+            return await GetContactMessageFromActivitiesAsync(messageId);
+        }
+    }
+
+    private async Task<List<ContactMessage>> GetContactMessagesFromActivitiesAsync(int limit = 1000)
+    {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var activitiesTable = $"{tablePrefix}-CustomerActivities";
+
+        try
+        {
+            var resp = await _dynamoDB.ScanAsync(new ScanRequest
+            {
+                TableName = activitiesTable,
+                FilterExpression = "ActivityType = :t",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    { ":t", new AttributeValue { S = "contact_submitted" } }
+                },
+                Limit = Math.Max(10, limit)
+            });
+
+            var results = new List<ContactMessage>();
+            foreach (var item in resp.Items)
+            {
+                var msg = MapContactMessageFromActivityItem(item);
+                if (msg != null) results.Add(msg);
+            }
+
+            return results
+                .OrderByDescending(m => m.CreatedAt)
+                .Take(limit)
+                .ToList();
+        }
+        catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+        {
+            return new List<ContactMessage>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DynamoDBService] Fallback contact scan failed: {ex.Message}");
+            return new List<ContactMessage>();
+        }
+    }
+
+    private async Task<ContactMessage?> GetContactMessageFromActivitiesAsync(string messageId)
+    {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var activitiesTable = $"{tablePrefix}-CustomerActivities";
+
+        try
+        {
+            var resp = await _dynamoDB.ScanAsync(new ScanRequest
+            {
+                TableName = activitiesTable,
+                FilterExpression = "(ContactMessageId = :id OR ActivityId = :id) AND ActivityType = :t",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    { ":id", new AttributeValue { S = messageId } },
+                    { ":t", new AttributeValue { S = "contact_submitted" } }
+                },
+                Limit = 5
+            });
+
+            foreach (var item in resp.Items)
+            {
+                var msg = MapContactMessageFromActivityItem(item);
+                if (msg != null) return msg;
+            }
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static ContactMessage? MapContactMessageFromActivityItem(Dictionary<string, AttributeValue> item)
+    {
+        try
+        {
+            var messageId = item.ContainsKey("ContactMessageId")
+                ? item["ContactMessageId"].S
+                : item.ContainsKey("ActivityId") ? item["ActivityId"].S : Guid.NewGuid().ToString();
+
+            var email = item.ContainsKey("DeviceId") ? item["DeviceId"].S : "";
+            var createdAt = item.ContainsKey("Timestamp") ? DateTime.Parse(item["Timestamp"].S) : DateTime.UtcNow;
+
+            string name = "";
+            string subject = "Contact Form Submission";
+            string message = "(Message content unavailable — ContactMessages table was missing at submission time.)";
+
+            if (item.ContainsKey("DetailsJson") && !string.IsNullOrWhiteSpace(item["DetailsJson"].S))
+            {
+                try
+                {
+                    var dict = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(item["DetailsJson"].S);
+                    if (dict != null)
+                    {
+                        if (dict.TryGetValue("email", out var e) && e.ValueKind == JsonValueKind.String) email = e.GetString() ?? email;
+                        if (dict.TryGetValue("name", out var n) && n.ValueKind == JsonValueKind.String) name = n.GetString() ?? "";
+                        if (dict.TryGetValue("subject", out var s) && s.ValueKind == JsonValueKind.String) subject = s.GetString() ?? subject;
+                        if (dict.TryGetValue("message", out var m) && m.ValueKind == JsonValueKind.String) message = m.GetString() ?? message;
+                    }
+                }
+                catch
+                {
+                    // ignore invalid JSON
+                }
+            }
+
+            return new ContactMessage
+            {
+                MessageId = messageId,
+                Email = email,
+                Name = name,
+                Subject = subject,
+                Message = message,
+                CreatedAt = createdAt
+            };
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     public async Task SaveContactReplyAsync(ContactReply reply)
@@ -1501,6 +1634,17 @@ public class DynamoDBService : IDynamoDBService
             document["PurchaseId"] = activity.PurchaseId;
         if (!string.IsNullOrEmpty(activity.ContactMessageId))
             document["ContactMessageId"] = activity.ContactMessageId;
+        if (activity.Details != null && activity.Details.Count > 0)
+        {
+            try
+            {
+                document["DetailsJson"] = JsonSerializer.Serialize(activity.Details);
+            }
+            catch
+            {
+                // best-effort; do not block request
+            }
+        }
 
         try
         {
@@ -2158,18 +2302,14 @@ public class DynamoDBService : IDynamoDBService
             }
             
             // Plan not found in DB, check default plans
-            if (_loggedMissingPlans.Add(planId))
-            {
-                Console.WriteLine($"[DynamoDBService] Plan {planId} not found in DB, falling back to inferred defaults");
-            }
+            if (DebugPlansEnabled && _loggedMissingPlans.Add(planId))
+                Console.WriteLine($"[DynamoDBService] DEBUG_PLANS: Plan {planId} not found in DB (caller may infer defaults)");
             return null;
         }
         catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
         {
-            if (_loggedMissingPlans.Add(planId))
-            {
-                Console.WriteLine($"[DynamoDBService] PricingPlans table missing; falling back to inferred defaults for: {planId}");
-            }
+            if (DebugPlansEnabled && _loggedMissingPlans.Add(planId))
+                Console.WriteLine($"[DynamoDBService] DEBUG_PLANS: PricingPlans table missing; returning inferred default for: {planId}");
             return GetDefaultPricingPlans().FirstOrDefault(p => string.Equals(p.PlanId, planId, StringComparison.OrdinalIgnoreCase));
         }
         catch (Exception ex)
