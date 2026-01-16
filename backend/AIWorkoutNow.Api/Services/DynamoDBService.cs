@@ -26,6 +26,10 @@ public class DynamoDBService : IDynamoDBService
         string.Equals(Environment.GetEnvironmentVariable("DEBUG_PLANS"), "1", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(Environment.GetEnvironmentVariable("DEBUG_PLANS"), "true", StringComparison.OrdinalIgnoreCase);
 
+    private static bool DebugPurchasesEnabled =>
+        string.Equals(Environment.GetEnvironmentVariable("DEBUG_PURCHASES"), "1", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(Environment.GetEnvironmentVariable("DEBUG_PURCHASES"), "true", StringComparison.OrdinalIgnoreCase);
+
     public DynamoDBService(IAmazonDynamoDB dynamoDB)
     {
         _dynamoDB = dynamoDB;
@@ -991,7 +995,10 @@ public class DynamoDBService : IDynamoDBService
                     }
                     else
                     {
-                        Console.WriteLine($"[DynamoDBService] Pending purchase {purchase.PurchaseId} not paid yet (payment_status={paymentStatus}, status={sessionStatus})");
+                        if (DebugPurchasesEnabled)
+                        {
+                            Console.WriteLine($"[DynamoDBService] DEBUG_PURCHASES: Pending purchase {purchase.PurchaseId} not paid yet (payment_status={paymentStatus}, status={sessionStatus})");
+                        }
                     }
                 }
                 catch (Exception exInner)

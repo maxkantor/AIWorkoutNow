@@ -662,14 +662,14 @@ export async function getContact(token: string, messageId: string): Promise<{ me
   return response.json();
 }
 
-export async function replyToContact(token: string, messageId: string, replyMessage: string, adminEmail?: string): Promise<void> {
+export async function replyToContact(token: string, messageId: string, replyText: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/admin/contacts/${messageId}/reply`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({ replyMessage, adminEmail: adminEmail || 'admin@aiworkoutnow.com' }),
+    body: JSON.stringify({ replyText }),
   });
 
   if (!response.ok) {

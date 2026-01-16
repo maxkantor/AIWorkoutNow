@@ -16,13 +16,15 @@ public class PricingControllerTests
 
     private readonly Mock<IDynamoDBService> _mockDynamoService;
     private readonly Mock<IConfigService> _mockConfigService;
+    private readonly Mock<IEmailService> _mockEmailService;
     private readonly PricingController _controller;
 
     public PricingControllerTests()
     {
         _mockDynamoService = new Mock<IDynamoDBService>();
         _mockConfigService = new Mock<IConfigService>();
-        _controller = new PricingController(_mockDynamoService.Object, _mockConfigService.Object);
+        _mockEmailService = new Mock<IEmailService>();
+        _controller = new PricingController(_mockDynamoService.Object, _mockConfigService.Object, _mockEmailService.Object);
     }
 
     [Fact]

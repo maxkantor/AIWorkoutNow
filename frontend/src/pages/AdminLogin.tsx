@@ -5,10 +5,13 @@ import { adminLogin } from '../services/api';
 import './AdminLogin.css';
 
 function AdminLogin() {
-  const [email, setEmail] = useState(() => localStorage.getItem('admin_email') || '');
+  const [email, setEmail] = useState(() => localStorage.getItem('admin_email') || 'admin@aiworkoutnow.com');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberEmail, setRememberEmail] = useState(() => !!localStorage.getItem('admin_email'));
+  // Default to remembering email (never the password) to reduce admin friction.
+  const [rememberEmail, setRememberEmail] = useState(() => {
+    return true;
+  });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -40,11 +43,7 @@ function AdminLogin() {
     try {
       const token = await adminLogin(email.trim(), password);
       localStorage.setItem('admin_token', token);
-      if (rememberEmail) {
-        localStorage.setItem('admin_email', email.trim());
-      } else {
-        localStorage.removeItem('admin_email');
-      }
+      if (rememberEmail) localStorage.setItem('admin_email', email.trim());
       navigate('/admin/dashboard');
     } catch (err: any) {
       setError('Invalid credentials. Please try again.');
@@ -113,7 +112,7 @@ function AdminLogin() {
                   checked={rememberEmail}
                   onChange={(e) => setRememberEmail(e.target.checked)}
                 />
-                <span>Remember me</span>
+                <span>Remember email</span>
               </label>
             </div>
 

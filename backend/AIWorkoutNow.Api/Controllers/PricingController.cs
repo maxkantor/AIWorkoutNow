@@ -12,6 +12,7 @@ public class PricingController : ControllerBase
 {
     private readonly IDynamoDBService _dynamoService;
     private readonly IConfigService _configService;
+    private readonly IEmailService _emailService;
     private static List<PricingPlan>? _cachedPlans;
     private static DateTime _cacheExpiry = DateTime.MinValue;
     private static readonly object _cacheLock = new object();
@@ -20,10 +21,44 @@ public class PricingController : ControllerBase
     // Note: Static constructor removed - we'll populate cache on first request
     // This avoids dependency injection issues in static constructor
 
-    public PricingController(IDynamoDBService dynamoService, IConfigService configService)
+    public PricingController(IDynamoDBService dynamoService, IConfigService configService, IEmailService emailService)
     {
         _dynamoService = dynamoService;
         _configService = configService;
+        _emailService = emailService;
+    }
+
+    private async Task NotifyAdminForUnnotifiedCompletedPurchasesAsync(string deviceId)
+    {
+        try
+        {
+            var purchases = await _dynamoService.GetUserPurchasesByDeviceIdAsync(deviceId);
+            var targets = purchases
+                .Where(p => string.Equals(p.Status, "completed", StringComparison.OrdinalIgnoreCase) && !p.AdminNotifiedAt.HasValue)
+                .OrderByDescending(p => p.PurchasedAt)
+                .Take(1) // avoid email spam; this endpoint is polled frequently
+                .ToList();
+
+            foreach (var p in targets)
+            {
+                try
+                {
+                    var plan = await _dynamoService.GetPricingPlanAsync(p.PlanId);
+                    await _emailService.SendPurchaseNotificationAsync(p, plan);
+                    p.AdminNotifiedAt = DateTime.UtcNow;
+                    await _dynamoService.SaveUserPurchaseAsync(p);
+                    Console.WriteLine($"[PricingController] Admin purchase email sent for purchase {p.PurchaseId} (device {deviceId})");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[PricingController] Admin purchase email failed (non-critical) for device {deviceId}: {ex.Message}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[PricingController] NotifyAdminForUnnotifiedCompletedPurchasesAsync failed (non-critical): {ex.Message}");
+        }
     }
 
     public static void InvalidateCache()
@@ -319,6 +354,8 @@ public class PricingController : ControllerBase
                 if (!string.IsNullOrEmpty(stripeSecret))
                 {
                     await _dynamoService.ApplyPendingPurchasesAsync(deviceId, stripeSecret);
+                    // Purchases may be completed via this path (without webhook). Send admin email once.
+                    await NotifyAdminForUnnotifiedCompletedPurchasesAsync(deviceId);
                 }
             }
             catch (Exception ex)
