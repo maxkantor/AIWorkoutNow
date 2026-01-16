@@ -13,6 +13,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Reduce CloudWatch noise: DataProtection warnings are expected in Lambda and not actionable for this API.
 builder.Logging.AddFilter("Microsoft.AspNetCore.DataProtection", LogLevel.Error);
+// Reduce routine request pipeline spam; keep our own app logs.
+builder.Logging.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Warning);
+builder.Logging.AddFilter("Microsoft.AspNetCore.Routing.EndpointMiddleware", LogLevel.Warning);
+builder.Logging.AddFilter("Microsoft.AspNetCore.Cors.Infrastructure", LogLevel.Warning);
+builder.Logging.AddFilter("Microsoft.AspNetCore.Mvc.Infrastructure", LogLevel.Warning);
 
 // CRITICAL: Use Lambda hosting for provided.al2023 runtime
 // This integrates with Lambda Runtime Interface Client

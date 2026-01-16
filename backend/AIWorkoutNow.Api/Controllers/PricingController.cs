@@ -33,26 +33,56 @@ public class PricingController : ControllerBase
         try
         {
             var purchases = await _dynamoService.GetUserPurchasesByDeviceIdAsync(deviceId);
-            var targets = purchases
+            var unnotified = purchases
                 .Where(p => string.Equals(p.Status, "completed", StringComparison.OrdinalIgnoreCase) && !p.AdminNotifiedAt.HasValue)
                 .OrderByDescending(p => p.PurchasedAt)
-                .Take(1) // avoid email spam; this endpoint is polled frequently
                 .ToList();
 
-            foreach (var p in targets)
+            if (unnotified.Count == 0) return;
+
+            // If there is backlog (older purchases created before this feature), avoid spamming:
+            // - Email only the newest purchase if it is recent.
+            // - Mark older backlog as notified without sending.
+            var now = DateTime.UtcNow;
+            var newest = unnotified.First();
+            var recentWindow = TimeSpan.FromMinutes(30);
+
+            if (now - newest.PurchasedAt > recentWindow)
             {
-                try
+                // Backlog only: mark as notified so we stop sending on every poll.
+                foreach (var p in unnotified)
                 {
-                    var plan = await _dynamoService.GetPricingPlanAsync(p.PlanId);
-                    await _emailService.SendPurchaseNotificationAsync(p, plan);
-                    p.AdminNotifiedAt = DateTime.UtcNow;
+                    p.AdminNotifiedAt = now;
                     await _dynamoService.SaveUserPurchaseAsync(p);
-                    Console.WriteLine($"[PricingController] Admin purchase email sent for purchase {p.PurchaseId} (device {deviceId})");
                 }
-                catch (Exception ex)
+                Console.WriteLine($"[PricingController] Marked {unnotified.Count} old purchases as admin-notified (device {deviceId})");
+                return;
+            }
+
+            // Email newest recent purchase once
+            try
+            {
+                var plan = await _dynamoService.GetPricingPlanAsync(newest.PlanId);
+                await _emailService.SendPurchaseNotificationAsync(newest, plan);
+                newest.AdminNotifiedAt = now;
+                await _dynamoService.SaveUserPurchaseAsync(newest);
+                Console.WriteLine($"[PricingController] Admin purchase email sent for purchase {newest.PurchaseId} (device {deviceId})");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[PricingController] Admin purchase email failed (non-critical) for device {deviceId}: {ex.Message}");
+            }
+
+            // Mark any older purchases outside the window as notified (no email)
+            var olderBacklog = unnotified.Skip(1).Where(p => now - p.PurchasedAt > recentWindow).ToList();
+            if (olderBacklog.Count > 0)
+            {
+                foreach (var p in olderBacklog)
                 {
-                    Console.WriteLine($"[PricingController] Admin purchase email failed (non-critical) for device {deviceId}: {ex.Message}");
+                    p.AdminNotifiedAt = now;
+                    await _dynamoService.SaveUserPurchaseAsync(p);
                 }
+                Console.WriteLine($"[PricingController] Marked {olderBacklog.Count} older purchases as admin-notified (device {deviceId})");
             }
         }
         catch (Exception ex)
