@@ -441,6 +441,20 @@ function Home() {
             <h2 id="faq-heading" className="text-2xl font-extrabold text-slate-900 mb-3">FAQ</h2>
             <div className="space-y-2">
               <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
+                <summary className="font-semibold text-slate-900 cursor-pointer">Why not just use ChatGPT?</summary>
+                <div className="text-slate-700 mt-2">
+                  <p className="mb-3">ChatGPT is great for many things — AIWorkoutNow is built specifically to generate workouts fast and consistently.</p>
+                  <ul className="list-disc pl-5 space-y-1 mb-3">
+                    <li>No prompts needed: pick level, goal, time, equipment</li>
+                    <li>Consistent workout structure (warm-up → main → cooldown)</li>
+                    <li>Equipment-aware plans (home vs gym)</li>
+                    <li>One-click variations (regenerate instantly)</li>
+                    <li>Credits are simple (no subscription)</li>
+                  </ul>
+                  <p className="text-slate-500 text-sm">We love ChatGPT — this is just a focused workout generator for speed and simplicity.</p>
+                </div>
+              </details>
+              <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
                 <summary className="font-semibold text-slate-900 cursor-pointer">Do I need to sign up?</summary>
                 <p className="text-slate-700 mt-2">No. You can generate workouts immediately—no account or login required.</p>
               </details>
