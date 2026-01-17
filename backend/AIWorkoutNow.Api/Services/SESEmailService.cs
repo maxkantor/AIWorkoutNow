@@ -105,6 +105,12 @@ public class SESEmailService : IEmailService
                     Text = new Amazon.SimpleEmail.Model.Content(body),
                     Html = new Amazon.SimpleEmail.Model.Content($"<html><body>{body.Replace("\n", "<br>")}</body></html>")
                 }
+            },
+            // Improve deliverability: Add headers to prevent spam filtering
+            ConfigurationSetName = null, // Can be configured later if using SES Configuration Sets
+            Tags = new List<MessageTag>
+            {
+                new MessageTag { Name = "email-type", Value = "transactional" }
             }
         };
 
@@ -166,7 +172,8 @@ If you didn't request this, you can ignore this email.
         var amount = plan?.Price;
         var currency = plan?.Currency ?? "USD";
 
-        var subject = $"New Purchase: {planName}";
+        // Use less "spammy" subject line - avoid "Purchase" keyword that triggers filters
+        var subject = $"[AIWorkoutNow] New Order: {planName}";
         var body = $@"New purchase completed:
 
 Plan: {planName} ({purchase.PlanId})
