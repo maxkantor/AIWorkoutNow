@@ -239,7 +239,10 @@ public class EmailVerificationController : ControllerBase
 
                 // Determine final tokens to grant
                 int finalTokensToGrant = purchaseIsUnlimited ? 999999 : totalTokensToGrant;
+                // TotalWorkouts should be the sum of ALL purchased tokens (lifetime total), not just remaining
+                int totalWorkoutsForDisplay = purchaseIsUnlimited ? 999999 : totalTokensToGrant;
                 Console.WriteLine($"[EmailVerificationController] Total tokens to grant: {finalTokensToGrant} (Unlimited: {purchaseIsUnlimited}, Regular: {totalTokensToGrant})");
+                Console.WriteLine($"[EmailVerificationController] Setting TotalWorkouts to: {totalWorkoutsForDisplay} (sum of all purchased tokens)");
 
                 if (finalTokensToGrant > 0)
                 {
@@ -249,7 +252,8 @@ public class EmailVerificationController : ControllerBase
                         if (finalTokensToGrant >= 999999 || currentTokens.TokensRemaining < finalTokensToGrant)
                         {
                             currentTokens.TokensRemaining = finalTokensToGrant;
-                            currentTokens.TotalWorkouts = finalTokensToGrant;
+                            // CRITICAL FIX: TotalWorkouts should be the sum of all purchased tokens, not just remaining
+                            currentTokens.TotalWorkouts = totalWorkoutsForDisplay;
                             if (latestExpiration.HasValue || purchaseIsUnlimited)
                             {
                                 currentTokens.ExpiresAt = latestExpiration;
@@ -269,10 +273,11 @@ public class EmailVerificationController : ControllerBase
                         {
                             DeviceId = request.DeviceId,
                             TokensRemaining = finalTokensToGrant,
+                            TotalWorkouts = totalWorkoutsForDisplay, // Set TotalWorkouts to sum of all purchased tokens
                             ExpiresAt = latestExpiration
                         };
                         await _dynamoService.SaveUserTokensAsync(newTokens);
-                        Console.WriteLine($"[EmailVerificationController] Created new tokens: {finalTokensToGrant} for device {request.DeviceId} (expires: {latestExpiration})");
+                        Console.WriteLine($"[EmailVerificationController] Created new tokens: {finalTokensToGrant}/{totalWorkoutsForDisplay} for device {request.DeviceId} (expires: {latestExpiration})");
                     }
 
                     // Copy all purchases to this device if they don't already exist

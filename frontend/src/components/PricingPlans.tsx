@@ -32,15 +32,15 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
 
   const getBenefits = (tokenCount?: number | null) => {
     if (tokenCount === 10) {
-      return ['Instant access', 'No signup', 'Great for testing', 'Restore credits anytime'];
+      return ['Instant access', 'No signup', 'Great for testing', 'Restore workouts anytime'];
     }
     if (tokenCount === 30) {
-      return ['Best for regular use', 'No signup', 'Better value per workout', 'Restore credits anytime'];
+      return ['Best for regular use', 'No signup', 'Better value per workout', 'Restore workouts anytime'];
     }
     if (tokenCount === 100) {
-      return ['Best savings', 'No signup', 'Long-term access', 'Restore credits anytime'];
+      return ['Best savings', 'No signup', 'Long-term access', 'Restore workouts anytime'];
     }
-    return ['Instant access', 'No signup', 'Restore credits anytime'];
+    return ['Instant access', 'No signup', 'Restore workouts anytime'];
   };
 
   const costPerWorkout = (plan: PricingPlan) => {

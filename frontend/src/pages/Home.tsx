@@ -351,7 +351,7 @@ function Home() {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h3 className="text-lg font-bold text-slate-800 mb-1">
-                        {!showRestoreCredits ? 'Access Your Credits from Another Device?' : 'Restore Credits'}
+                        {!showRestoreCredits ? 'Access Your Workouts from Another Device?' : 'Restore Workouts'}
                       </h3>
                       <p className="text-sm text-slate-600">
                         {!showRestoreCredits 
@@ -365,7 +365,7 @@ function Home() {
                       onClick={() => setShowRestoreCredits(true)}
                       className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all hover:-translate-y-0.5"
                     >
-                      Restore Credits
+                      Restore Workouts
                     </button>
                   ) : (
                     <RestoreCredits
@@ -449,8 +449,8 @@ function Home() {
                 <p className="text-slate-700 mt-2">No. Purchases are one-time payments (no recurring charges).</p>
               </details>
               <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
-                <summary className="font-semibold text-slate-900 cursor-pointer">How do I restore credits on another device?</summary>
-                <p className="text-slate-700 mt-2">Use “Restore Credits” and enter the email used at checkout. We’ll send a verification code.</p>
+                <summary className="font-semibold text-slate-900 cursor-pointer">How do I restore workouts on another device?</summary>
+                <p className="text-slate-700 mt-2">Use "Restore Workouts" and enter the email used at checkout. We'll send a verification code.</p>
               </details>
               <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
                 <summary className="font-semibold text-slate-900 cursor-pointer">What counts as a workout generation?</summary>
