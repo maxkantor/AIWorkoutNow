@@ -137,23 +137,91 @@ public class WorkoutController : ControllerBase
             await _dynamoService.SaveWorkoutAsync(workout);
             Console.WriteLine("[WorkoutController] Workout saved");
 
-            // Track activity
+            // Track activity with all filled fields
             try
             {
+                // Build comprehensive description with all filled fields (at least 100 chars)
+                var descriptionParts = new List<string>
+                {
+                    $"Generated {request.WorkoutType} workout",
+                    $"{request.Duration} minutes",
+                    $"{request.FitnessLevel} level",
+                    $"Equipment: {request.Equipment}"
+                };
+
+                // Add injuries if provided
+                if (request.Injuries != null && request.Injuries.Count > 0)
+                {
+                    var injuriesStr = string.Join(", ", request.Injuries.Where(i => !string.IsNullOrWhiteSpace(i)));
+                    if (!string.IsNullOrWhiteSpace(injuriesStr))
+                    {
+                        descriptionParts.Add($"Injuries: {injuriesStr}");
+                    }
+                }
+
+                // Add goals if provided
+                if (request.Goals != null && request.Goals.Count > 0)
+                {
+                    var goalsStr = string.Join(", ", request.Goals.Where(g => !string.IsNullOrWhiteSpace(g)));
+                    if (!string.IsNullOrWhiteSpace(goalsStr))
+                    {
+                        descriptionParts.Add($"Goals: {goalsStr}");
+                    }
+                }
+
+                var description = string.Join(" • ", descriptionParts);
+
+                // Ensure description is at least 100 characters for database efficiency
+                // Add DeviceId and WorkoutId if description is too short
+                if (description.Length < 100)
+                {
+                    var additionalInfo = $" • User: {deviceId.Substring(0, Math.Min(8, deviceId.Length))}... • ID: {workout.WorkoutId}";
+                    description += additionalInfo;
+                    
+                    // If still too short (rare), add more context
+                    if (description.Length < 100)
+                    {
+                        description += $" • Access: {(request.IsFreeUser ? "Free Tier" : "Paid")}";
+                    }
+                }
+
+                // Build details dictionary with all filled fields
+                var details = new Dictionary<string, object>
+                {
+                    { "workoutType", request.WorkoutType },
+                    { "duration", request.Duration },
+                    { "fitnessLevel", request.FitnessLevel },
+                    { "equipment", request.Equipment },
+                    { "isFreeUser", request.IsFreeUser }
+                };
+
+                // Add injuries if provided
+                if (request.Injuries != null && request.Injuries.Count > 0)
+                {
+                    var injuriesList = request.Injuries.Where(i => !string.IsNullOrWhiteSpace(i)).ToList();
+                    if (injuriesList.Count > 0)
+                    {
+                        details["injuries"] = injuriesList;
+                    }
+                }
+
+                // Add goals if provided
+                if (request.Goals != null && request.Goals.Count > 0)
+                {
+                    var goalsList = request.Goals.Where(g => !string.IsNullOrWhiteSpace(g)).ToList();
+                    if (goalsList.Count > 0)
+                    {
+                        details["goals"] = goalsList;
+                    }
+                }
+
                 await _dynamoService.SaveCustomerActivityAsync(new CustomerActivity
                 {
                     DeviceId = deviceId,
                     ActivityType = "workout_generated",
-                    Description = $"Generated {request.WorkoutType} workout ({request.Duration} min, {request.FitnessLevel} level)",
+                    Description = description,
                     WorkoutId = workout.WorkoutId,
-                    Details = new Dictionary<string, object>
-                    {
-                        { "workoutType", request.WorkoutType },
-                        { "duration", request.Duration },
-                        { "fitnessLevel", request.FitnessLevel },
-                        { "equipment", request.Equipment },
-                        { "isFreeUser", request.IsFreeUser }
-                    }
+                    Details = details
                 });
             }
             catch (Exception ex)
