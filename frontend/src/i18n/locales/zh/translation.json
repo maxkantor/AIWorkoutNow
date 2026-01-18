@@ -1,0 +1,494 @@
+{
+  "language": {
+    "en": "EN 🇺🇸",
+    "es": "ES 🇪🇸",
+    "ru": "RU 🇷🇺",
+    "hi": "HI 🇮🇳",
+    "zh": "ZH 🇨🇳"
+  },
+  "common": {
+    "language": "语言"
+  },
+  "hero": {
+    "title": "几秒内获得你的完美训练",
+    "cta": "生成 AI 训练",
+    "ctaAria": "滚动到训练生成器",
+    "chips": {
+      "free": "🎁 3 次免费训练",
+      "noSignup": "🚫 无需注册",
+      "oneTime": "💳 一次性付款",
+      "instant": "⚡ 即刻访问"
+    },
+    "status": {
+      "unlimited": "∞ 无限访问",
+      "expires": "(到期：{{date}})",
+      "freeRemaining": "剩余免费训练：{{remaining}} / {{total}}",
+      "remainingWorkouts": "💪 剩余训练：{{remaining}}/{{total}}",
+      "remainingWorkoutsTitle": "X/Y 表示剩余训练次数 / 终身总授予次数。管理员重置可能改变 X，但不改变总数。",
+      "freeExhausted": "免费训练已用完"
+    }
+  },
+  "generator": {
+    "fitnessLevel": "健身水平",
+    "workoutType": "训练类型",
+    "duration": "时长（分钟）",
+    "equipment": "可用器械",
+    "injuries": "伤病或限制（逗号分隔，可选）",
+    "goals": "健身目标（逗号分隔，可选）",
+    "placeholders": {
+      "injuries": "例如：膝盖伤，腰痛",
+      "goals": "例如：减脂，增肌，耐力"
+    },
+    "options": {
+      "fitnessLevel": {
+        "beginner": "初学者",
+        "intermediate": "中级",
+        "advanced": "高级"
+      },
+      "workoutType": {
+        "full-body": "全身",
+        "upper-body": "上半身",
+        "lower-body": "下半身",
+        "cardio": "有氧",
+        "strength": "力量",
+        "hiit": "HIIT",
+        "yoga": "瑜伽"
+      },
+      "duration": {
+        "15": "15 分钟",
+        "30": "30 分钟",
+        "45": "45 分钟",
+        "60": "60 分钟"
+      },
+      "equipment": {
+        "minimal": "最少（自重）",
+        "dumbbells": "哑铃",
+        "full-gym": "全套健身房",
+        "resistance-bands": "弹力带"
+      }
+    },
+    "button": {
+      "loading": "生成中...",
+      "retry": "再试一次",
+      "default": "生成 AI 训练"
+    }
+  },
+  "pricing": {
+    "header": "解锁更多 AI 训练",
+    "loadingPlans": "正在加载价格方案...",
+    "processing": "处理中...",
+    "perWorkout": "（每次 ${price}）",
+    "noLoginNoSubscription": "无需登录。无需订阅。",
+    "comparison": "其他健身应用每月收费 $10–$30。我们不收。",
+    "badges": {
+      "starter": "快速开始",
+      "popular": "最受欢迎",
+      "value": "最佳性价比"
+    },
+    "planName": {
+      "10": "入门",
+      "30": "热门",
+      "100": "最佳性价比"
+    },
+    "cta": {
+      "10": "试用 10 次训练",
+      "30": "解锁 30 次训练",
+      "100": "获取 100 次训练",
+      "default": "开始"
+    },
+    "benefits": {
+      "10": ["即刻访问", "无需注册", "适合尝试", "随时恢复训练次数"],
+      "30": ["适合经常使用", "无需注册", "单次更划算", "随时恢复训练次数"],
+      "100": ["最省钱", "无需注册", "长期使用", "随时恢复训练次数"],
+      "default": ["即刻访问", "无需注册", "随时恢复训练次数"]
+    }
+  },
+  "restore": {
+    "title": "从另一台设备恢复训练次数",
+    "description": "输入你购买时使用的邮箱。我们会发送验证码，把训练次数恢复到这台设备上。",
+    "emailLabel": "邮箱",
+    "emailPlaceholder": "your@email.com",
+    "sendCode": "发送验证码",
+    "sending": "发送中...",
+    "codeSentTo": "验证码已发送至 {{email}}",
+    "codeHint": "请查看邮箱并在下方输入 6 位验证码。",
+    "codeLabel": "验证码",
+    "attemptsRemaining": "剩余尝试次数：{{count}}",
+    "verifyRestore": "验证并恢复训练次数",
+    "verifying": "验证中...",
+    "useDifferentEmail": "使用其他邮箱",
+    "successTitle": "恢复成功！",
+    "unlimited": "无限访问",
+    "expires": "到期：{{date}}",
+    "paidWorkouts": "{{count}} 次付费训练",
+    "paidDetail": "已在此设备可用",
+    "freeWorkouts": "{{count}} 次免费训练",
+    "freeDetail": "已重置并可用",
+    "restoreMore": "继续恢复更多",
+    "errors": {
+      "invalidEmail": "请输入有效的邮箱地址",
+      "invalidCode": "请输入 6 位验证码",
+      "sendFailed": "发送验证码失败，请重试。",
+      "verifyFailed": "验证码验证失败"
+    }
+  },
+  "paywall": {
+    "backToHome": "← 返回首页",
+    "title": "你已用完 3 次免费训练 💪",
+    "subheadline": "立即解锁更多 AI 训练。一次性付款。无需登录。",
+    "loadingPlans": "正在加载方案...",
+    "mostPopular": "⭐ 最受欢迎",
+    "oneTime": "一次性",
+    "unlimitedWorkouts": "无限训练",
+    "workouts": "{{count}} 次训练",
+    "cta": "开始",
+    "disclaimerLine": "无需登录。无需订阅。一次性付款。"
+  },
+  "workoutDisplay": {
+    "titleFallback": "你的 AI 训练",
+    "workoutTypeAria": "训练类型：{{type}}",
+    "exercises": "动作",
+    "setsReps": "{{sets}} 组 × {{reps}} 次",
+    "rest": "休息：{{rest}}",
+    "tips": "提示",
+    "generatedOn": "生成日期：{{date}}"
+  },
+  "products": {
+    "heading": "推荐器械",
+    "subtitle": "用这些推荐产品提升你的训练体验",
+    "why": "原因：",
+    "button": "在 Amazon 查看",
+    "ariaViewOnAmazon": "在 Amazon 查看 {{title}}",
+    "disclaimer": "作为 Amazon Associate，我们会从符合条件的购买中获得收益。"
+  },
+  "promo": {
+    "videoAria": "训练宣传视频",
+    "videoUnavailable": "训练宣传视频不可用"
+  },
+  "footer": {
+    "tagline": "你的 AI 健身伙伴。立即获得个性化训练。",
+    "legal": "法律",
+    "support": "支持",
+    "links": {
+      "privacy": "隐私政策",
+      "disclaimer": "免责声明",
+      "about": "关于我们",
+      "contact": "联系我们",
+      "faq": "常见问题"
+    },
+    "copyright": "© {{year}} AIWorkoutNow。保留所有权利。",
+    "amazonDisclosure": "作为 Amazon Associate，我们会从符合条件的购买中获得收益。"
+  },
+  "pages": {
+    "home": {
+      "seo": {
+        "title": "AI 训练生成器（无需注册）| 一次性付款",
+        "description": "立即生成个性化训练计划——无需注册。先试用 3 次免费训练，然后用一次性付款解锁更多。适用于居家或健身房，结合器械与目标。"
+      },
+      "h1Sr": "AI 训练生成器 — 几秒内获得你的完美训练",
+      "whyTitle": "为什么选择 AIWorkoutNow？",
+      "whyCards": [
+        {
+          "title": "100% 个性化",
+          "body": "每次训练都会根据你的水平、目标和可用器械量身定制。"
+        },
+        {
+          "title": "秒级生成",
+          "body": "几秒内获得专业级训练方案，而不是花几个小时搜索。"
+        },
+        {
+          "title": "居家或健身房",
+          "body": "从自重到全套健身房器械都适用。"
+        },
+        {
+          "title": "无需承诺",
+          "body": "一次性付款。无订阅。无重复扣费。"
+        }
+      ],
+      "restore": {
+        "promptTitle": "在另一台设备上访问你的训练次数？",
+        "promptBody": "在另一台设备购买过次数？输入邮箱即可在这里恢复。",
+        "restoreTitle": "恢复训练次数",
+        "restoreBody": "输入购买时使用的邮箱以恢复你的次数。",
+        "button": "恢复训练次数"
+      },
+      "trustBadges": {
+        "securePayment": "安全支付",
+        "noSubscription": "无订阅",
+        "instantAccess": "即刻访问",
+        "moneyBack": "退款保证"
+      },
+      "pricingSide": {
+        "title": "解锁更多 AI 训练",
+        "sub": "一次性付款 • 无需登录 • 即刻访问"
+      },
+      "seoBlock": {
+        "title": "AI 训练生成器",
+        "p1": "AIWorkoutNow 是一款 AI 训练生成器，会根据你的健身水平、目标、器械和时间生成个性化训练计划。几秒内获得即时方案——无需注册。",
+        "p2": "先免费体验，再通过一次性付款模式解锁更多训练次数。无订阅。无重复扣费。",
+        "listTitle": "几秒内生成个性化训练方案",
+        "bullets": [
+          "从初学者到高级难度",
+          "居家或健身房场景",
+          "结合器械给出建议",
+          "按目标训练（力量、减脂、耐力）",
+          "即刻访问 — 无需注册"
+        ],
+        "noSignupTitle": "无需注册。一次性付款。",
+        "noSignupBody": "先免费试用，准备好后选择一次性付款的训练包。无订阅。"
+      },
+      "faq": {
+        "title": "常见问题",
+        "items": {
+          "chatgpt": {
+            "q": "为什么不直接用 ChatGPT？",
+            "intro": "ChatGPT 很强大，但 AIWorkoutNow 专注于更快、更稳定地生成训练计划。",
+            "bullets": [
+              "无需写提示词：选择水平、目标、时间、器械",
+              "结构一致（热身 → 主训练 → 放松）",
+              "器械匹配（居家 vs 健身房）",
+              "一键变化（立即重新生成）",
+              "次数简单明了（无订阅）"
+            ],
+            "outro": "我们也喜欢 ChatGPT — 这里只是更专注、更省事的训练生成器。"
+          },
+          "signup": {
+            "q": "需要注册吗？",
+            "a": "不需要。你可以立即生成训练——无需账号或登录。"
+          },
+          "subscription": {
+            "q": "这是订阅吗？",
+            "a": "不是。购买为一次性付款（无重复扣费）。"
+          },
+          "restore": {
+            "q": "如何在另一台设备恢复训练次数？",
+            "a": "点击“恢复训练次数”，输入结账时使用的邮箱。我们会发送验证码。"
+          },
+          "counts": {
+            "q": "什么算一次训练生成？",
+            "a": "每生成一个新的训练计划会消耗 1 次训练额度（免费试用额度除外）。"
+          }
+        }
+      },
+      "errors": {
+        "noFreeRemaining": "免费训练次数已用完。请购买更多训练次数继续。",
+        "noWorkoutsRemaining": "训练次数已用完。请购买更多训练次数继续。"
+      },
+      "schema": {
+        "faq": {
+          "q1": "AI 训练生成器是如何工作的？",
+          "a1": "选择你的水平、时间和器械。AIWorkoutNow 会根据输入立即生成个性化训练计划。",
+          "q2": "需要注册吗？",
+          "a2": "不需要。你可以立即生成训练——无需账号或登录。",
+          "q3": "这是订阅吗？",
+          "a3": "不是。购买为一次性付款（无重复扣费）。",
+          "q4": "可以在另一台设备恢复训练次数吗？",
+          "a4": "点击“恢复训练次数”，输入结账时使用的邮箱。我们会发送验证码。",
+          "offerDesc": "3 次免费训练，然后可一次性购买训练包"
+        }
+    },
+    "faq": {
+      "seo": {
+        "title": "常见问题 | AIWorkoutNow — AI 训练生成器（无需注册）",
+        "description": "关于 AIWorkoutNow 的解答：生成器如何工作、无需注册、训练次数、居家/健身房以及安全性。"
+      },
+      "title": "常见问题",
+      "items": [
+        {
+          "q": "AI 训练生成器是如何工作的？",
+          "a": "你选择健身水平、时间、训练类型、器械和限制。AIWorkoutNow 会根据输入在几秒内生成训练计划。"
+        },
+        { "q": "需要注册吗？", "a": "不需要。无需创建账号即可生成训练。" },
+        { "q": "适合初学者吗？", "a": "适合。选择“初学者”和你的器械，训练会按水平调整，更易上手。"},
+        { "q": "可以用于居家或健身房吗？", "a": "都可以。选择你的器械（或“无器械”），计划会自动适配。"},
+        { "q": "训练次数（额度）怎么用？", "a": "你可以先免费试用几次训练。之后可通过一次性付款购买训练次数（无订阅）。"},
+        { "q": "可以在另一台设备恢复训练次数吗？", "a": "可以。点击“恢复训练次数”，并验证你结账时使用的邮箱。"},
+        { "q": "生成速度有多快？", "a": "大多数训练在几秒内生成。繁忙时可能会稍慢一些。"},
+        { "q": "这是医疗建议吗？", "a": "不是。训练仅供参考。如有伤病或健康疑虑，请咨询专业人士。"}
+      ]
+    },
+    "workoutPlans": {
+      "seo": {
+        "title": "训练计划 | AIWorkoutNow — AI 训练生成器",
+        "description": "探索训练目标（减脂、力量、增肌、HIIT 等）。无需注册，立即生成 AI 训练计划。"
+      },
+      "title": "训练计划",
+      "intro": "选择一个目标，然后生成即时 AI 训练计划。这些“意图”帮你快速开始——AIWorkoutNow 会根据你的水平、时间和器械进行个性化。",
+      "popularGoals": "热门目标",
+      "generateNow": "立即生成",
+      "generateNowPrefix": "准备好了？前往",
+      "generateNowSuffix": "几秒内生成训练。",
+      "intents": {
+        "fat-loss": "减脂",
+        "strength": "力量",
+        "muscle-gain": "增肌",
+        "endurance": "耐力",
+        "hiit": "HIIT",
+        "bodyweight": "仅自重"
+      },
+      "linkToGenerator": "AI 训练生成器"
+    },
+    "aiWorkoutGenerator": {
+      "seo": {
+        "title": "AI 训练生成器（无需注册）| AIWorkoutNow",
+        "description": "几秒内生成 AI 训练计划——适用于居家或健身房。无需注册。先免费试用，然后一次性付款解锁更多。"
+      },
+      "title": "AI 训练生成器",
+      "intro": "几秒内生成 AI 训练计划。选择你的水平、可用时间、器械和目标——无需注册，获得适合居家或健身房的个性化训练。",
+      "generateSection": "生成你的训练",
+      "restoreTitle": "恢复训练次数",
+      "unlockTitle": "解锁更多训练次数",
+      "faqTitle": "常见问题",
+      "faq": {
+        "signupQ": "需要注册吗？",
+        "signupA": "不需要。你可以立即生成训练。",
+        "subQ": "这是订阅吗？",
+        "subA": "不是。训练次数为一次性付款购买。",
+        "homeGymQ": "居家还是健身房？",
+        "homeGymA": "都可以——选择器械后计划会自动适配。"
+      }
+    },
+    "about": {
+      "seo": {
+        "title": "关于我们 | AIWorkoutNow — AI 训练生成器（无需注册）",
+        "description": "了解 AIWorkoutNow，以及我们的 AI 训练生成器如何为居家或健身房即时生成个性化训练计划——无需注册。"
+      },
+      "backToHome": "← 返回首页",
+      "title": "关于 AIWorkoutNow",
+      "missionTitle": "我们的使命",
+      "missionBody": "AIWorkoutNow 的目标是让个性化健身人人可用。我们相信每个人都应获得高质量、定制化的训练计划，而不必依赖昂贵的健身房会员或私教。",
+      "howTitle": "它如何工作",
+      "howBody": "我们的 AI 平台会根据你的健身水平、目标、可用器械以及伤病或限制生成训练计划。只需输入偏好，几秒内获得完整方案——首次无需注册。",
+      "whyTitle": "为什么选择 AIWorkoutNow？",
+      "whyBullets": [
+        { "strong": "无需注册：", "text": "立即免费试用生成器" },
+        { "strong": "个性化方案：", "text": "每次训练都为你量身定制" },
+        { "strong": "灵活价格：", "text": "按需购买训练次数" },
+        { "strong": "离线访问：", "text": "保存训练，随时查看" },
+        { "strong": "隐私优先：", "text": "我们尊重你的数据" }
+      ],
+      "contactTitle": "联系我们",
+      "contactBody": "有问题或反馈？欢迎联系我们。前往联系页面与我们取得联系。",
+      "contactLinkText": "前往联系页面"
+    },
+    "contact": {
+      "seo": {
+        "title": "联系 | AIWorkoutNow",
+        "description": "联系 AIWorkoutNow 支持：获取帮助、反馈或关于 AI 训练生成器与训练次数的问题。"
+      },
+      "backToHome": "← 返回首页",
+      "title": "联系我们",
+      "intro": "有问题、建议或反馈？欢迎告诉我们！填写下方表单，我们会尽快回复。",
+      "success": "感谢你的消息！我们会尽快回复。",
+      "form": {
+        "name": "你的姓名",
+        "email": "你的邮箱",
+        "subject": "主题",
+        "message": "内容",
+        "placeholders": {
+          "name": "张三",
+          "email": "your.email@example.com",
+          "subject": "想咨询什么？",
+          "message": "告诉我们你的想法..."
+        },
+        "send": "发送消息",
+        "sending": "发送中..."
+      },
+      "validation": {
+        "nameRequired": "姓名为必填项",
+        "nameMax": "姓名长度不能超过 100 个字符",
+        "emailRequired": "邮箱为必填项",
+        "emailInvalid": "请输入有效的邮箱地址",
+        "subjectRequired": "主题为必填项",
+        "subjectMax": "主题长度不能超过 200 个字符",
+        "messageRequired": "内容为必填项",
+        "messageMax": "内容长度不能超过 5000 个字符"
+      }
+    },
+    "privacy": {
+      "seo": {
+        "title": "隐私政策 | AIWorkoutNow",
+        "description": "阅读 AIWorkoutNow 隐私政策，了解我们在你使用 AI 训练生成器时如何收集、使用并保护数据。"
+      },
+      "backToHome": "← 返回首页",
+      "title": "隐私政策",
+      "lastUpdated": "最后更新：{{date}}",
+      "sections": {
+        "introTitle": "介绍",
+        "introBody": "AIWorkoutNow 尊重你的隐私，并致力于保护个人数据。本政策说明我们如何在你使用服务时收集、使用与保护信息。",
+        "collectTitle": "我们收集的信息",
+        "deviceTitle": "设备信息",
+        "deviceBody": "我们会生成并在本地保存一个唯一设备标识，用于跟踪使用次数与余额。该标识不与个人身份关联。",
+        "prefsTitle": "训练偏好",
+        "prefsBody": "当你生成训练时，我们会收集你的偏好（水平、类型、时长、器械等）以创建个性化计划。该数据会保存在本地，也可能用于服务改进而保存在服务器上。",
+        "useTitle": "我们如何使用信息",
+        "useBullets": [
+          "生成个性化训练计划",
+          "跟踪你的训练次数与使用情况",
+          "改进我们的 AI 与服务质量",
+          "在你请求时提供客户支持"
+        ],
+        "storageTitle": "数据存储",
+        "storageBody": "训练数据与偏好会存储在浏览器 localStorage 中。我们也可能在服务器上存储匿名使用数据以改进服务。除非你主动提供（例如通过联系表单），否则我们不会存储可识别个人身份的信息。",
+        "thirdPartyTitle": "第三方服务",
+        "thirdPartyBody": "我们使用 Amazon Associates 链接做产品推荐。点击后 Amazon 可能按其隐私政策收集信息。我们不对 Amazon 的数据实践负责。",
+        "rightsTitle": "你的权利",
+        "rightsBody": "你可以随时清除浏览器 localStorage 来删除本地数据。如需删除服务器端数据，请通过联系表单联系我们。",
+        "contactTitle": "联系",
+        "contactBody": "如果你对本隐私政策有疑问，请联系我们。"
+      }
+    },
+    "disclaimer": {
+      "seo": {
+        "title": "免责声明 | AIWorkoutNow",
+        "description": "重要的安全与健康免责声明。训练建议仅供参考，并非医疗建议。"
+      },
+      "backToHome": "← 返回首页",
+      "title": "免责声明",
+      "sections": {
+        "medicalTitle": "医疗免责声明",
+        "medicalBody": "AIWorkoutNow 不是医疗服务。AI 生成的训练仅用于信息与教育目的。开始任何训练计划前请咨询医疗专业人士，尤其是在有既往病史、伤病或健康担忧时。",
+        "fitnessTitle": "健身免责声明",
+        "fitnessBody": "我们努力提供安全有效的建议，但个体差异很大。你需要对以下事项负责：",
+        "fitnessBullets": [
+          "评估自己的健身水平与能力",
+          "根据自身限制调整动作",
+          "出现疼痛或不适时立即停止",
+          "确保正确动作与技术",
+          "必要时使用安全防护装备"
+        ],
+        "warrantyTitle": "无担保",
+        "warrantyBody": "AIWorkoutNow 按“现状”提供训练，不提供任何明示或暗示担保。我们不保证特定效果或适用于你的具体情况。",
+        "liabilityTitle": "责任限制",
+        "liabilityBody": "因使用本服务或遵循训练建议导致的伤害或损失，AIWorkoutNow 及其运营方/关联方不承担责任。你需自行承担运动风险。",
+        "adviceTitle": "专业建议",
+        "adviceBody": "如需个性化健身指导、营养建议或医疗许可，请咨询合格专业人士（如认证教练、营养师或医疗人员）。",
+        "riskTitle": "风险承担",
+        "riskBody": "使用 AIWorkoutNow 即表示你认可运动存在固有风险，并自愿承担参与训练计划的相关风险。"
+      }
+    },
+    "paymentSuccess": {
+      "seo": { "title": "支付成功 | AIWorkoutNow", "description": "支付成功。" },
+      "title": "支付成功！",
+      "message": "感谢你的购买。你的访问权限已升级。",
+      "verifying": "正在验证支付并发放训练次数...",
+      "checking": "正在检查你的访问权限...",
+      "unlimitedActive": "无限访问已激活",
+      "expires": "（到期：{{date}}）",
+      "workoutsAvailable": "可用训练次数：{{count}}",
+      "redirecting": "3 秒后将返回首页...",
+      "start": "开始生成训练",
+      "backToHome": "← 返回首页"
+    },
+    "paymentCancel": {
+      "seo": { "title": "支付已取消 | AIWorkoutNow", "description": "支付已取消。" },
+      "title": "支付已取消",
+      "message": "你的支付未完成。不会产生任何扣费。",
+      "submessage": "你可以随时再试一次。你的 3 次免费训练仍然可用！",
+      "tryAgain": "再试一次",
+      "goHome": "返回首页"
+    }
+  }
+}
+}
+

@@ -1,49 +1,55 @@
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
+import { useTranslation } from 'react-i18next';
 import './About.css';
 
 const PLAN_INTENTS = [
-  { label: 'Fat loss', qp: 'fat-loss' },
-  { label: 'Strength', qp: 'strength' },
-  { label: 'Muscle gain', qp: 'muscle-gain' },
-  { label: 'Endurance', qp: 'endurance' },
-  { label: 'HIIT', qp: 'hiit' },
-  { label: 'Bodyweight-only', qp: 'bodyweight' },
+  { qp: 'fat-loss' },
+  { qp: 'strength' },
+  { qp: 'muscle-gain' },
+  { qp: 'endurance' },
+  { qp: 'hiit' },
+  { qp: 'bodyweight' },
 ] as const;
 
 function WorkoutPlans() {
+  const { t } = useTranslation();
+
   return (
     <>
       <SEO
-        title="Workout Plans | AIWorkoutNow — AI Workout Generator"
-        description="Explore workout plan goals (fat loss, strength, muscle gain, HIIT, and more). Generate an instant AI workout plan with no signup."
+        title={t('pages.workoutPlans.seo.title')}
+        description={t('pages.workoutPlans.seo.description')}
         canonicalUrl="https://aiworkoutnow.com/workout-plans"
       />
 
       <div className="about-page">
         <div className="container">
           <div className="content-card">
-            <h1>Workout Plans</h1>
+            <h1>{t('pages.workoutPlans.title')}</h1>
             <p>
-              Pick a goal, then generate an instant AI workout plan. These are “plan intents” to help you
-              get started quickly—AIWorkoutNow personalizes each workout to your level, time, and equipment.
+              {t('pages.workoutPlans.intro')}
             </p>
 
             <section>
-              <h2>Popular plan goals</h2>
+              <h2>{t('pages.workoutPlans.popularGoals')}</h2>
               <ul>
                 {PLAN_INTENTS.map((p) => (
                   <li key={p.qp}>
-                    <Link to={`/ai-workout-generator?goal=${encodeURIComponent(p.qp)}`}>{p.label}</Link>
+                    <Link to={`/ai-workout-generator?goal=${encodeURIComponent(p.qp)}`}>
+                      {t(`pages.workoutPlans.intents.${p.qp}`)}
+                    </Link>
                   </li>
                 ))}
               </ul>
             </section>
 
             <section>
-              <h2>Generate now</h2>
+              <h2>{t('pages.workoutPlans.generateNow')}</h2>
               <p>
-                Ready to go? Head to the <Link to="/ai-workout-generator">AI Workout Generator</Link> and build a workout in seconds.
+                {t('pages.workoutPlans.generateNowPrefix')}{' '}
+                <Link to="/ai-workout-generator">{t('pages.workoutPlans.linkToGenerator')}</Link>{' '}
+                {t('pages.workoutPlans.generateNowSuffix')}
               </p>
             </section>
           </div>

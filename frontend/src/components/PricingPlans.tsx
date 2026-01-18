@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getPricingPlans, createCheckoutSession, PricingPlan } from '../services/api';
 import { getDeviceId } from '../utils/storage';
 import PlanBadge, { PlanBadgeVariant } from './PlanBadge';
+import { useTranslation } from 'react-i18next';
 
 interface PricingPlansProps {
   showHeader?: boolean;
@@ -9,6 +10,7 @@ interface PricingPlansProps {
 }
 
 function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps) {
+  const { t } = useTranslation();
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
@@ -24,23 +26,31 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
   const isMostPopular = (tokenCount?: number | null) => tokenCount === 30;
 
   const getCta = (tokenCount?: number | null) => {
-    if (tokenCount === 10) return 'Try 10 Workouts';
-    if (tokenCount === 30) return 'Unlock 30 Workouts';
-    if (tokenCount === 100) return 'Get 100 Workouts';
-    return 'Get Started';
+    if (tokenCount === 10) return t('pricing.cta.10');
+    if (tokenCount === 30) return t('pricing.cta.30');
+    if (tokenCount === 100) return t('pricing.cta.100');
+    return t('pricing.cta.default');
   };
 
   const getBenefits = (tokenCount?: number | null) => {
-    if (tokenCount === 10) {
-      return ['Instant access', 'No signup', 'Great for testing', 'Restore workouts anytime'];
-    }
-    if (tokenCount === 30) {
-      return ['Best for regular use', 'No signup', 'Better value per workout', 'Restore workouts anytime'];
-    }
-    if (tokenCount === 100) {
-      return ['Best savings', 'No signup', 'Long-term access', 'Restore workouts anytime'];
-    }
-    return ['Instant access', 'No signup', 'Restore workouts anytime'];
+    const key =
+      tokenCount === 10
+        ? 'pricing.benefits.10'
+        : tokenCount === 30
+          ? 'pricing.benefits.30'
+          : tokenCount === 100
+            ? 'pricing.benefits.100'
+            : 'pricing.benefits.default';
+
+    return t(key, { returnObjects: true }) as unknown as string[];
+  };
+
+  const getPlanDisplayName = (plan: PricingPlan) => {
+    const tokenCount = plan.tokenCount ?? null;
+    if (tokenCount === 10) return t('pricing.planName.10');
+    if (tokenCount === 30) return t('pricing.planName.30');
+    if (tokenCount === 100) return t('pricing.planName.100');
+    return plan.name;
   };
 
   const costPerWorkout = (plan: PricingPlan) => {
@@ -140,7 +150,7 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
   if (loading) {
     return (
       <div className="text-center py-8 text-slate-600">
-        Loading pricing plans...
+        {t('pricing.loadingPlans')}
       </div>
     );
   }
@@ -160,9 +170,9 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
           <h2
             id="pricing-heading"
             className="text-lg font-bold text-slate-800 mb-2 whitespace-normal lg:whitespace-nowrap"
-            title="Unlock More AI Workouts"
+            title={t('pricing.header')}
           >
-            Unlock More AI Workouts
+            {t('pricing.header')}
           </h2>
         </header>
       )}
@@ -188,7 +198,7 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
                 )}
 
                 <h3 className="text-[15px] sm:text-[16px] font-extrabold text-slate-900 whitespace-nowrap">
-                  {plan.name}
+                  {getPlanDisplayName(plan)}
                 </h3>
               </div>
               
@@ -200,7 +210,7 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
                   </span>
                   {plan.tokenCount && (
                     <span className="text-xs text-slate-500 font-semibold whitespace-nowrap">
-                      (${costPerWorkout(plan)} per workout)
+                      {t('pricing.perWorkout', { price: costPerWorkout(plan) })}
                     </span>
                   )}
                 </div>
@@ -233,7 +243,7 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
                 {checkoutLoading === plan.planId ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="animate-spin">⚙️</span>
-                    Processing...
+                    {t('pricing.processing')}
                   </span>
                 ) : (
                   getCta(plan.tokenCount)
@@ -260,7 +270,7 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
                   <PlanBadge variant={getBadgeVariant(plan.tokenCount)!} />
                 )}
                 <h3 className="text-[18px] font-semibold text-slate-900">
-                  {plan.name}
+                  {getPlanDisplayName(plan)}
                 </h3>
               </div>
               
@@ -271,7 +281,7 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
                   </span>
                   {plan.tokenCount && (
                     <span className="text-xs text-slate-500 font-semibold whitespace-nowrap">
-                      (${costPerWorkout(plan)} per workout)
+                      {t('pricing.perWorkout', { price: costPerWorkout(plan) })}
                     </span>
                   )}
                 </div>
@@ -298,7 +308,7 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
                 disabled={checkoutLoading === plan.planId}
                 aria-label={`Purchase ${plan.name} plan`}
               >
-                {checkoutLoading === plan.planId ? 'Processing...' : getCta(plan.tokenCount)}
+                {checkoutLoading === plan.planId ? t('pricing.processing') : getCta(plan.tokenCount)}
               </button>
 
             </article>
@@ -308,9 +318,9 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
 
       {showHeader && !vertical && (
         <div className="mt-6 text-center space-y-2 pt-6 border-t border-slate-200">
-          <p className="text-sm text-slate-600">No login. No subscription.</p>
+          <p className="text-sm text-slate-600">{t('pricing.noLoginNoSubscription')}</p>
           <p className="text-sm font-semibold text-slate-700">
-            Other fitness apps charge $10–$30/month. We don't.
+            {t('pricing.comparison')}
           </p>
         </div>
       )}

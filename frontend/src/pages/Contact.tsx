@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
+import { useTranslation } from 'react-i18next';
 import { submitContact } from '../services/api';
 import './Contact.css';
 
 function Contact() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('');
@@ -29,27 +31,27 @@ function Contact() {
     const errors: { name?: string; email?: string; subject?: string; message?: string } = {};
 
     if (!name.trim()) {
-      errors.name = 'Name is required';
+      errors.name = t('pages.contact.validation.nameRequired');
     } else if (name.length > 100) {
-      errors.name = 'Name must be 100 characters or less';
+      errors.name = t('pages.contact.validation.nameMax');
     }
 
     if (!email.trim()) {
-      errors.email = 'Email is required';
+      errors.email = t('pages.contact.validation.emailRequired');
     } else if (!validateEmail(email)) {
-      errors.email = 'Please enter a valid email address';
+      errors.email = t('pages.contact.validation.emailInvalid');
     }
 
     if (!subject.trim()) {
-      errors.subject = 'Subject is required';
+      errors.subject = t('pages.contact.validation.subjectRequired');
     } else if (subject.length > 200) {
-      errors.subject = 'Subject must be 200 characters or less';
+      errors.subject = t('pages.contact.validation.subjectMax');
     }
 
     if (!message.trim()) {
-      errors.message = 'Message is required';
+      errors.message = t('pages.contact.validation.messageRequired');
     } else if (message.length > 5000) {
-      errors.message = 'Message must be 5000 characters or less';
+      errors.message = t('pages.contact.validation.messageMax');
     }
 
     setValidationErrors(errors);
@@ -84,26 +86,23 @@ function Contact() {
   return (
     <>
       <SEO
-        title="Contact | AIWorkoutNow"
-        description="Contact AIWorkoutNow support for help, feedback, or questions about the AI workout generator and workout credits."
+        title={t('pages.contact.seo.title')}
+        description={t('pages.contact.seo.description')}
         canonicalUrl="https://aiworkoutnow.com/contact"
       />
       
       <div className="contact-page">
         <div className="container">
           <button onClick={() => navigate('/')} className="back-button">
-            ← Back to Home
+            {t('pages.contact.backToHome')}
           </button>
           <div className="content-card">
-            <h1>Contact Us</h1>
-            <p>
-              Have a question, suggestion, or feedback? We'd love to hear from you! 
-              Fill out the form below and we'll get back to you as soon as possible.
-            </p>
+            <h1>{t('pages.contact.title')}</h1>
+            <p>{t('pages.contact.intro')}</p>
 
             {success && (
               <div className="success-message">
-                Thank you for your message! We'll get back to you soon.
+                {t('pages.contact.success')}
               </div>
             )}
 
@@ -115,7 +114,7 @@ function Contact() {
 
             <form onSubmit={handleSubmit} className="contact-form">
               <div className="form-group">
-                <label htmlFor="name">Your Name</label>
+                <label htmlFor="name">{t('pages.contact.form.name')}</label>
                 <input
                   type="text"
                   id="name"
@@ -129,7 +128,7 @@ function Contact() {
                   className={`input ${validationErrors.name ? 'error' : ''}`}
                   required
                   maxLength={100}
-                  placeholder="John Doe"
+                  placeholder={t('pages.contact.form.placeholders.name')}
                 />
                 {validationErrors.name && (
                   <span className="error-text">{validationErrors.name}</span>
@@ -137,7 +136,7 @@ function Contact() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="email">Your Email</label>
+                <label htmlFor="email">{t('pages.contact.form.email')}</label>
                 <input
                   type="email"
                   id="email"
@@ -150,7 +149,7 @@ function Contact() {
                   }}
                   className={`input ${validationErrors.email ? 'error' : ''}`}
                   required
-                  placeholder="your.email@example.com"
+                  placeholder={t('pages.contact.form.placeholders.email')}
                 />
                 {validationErrors.email && (
                   <span className="error-text">{validationErrors.email}</span>
@@ -158,7 +157,7 @@ function Contact() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="subject">Subject</label>
+                <label htmlFor="subject">{t('pages.contact.form.subject')}</label>
                 <input
                   type="text"
                   id="subject"
@@ -172,7 +171,7 @@ function Contact() {
                   className={`input ${validationErrors.subject ? 'error' : ''}`}
                   required
                   maxLength={200}
-                  placeholder="What is this regarding?"
+                  placeholder={t('pages.contact.form.placeholders.subject')}
                 />
                 {validationErrors.subject && (
                   <span className="error-text">{validationErrors.subject}</span>
@@ -181,7 +180,7 @@ function Contact() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="message">Message</label>
+                <label htmlFor="message">{t('pages.contact.form.message')}</label>
                 <textarea
                   id="message"
                   value={message}
@@ -195,7 +194,7 @@ function Contact() {
                   required
                   rows={6}
                   maxLength={5000}
-                  placeholder="Tell us what's on your mind..."
+                  placeholder={t('pages.contact.form.placeholders.message')}
                 />
                 {validationErrors.message && (
                   <span className="error-text">{validationErrors.message}</span>
@@ -204,7 +203,7 @@ function Contact() {
               </div>
 
               <button type="submit" className="btn" disabled={loading}>
-                {loading ? 'Sending...' : 'Send Message'}
+                {loading ? t('pages.contact.form.sending') : t('pages.contact.form.send')}
               </button>
             </form>
           </div>

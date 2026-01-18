@@ -5,21 +5,23 @@ interface PlanBadgeProps {
   className?: string;
 }
 
-const VARIANT_STYLES: Record<PlanBadgeVariant, { label: string; icon?: string; className: string }> = {
+import { useTranslation } from 'react-i18next';
+
+const VARIANT_STYLES: Record<PlanBadgeVariant, { labelKey: string; icon?: string; className: string }> = {
   starter: {
-    label: 'Quick Start',
+    labelKey: 'pricing.badges.starter',
     icon: '🚀',
     className:
       'bg-sky-100 text-sky-900 border border-sky-200 shadow-sm',
   },
   popular: {
-    label: 'Most Popular',
+    labelKey: 'pricing.badges.popular',
     icon: '⭐',
     className:
       'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-sm',
   },
   value: {
-    label: 'Best Value',
+    labelKey: 'pricing.badges.value',
     icon: '💰',
     className:
       'bg-emerald-600 text-white shadow-sm',
@@ -27,6 +29,7 @@ const VARIANT_STYLES: Record<PlanBadgeVariant, { label: string; icon?: string; c
 };
 
 export default function PlanBadge({ variant, className }: PlanBadgeProps) {
+  const { t } = useTranslation();
   const v = VARIANT_STYLES[variant];
 
   return (
@@ -43,7 +46,7 @@ export default function PlanBadge({ variant, className }: PlanBadgeProps) {
       ].join(' ')}
     >
       {v.icon ? <span aria-hidden="true">{v.icon}</span> : null}
-      <span>{v.label}</span>
+      <span>{t(v.labelKey)}</span>
     </span>
   );
 }

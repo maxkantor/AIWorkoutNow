@@ -1,5 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 type JsonLd = Record<string, any>;
 
@@ -31,6 +32,7 @@ export default function SEO({
   jsonLd,
 }: SEOProps) {
   const location = useLocation();
+  const { i18n } = useTranslation();
   const canonical =
     canonicalUrl ??
     `${SITE_URL}${location.pathname === '/' ? '/' : location.pathname.replace(/\/+$/, '')}`;
@@ -38,7 +40,7 @@ export default function SEO({
   const schemas: JsonLd[] = Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : [];
 
   return (
-    <Helmet>
+    <Helmet htmlAttributes={{ lang: i18n.resolvedLanguage || i18n.language || 'en' }}>
       <title>{title}</title>
       <meta name="description" content={description} />
       <meta name="robots" content={robots} />

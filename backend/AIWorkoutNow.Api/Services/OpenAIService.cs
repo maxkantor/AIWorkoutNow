@@ -42,13 +42,23 @@ public class OpenAIService : IAIService
     public async Task<Workout> GenerateWorkoutAsync(WorkoutPreferences preferences)
     {
         var prompt = BuildPrompt(preferences);
+        var languageName = GetLanguageName(preferences.Lang);
         
         var requestBody = new
         {
             model = "gpt-4o-mini",
             messages = new[]
             {
-                new { role = "system", content = "You are a professional fitness trainer and workout planner. Generate detailed, safe, and effective workout plans in JSON format. Always return valid JSON." },
+                new
+                {
+                    role = "system",
+                    content =
+                        $"You are a professional fitness trainer and workout planner. " +
+                        $"Return ONLY valid JSON (no markdown, no extra text). " +
+                        $"All human-readable strings MUST be in {languageName}. Do NOT use English unless the language is English. " +
+                        $"No medical claims. Include a brief safety disclaimer inside the description field. " +
+                        $"Do not add extra keys beyond the requested JSON shape."
+                },
                 new { role = "user", content = prompt }
             },
             response_format = new { type = "json_object" },
@@ -118,7 +128,10 @@ public class OpenAIService : IAIService
 
     private string BuildPrompt(WorkoutPreferences preferences)
     {
+        var languageName = GetLanguageName(preferences.Lang);
         return $@"Generate a personalized workout plan with the following specifications:
+
+Language: {languageName}
 
 Fitness Level: {preferences.FitnessLevel}
 Workout Type: {preferences.WorkoutType}
@@ -130,7 +143,7 @@ Goals: {(preferences.Goals.Any() ? string.Join(", ", preferences.Goals) : "Gener
 Please provide a JSON response with the following structure:
 {{
   ""title"": ""Workout title"",
-  ""description"": ""Brief description"",
+  ""description"": ""Brief description (include a short safety disclaimer here)"",
   ""type"": ""{preferences.WorkoutType}"",
   ""exercises"": [
     {{
@@ -156,6 +169,19 @@ Please provide a JSON response with the following structure:
 For productRecommendations, suggest 2-4 relevant fitness products that would enhance this workout. Base recommendations on the workout type, equipment available, and exercises included. Use specific, searchable keywords that users would use on Amazon.
 
 Make sure the workout is safe, effective, and appropriate for the specified fitness level and equipment available.";
+    }
+
+    private static string GetLanguageName(string? lang)
+    {
+        var l = (lang ?? "en").Trim().ToLowerInvariant();
+        return l switch
+        {
+            "es" => "Spanish",
+            "ru" => "Russian",
+            "hi" => "Hindi",
+            "zh" => "Chinese (Simplified)",
+            _ => "English"
+        };
     }
 
     private string GenerateWorkoutHash(Workout workout)

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPricingPlans, createCheckoutSession, PricingPlan } from '../services/api';
 import { getDeviceId } from '../utils/storage';
+import { useTranslation } from 'react-i18next';
 import './PaywallModal.css';
 
 interface PaywallModalProps {
@@ -12,6 +13,7 @@ interface PaywallModalProps {
 
 function PaywallModal({ isOpen, onClose, onPurchaseComplete: _onPurchaseComplete }: PaywallModalProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
@@ -84,13 +86,13 @@ function PaywallModal({ isOpen, onClose, onPurchaseComplete: _onPurchaseComplete
         <button className="paywall-close" onClick={onClose}>×</button>
         
         <button className="paywall-back" onClick={handleBackToHome}>
-          ← Back to Home
+          {t('paywall.backToHome')}
         </button>
         
         <div className="paywall-header">
-          <h2>You've Used Your 3 Free Workouts 💪</h2>
+          <h2>{t('paywall.title')}</h2>
           <p className="paywall-subheadline">
-            Unlock more AI workouts instantly. Pay once. No login.
+            {t('paywall.subheadline')}
           </p>
         </div>
 
@@ -99,7 +101,7 @@ function PaywallModal({ isOpen, onClose, onPurchaseComplete: _onPurchaseComplete
         )}
 
         {loading ? (
-          <div className="paywall-loading">Loading plans...</div>
+          <div className="paywall-loading">{t('paywall.loadingPlans')}</div>
         ) : (
           <>
             <div className="pricing-plans-grid">
@@ -110,27 +112,35 @@ function PaywallModal({ isOpen, onClose, onPurchaseComplete: _onPurchaseComplete
                 >
                   {plan.isRecommended && (
                     <div className="recommended-badge">
-                      {plan.badgeText || '⭐ Most Popular'}
+                      {t('paywall.mostPopular')}
                     </div>
                   )}
                   
-                  <h3>{plan.name}</h3>
+                  <h3>
+                    {plan.tokenCount === 10
+                      ? t('pricing.planName.10')
+                      : plan.tokenCount === 30
+                        ? t('pricing.planName.30')
+                        : plan.tokenCount === 100
+                          ? t('pricing.planName.100')
+                          : plan.name}
+                  </h3>
                   
                   <div className="plan-price">
                     <span className="price-amount">${plan.price.toFixed(2)}</span>
-                    <span className="price-period">one-time</span>
+                    <span className="price-period">{t('paywall.oneTime')}</span>
                   </div>
 
                   <div className="plan-features">
                     {plan.isUnlimited ? (
                       <div className="feature-item">
                         <span className="feature-icon">∞</span>
-                        <span>Unlimited workouts</span>
+                        <span>{t('paywall.unlimitedWorkouts')}</span>
                       </div>
                     ) : (
                       <div className="feature-item">
                         <span className="feature-icon">💪</span>
-                        <span>{plan.tokenCount} workouts</span>
+                        <span>{t('paywall.workouts', { count: plan.tokenCount })}</span>
                       </div>
                     )}
                   </div>
@@ -144,16 +154,16 @@ function PaywallModal({ isOpen, onClose, onPurchaseComplete: _onPurchaseComplete
                     onClick={() => handlePurchase(plan)}
                     disabled={checkoutLoading === plan.planId}
                   >
-                    {checkoutLoading === plan.planId ? 'Processing...' : 'Get Started'}
+                    {checkoutLoading === plan.planId ? t('pricing.processing') : t('paywall.cta')}
                   </button>
                 </div>
               ))}
             </div>
 
             <div className="pricing-disclaimer">
-              <p>No login. No subscription. Pay once.</p>
+              <p>{t('paywall.disclaimerLine')}</p>
               <p className="comparison-text">
-                Other fitness apps charge $10–$30/month. We don't.
+                {t('pricing.comparison')}
               </p>
             </div>
           </>

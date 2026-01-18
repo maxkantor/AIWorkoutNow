@@ -40,6 +40,7 @@ public class WorkoutPreferences
     public string Equipment { get; set; } = string.Empty;
     public List<string> Injuries { get; set; } = new();
     public List<string> Goals { get; set; } = new();
+    public string Lang { get; set; } = "en";
 }
 
 public class AnonymousUsage

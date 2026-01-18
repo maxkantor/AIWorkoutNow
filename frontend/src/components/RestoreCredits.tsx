@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getDeviceId } from '../utils/storage';
 import { sendVerificationCode, verifyAndRestoreCredits } from '../services/api';
 import './RestoreCredits.css';
@@ -8,6 +9,7 @@ interface RestoreCreditsProps {
 }
 
 function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
+  const { t, i18n } = useTranslation();
   const [step, setStep] = useState<'email' | 'code' | 'success'>('email');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -18,7 +20,7 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
 
   const handleSendCode = async () => {
     if (!email || !email.includes('@')) {
-      setError('Please enter a valid email address');
+      setError(t('restore.errors.invalidEmail'));
       return;
     }
 
@@ -29,7 +31,7 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
       await sendVerificationCode(email);
       setStep('code');
     } catch (err: any) {
-      setError(err.message || 'Failed to send verification code. Please try again.');
+      setError(err.message || t('restore.errors.sendFailed'));
     } finally {
       setLoading(false);
     }
@@ -37,7 +39,7 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
 
   const handleVerifyCode = async () => {
     if (!code || code.length !== 6) {
-      setError('Please enter the 6-digit verification code');
+      setError(t('restore.errors.invalidCode'));
       return;
     }
 
@@ -56,7 +58,7 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
       // Also dispatch a global event to refresh access status across the app
       window.dispatchEvent(new CustomEvent('refreshAccessStatus'));
     } catch (err: any) {
-      const errorMessage = err.message || 'Failed to verify code';
+      const errorMessage = err.message || t('restore.errors.verifyFailed');
       if (errorMessage.includes('attempts')) {
         const match = errorMessage.match(/(\d+)/);
         if (match) {
@@ -81,21 +83,21 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
   return (
     <div className="restore-credits-container">
       <div className="restore-credits-card">
-        <h2 className="restore-credits-title">Restore Workouts from Another Device</h2>
+        <h2 className="restore-credits-title">{t('restore.title')}</h2>
         <p className="restore-credits-description">
-          Enter the email address you used when purchasing credits. We'll send you a verification code to restore your credits on this device.
+          {t('restore.description')}
         </p>
 
         {step === 'email' && (
           <div className="restore-credits-form">
             <div className="form-group">
-              <label htmlFor="email">Email Address</label>
+              <label htmlFor="email">{t('restore.emailLabel')}</label>
               <input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
+                placeholder={t('restore.emailPlaceholder')}
                 className="form-input"
                 disabled={loading}
                 onKeyPress={(e) => {
@@ -111,7 +113,7 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
               disabled={loading || !email}
               className="cta-button"
             >
-              {loading ? 'Sending...' : 'Send Verification Code'}
+              {loading ? t('restore.sending') : t('restore.sendCode')}
             </button>
           </div>
         )}
@@ -120,11 +122,11 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
           <div className="restore-credits-form">
             <div className="code-sent-message">
               <span className="check-icon">✓</span>
-              <p>Verification code sent to <strong>{email}</strong></p>
-              <p className="code-hint">Check your email and enter the 6-digit code below.</p>
+              <p>{t('restore.codeSentTo', { email })}</p>
+              <p className="code-hint">{t('restore.codeHint')}</p>
             </div>
             <div className="form-group">
-              <label htmlFor="code">Verification Code</label>
+              <label htmlFor="code">{t('restore.codeLabel')}</label>
               <input
                 id="code"
                 type="text"
@@ -144,7 +146,7 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
                 }}
               />
               {attemptsRemaining !== null && (
-                <p className="attempts-remaining">Attempts remaining: {attemptsRemaining}</p>
+                <p className="attempts-remaining">{t('restore.attemptsRemaining', { count: attemptsRemaining })}</p>
               )}
             </div>
             {error && <div className="error-message">{error}</div>}
@@ -154,14 +156,14 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
                 disabled={loading || code.length !== 6}
                 className="cta-button"
               >
-              {loading ? 'Verifying...' : 'Verify & Restore Workouts'}
+              {loading ? t('restore.verifying') : t('restore.verifyRestore')}
               </button>
               <button
                 onClick={handleReset}
                 disabled={loading}
                 className="secondary-button"
               >
-                Use Different Email
+                {t('restore.useDifferentEmail')}
               </button>
             </div>
           </div>
@@ -170,15 +172,19 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
         {step === 'success' && success && (
           <div className="restore-credits-success">
             <div className="success-icon">✓</div>
-            <h3>Credits Restored Successfully!</h3>
+            <h3>{t('restore.successTitle')}</h3>
             <div className="credits-info">
               {success.hasUnlimited ? (
                 <div className="credits-item">
                   <span className="credits-icon">∞</span>
                   <div>
-                    <strong>Unlimited Access</strong>
+                    <strong>{t('restore.unlimited')}</strong>
                     {success.expiresAt && (
-                      <p className="credits-detail">Expires: {new Date(success.expiresAt).toLocaleDateString()}</p>
+                      <p className="credits-detail">
+                        {t('restore.expires', {
+                          date: new Date(success.expiresAt).toLocaleDateString(i18n.resolvedLanguage || i18n.language),
+                        })}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -188,8 +194,8 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
                     <div className="credits-item">
                       <span className="credits-icon">💪</span>
                       <div>
-                        <strong>{success.tokensRemaining} Paid Workouts</strong>
-                        <p className="credits-detail">Available on this device</p>
+                        <strong>{t('restore.paidWorkouts', { count: success.tokensRemaining })}</strong>
+                        <p className="credits-detail">{t('restore.paidDetail')}</p>
                       </div>
                     </div>
                   )}
@@ -197,8 +203,8 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
                     <div className="credits-item">
                       <span className="credits-icon">🎁</span>
                       <div>
-                        <strong>{success.freeWorkoutsRemaining} Free Workouts</strong>
-                        <p className="credits-detail">Reset and available</p>
+                        <strong>{t('restore.freeWorkouts', { count: success.freeWorkoutsRemaining })}</strong>
+                        <p className="credits-detail">{t('restore.freeDetail')}</p>
                       </div>
                     </div>
                   )}
@@ -206,7 +212,7 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
               )}
             </div>
             <button onClick={handleReset} className="cta-button">
-              Restore More Workouts
+              {t('restore.restoreMore')}
             </button>
           </div>
         )}

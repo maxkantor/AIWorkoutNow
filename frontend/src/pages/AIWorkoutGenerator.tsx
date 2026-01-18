@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import SEO from '../components/SEO';
 import WorkoutGenerator from '../components/WorkoutGenerator';
 import PricingPlans from '../components/PricingPlans';
@@ -8,6 +9,7 @@ import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAcc
 import './About.css';
 
 function AIWorkoutGeneratorPage() {
+  const { t, i18n } = useTranslation();
   const [workout, setWorkout] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,9 +20,8 @@ function AIWorkoutGeneratorPage() {
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [showRestoreCredits, setShowRestoreCredits] = useState(false);
 
-  const seoTitle = 'AI Workout Generator (No Signup) | AIWorkoutNow';
-  const seoDescription =
-    'Generate an AI workout plan in seconds—personalized for home or gym. No signup. Try free workouts, then unlock more with a one-time payment.';
+  const seoTitle = t('pages.aiWorkoutGenerator.seo.title');
+  const seoDescription = t('pages.aiWorkoutGenerator.seo.description');
 
   const checkAccessStatus = async (forceRefresh: boolean = false) => {
     try {
@@ -74,15 +75,15 @@ function AIWorkoutGeneratorPage() {
       const isFreeUser = tokensRemaining <= 0 && !hasUnlimited && freeRemaining > 0;
 
       if (isFreeUser && freeRemaining <= 0 && !hasUnlimited) {
-        setError('No free workouts remaining. Please purchase more workouts to continue.');
+        setError(t('pages.home.errors.noFreeRemaining'));
         return;
       }
       if (!isFreeUser && tokensRemaining <= 0 && !hasUnlimited && freeRemaining <= 0) {
-        setError('No workouts remaining. Please purchase more workouts to continue.');
+        setError(t('pages.home.errors.noWorkoutsRemaining'));
         return;
       }
 
-      const result = await generateWorkout(preferences, deviceId, isFreeUser);
+      const result = await generateWorkout(preferences, deviceId, isFreeUser, i18n.resolvedLanguage || i18n.language || 'en');
       setWorkout(result);
 
       if (result.tokensRemaining !== undefined) {
@@ -130,14 +131,11 @@ function AIWorkoutGeneratorPage() {
       <div className="about-page">
         <div className="container">
           <div className="content-card">
-            <h1>AI Workout Generator</h1>
-            <p>
-              Build an AI-generated workout plan in seconds. Choose your level, available time, equipment,
-              and goals—then get a personalized workout for home or gym with no signup required.
-            </p>
+            <h1>{t('pages.aiWorkoutGenerator.title')}</h1>
+            <p>{t('pages.aiWorkoutGenerator.intro')}</p>
 
             <section>
-              <h2>Generate your workout</h2>
+              <h2>{t('pages.aiWorkoutGenerator.generateSection')}</h2>
               <WorkoutGenerator
                 onGenerate={handleGenerateWorkout}
                 loading={loading}
@@ -149,24 +147,24 @@ function AIWorkoutGeneratorPage() {
 
             {showRestoreCredits ? (
               <section id="restore-credits-section">
-                <h2>Restore Workouts</h2>
+                <h2>{t('pages.aiWorkoutGenerator.restoreTitle')}</h2>
                 <RestoreCredits onCreditsRestored={() => checkAccessStatus(true)} />
               </section>
             ) : null}
 
             <section>
-              <h2>Unlock more workouts</h2>
+              <h2>{t('pages.aiWorkoutGenerator.unlockTitle')}</h2>
               <PricingPlans />
             </section>
 
             <section>
-              <h2>Frequently asked questions</h2>
-              <h3>Do I need to sign up?</h3>
-              <p>No. You can generate workouts instantly.</p>
-              <h3>Is this a subscription?</h3>
-              <p>No. It’s a one-time payment for workout credits.</p>
-              <h3>Home or gym?</h3>
-              <p>Both—select your equipment and your plan adapts.</p>
+              <h2>{t('pages.aiWorkoutGenerator.faqTitle')}</h2>
+              <h3>{t('pages.aiWorkoutGenerator.faq.signupQ')}</h3>
+              <p>{t('pages.aiWorkoutGenerator.faq.signupA')}</p>
+              <h3>{t('pages.aiWorkoutGenerator.faq.subQ')}</h3>
+              <p>{t('pages.aiWorkoutGenerator.faq.subA')}</p>
+              <h3>{t('pages.aiWorkoutGenerator.faq.homeGymQ')}</h3>
+              <p>{t('pages.aiWorkoutGenerator.faq.homeGymA')}</p>
             </section>
           </div>
         </div>

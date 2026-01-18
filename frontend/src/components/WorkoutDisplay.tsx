@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { saveWorkout } from '../utils/storage';
 import { getDeviceId } from '../utils/storage';
 import ProductRecommendations from './ProductRecommendations';
@@ -9,6 +10,7 @@ interface WorkoutDisplayProps {
 }
 
 function WorkoutDisplay({ workout }: WorkoutDisplayProps) {
+  const { t, i18n } = useTranslation();
   useEffect(() => {
     // Save workout to localStorage for offline access
     const deviceId = getDeviceId();
@@ -18,9 +20,9 @@ function WorkoutDisplay({ workout }: WorkoutDisplayProps) {
   return (
     <article className="workout-display card" aria-labelledby="workout-title">
       <header className="workout-header">
-        <h2 id="workout-title">{workout.title || 'Your AI Workout'}</h2>
+        <h2 id="workout-title">{workout.title || t('workoutDisplay.titleFallback')}</h2>
         {workout.type && (
-          <span className="workout-type-badge" aria-label={`Workout type: ${workout.type}`}>{workout.type}</span>
+          <span className="workout-type-badge" aria-label={t('workoutDisplay.workoutTypeAria', { type: workout.type })}>{workout.type}</span>
         )}
       </header>
       
@@ -30,7 +32,7 @@ function WorkoutDisplay({ workout }: WorkoutDisplayProps) {
       
       {workout.exercises && workout.exercises.length > 0 && (
         <section className="exercises" aria-labelledby="exercises-heading">
-          <h3 id="exercises-heading">Exercises</h3>
+          <h3 id="exercises-heading">{t('workoutDisplay.exercises')}</h3>
           <ol className="exercise-list" role="list">
             {workout.exercises.map((exercise: any, index: number) => (
               <li key={index} className="exercise-item" role="listitem">
@@ -38,7 +40,7 @@ function WorkoutDisplay({ workout }: WorkoutDisplayProps) {
                   <strong>{exercise.name}</strong>
                   {exercise.sets && exercise.reps && (
                     <span className="exercise-specs">
-                      {exercise.sets} sets × {exercise.reps} reps
+                      {t('workoutDisplay.setsReps', { sets: exercise.sets, reps: exercise.reps })}
                     </span>
                   )}
                   {exercise.duration && (
@@ -49,7 +51,7 @@ function WorkoutDisplay({ workout }: WorkoutDisplayProps) {
                   <p className="exercise-instructions">{exercise.instructions}</p>
                 )}
                 {exercise.rest && (
-                  <p className="exercise-rest">Rest: {exercise.rest}</p>
+                  <p className="exercise-rest">{t('workoutDisplay.rest', { rest: exercise.rest })}</p>
                 )}
               </li>
             ))}
@@ -59,7 +61,7 @@ function WorkoutDisplay({ workout }: WorkoutDisplayProps) {
       
       {workout.tips && workout.tips.length > 0 && (
         <section className="workout-tips" aria-labelledby="tips-heading">
-          <h3 id="tips-heading">Tips</h3>
+          <h3 id="tips-heading">{t('workoutDisplay.tips')}</h3>
           <ul role="list">
             {workout.tips.map((tip: string, index: number) => (
               <li key={index} role="listitem">{tip}</li>
@@ -75,7 +77,9 @@ function WorkoutDisplay({ workout }: WorkoutDisplayProps) {
       
       <footer className="workout-footer">
         <p className="workout-meta">
-          Generated on {new Date(workout.createdAt || Date.now()).toLocaleDateString()}
+          {t('workoutDisplay.generatedOn', {
+            date: new Date(workout.createdAt || Date.now()).toLocaleDateString(i18n.resolvedLanguage || i18n.language),
+          })}
         </p>
       </footer>
     </article>

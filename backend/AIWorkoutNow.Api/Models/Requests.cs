@@ -4,6 +4,7 @@ public class GenerateWorkoutRequest
 {
     public string DeviceId { get; set; } = string.Empty;
     public bool IsFreeUser { get; set; }
+    public string Lang { get; set; } = "en";
     public string FitnessLevel { get; set; } = string.Empty;
     public string WorkoutType { get; set; } = string.Empty;
     public int Duration { get; set; }

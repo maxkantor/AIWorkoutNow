@@ -1,96 +1,76 @@
 import { useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
+import { useTranslation } from 'react-i18next';
 import './Privacy.css';
 
 function Privacy() {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   
   return (
     <>
       <SEO
-        title="Privacy Policy | AIWorkoutNow"
-        description="Read AIWorkoutNow's privacy policy to understand how we collect, use, and protect your data when you use our AI workout generator."
+        title={t('pages.privacy.seo.title')}
+        description={t('pages.privacy.seo.description')}
         canonicalUrl="https://aiworkoutnow.com/privacy"
       />
       
       <div className="privacy-page">
         <div className="container">
           <button onClick={() => navigate('/')} className="back-button">
-            ← Back to Home
+            {t('pages.privacy.backToHome')}
           </button>
           <div className="content-card">
-            <h1>Privacy Policy</h1>
-            <p className="last-updated">Last Updated: {new Date().toLocaleDateString()}</p>
+            <h1>{t('pages.privacy.title')}</h1>
+            <p className="last-updated">
+              {t('pages.privacy.lastUpdated', {
+                date: new Date().toLocaleDateString(i18n.resolvedLanguage || i18n.language),
+              })}
+            </p>
             
             <section>
-              <h2>Introduction</h2>
-              <p>
-                At AIWorkoutNow, we respect your privacy and are committed to protecting your 
-                personal data. This privacy policy explains how we collect, use, and safeguard 
-                your information when you use our service.
-              </p>
+              <h2>{t('pages.privacy.sections.introTitle')}</h2>
+              <p>{t('pages.privacy.sections.introBody')}</p>
             </section>
 
             <section>
-              <h2>Information We Collect</h2>
-              <h3>Device Information</h3>
-              <p>
-                We generate a unique device identifier stored locally on your device to track 
-                workout usage and token balances. This identifier is not linked to your personal 
-                identity.
-              </p>
+              <h2>{t('pages.privacy.sections.collectTitle')}</h2>
+              <h3>{t('pages.privacy.sections.deviceTitle')}</h3>
+              <p>{t('pages.privacy.sections.deviceBody')}</p>
               
-              <h3>Workout Preferences</h3>
-              <p>
-                When you generate a workout, we collect your fitness preferences (level, type, 
-                duration, equipment, etc.) to create personalized workout plans. This data is 
-                stored locally on your device and may be stored on our servers for service 
-                improvement purposes.
-              </p>
+              <h3>{t('pages.privacy.sections.prefsTitle')}</h3>
+              <p>{t('pages.privacy.sections.prefsBody')}</p>
             </section>
 
             <section>
-              <h2>How We Use Your Information</h2>
+              <h2>{t('pages.privacy.sections.useTitle')}</h2>
               <ul>
-                <li>To generate personalized workout plans</li>
-                <li>To track your token balance and usage</li>
-                <li>To improve our AI algorithms and service quality</li>
-                <li>To provide customer support when requested</li>
+                {(t('pages.privacy.sections.useBullets', { returnObjects: true }) as unknown as string[]).map((b) => (
+                  <li key={b}>{b}</li>
+                ))}
               </ul>
             </section>
 
             <section>
-              <h2>Data Storage</h2>
-              <p>
-                Workout data and preferences are stored locally on your device using browser 
-                localStorage. We also store anonymized usage data on our servers to improve 
-                our service. We do not store personally identifiable information unless you 
-                explicitly provide it (e.g., through our contact form).
-              </p>
+              <h2>{t('pages.privacy.sections.storageTitle')}</h2>
+              <p>{t('pages.privacy.sections.storageBody')}</p>
             </section>
 
             <section>
-              <h2>Third-Party Services</h2>
-              <p>
-                We use Amazon Associates links for product recommendations. When you click 
-                these links, Amazon may collect information according to their privacy policy. 
-                We are not responsible for Amazon's data practices.
-              </p>
+              <h2>{t('pages.privacy.sections.thirdPartyTitle')}</h2>
+              <p>{t('pages.privacy.sections.thirdPartyBody')}</p>
             </section>
 
             <section>
-              <h2>Your Rights</h2>
-              <p>
-                You can clear your local data at any time by clearing your browser's localStorage. 
-                To request deletion of server-side data, please contact us through our contact form.
-              </p>
+              <h2>{t('pages.privacy.sections.rightsTitle')}</h2>
+              <p>{t('pages.privacy.sections.rightsBody')}</p>
             </section>
 
             <section>
-              <h2>Contact</h2>
+              <h2>{t('pages.privacy.sections.contactTitle')}</h2>
               <p>
-                If you have questions about this privacy policy, please 
-                <a href="/contact"> contact us</a>.
+                {t('pages.privacy.sections.contactBody')}{' '}
+                <a href="/contact">{t('footer.links.contact')}</a>.
               </p>
             </section>
           </div>

@@ -1,6 +1,7 @@
 import { trackAffiliateClick } from '../services/api';
 import { getDeviceId } from '../utils/storage';
 import { ProductRecommendation } from '../services/api';
+import { useTranslation } from 'react-i18next';
 import './ProductRecommendations.css';
 
 interface ProductRecommendationsProps {
@@ -9,6 +10,7 @@ interface ProductRecommendationsProps {
 }
 
 function ProductRecommendations({ products, workoutId }: ProductRecommendationsProps) {
+  const { t } = useTranslation();
   if (!products || products.length === 0) {
     return null;
   }
@@ -30,9 +32,9 @@ function ProductRecommendations({ products, workoutId }: ProductRecommendationsP
 
   return (
     <section className="product-recommendations" aria-labelledby="products-heading">
-      <h3 id="products-heading">Recommended Equipment</h3>
+      <h3 id="products-heading">{t('products.heading')}</h3>
       <p className="product-recommendations-subtitle">
-        Enhance your workout with these recommended products
+        {t('products.subtitle')}
       </p>
       <div className="product-grid" role="list">
         {products.map((product, index) => (
@@ -54,7 +56,7 @@ function ProductRecommendations({ products, workoutId }: ProductRecommendationsP
               )}
               {product.reason && (
                 <p className="product-reason">
-                  <strong>Why:</strong> {product.reason}
+                  <strong>{t('products.why')}</strong> {product.reason}
                 </p>
               )}
               {product.price && (
@@ -63,12 +65,12 @@ function ProductRecommendations({ products, workoutId }: ProductRecommendationsP
               <button
                 className="product-button"
                 onClick={() => handleProductClick(product)}
-                aria-label={`View ${product.title} on Amazon`}
+                aria-label={t('products.ariaViewOnAmazon', { title: product.title })}
               >
-                View on Amazon
+                {t('products.button')}
               </button>
               <p className="product-disclaimer">
-                <small>As an Amazon Associate, we earn from qualifying purchases.</small>
+                <small>{t('products.disclaimer')}</small>
               </p>
             </div>
           </article>

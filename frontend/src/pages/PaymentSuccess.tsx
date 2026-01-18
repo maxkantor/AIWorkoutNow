@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
+import { useTranslation } from 'react-i18next';
 import { getUserAccessStatus, verifyPayment, UserAccessStatus } from '../services/api';
 import { getDeviceId, setDeviceId } from '../utils/storage';
 import './PaymentSuccess.css';
 
 function PaymentSuccess() {
+  const { t, i18n } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [accessStatus, setAccessStatus] = useState<UserAccessStatus | null>(null);
@@ -88,8 +90,8 @@ function PaymentSuccess() {
   return (
     <>
       <SEO
-        title="Payment Successful | AIWorkoutNow"
-        description="Payment successful."
+        title={t('pages.paymentSuccess.seo.title')}
+        description={t('pages.paymentSuccess.seo.description')}
         canonicalUrl="https://aiworkoutnow.com/payment-success"
         robots="noindex, nofollow"
       />
@@ -97,36 +99,38 @@ function PaymentSuccess() {
       <div className="payment-success-container">
         <div className="payment-success-card">
           <div className="success-icon">✓</div>
-          <h1>Payment Successful!</h1>
+          <h1>{t('pages.paymentSuccess.title')}</h1>
           <p className="success-message">
-            Thank you for your purchase. Your account has been upgraded.
+            {t('pages.paymentSuccess.message')}
           </p>
 
           {loading || verifying ? (
             <div className="loading-status">
-              {verifying ? 'Verifying payment and granting tokens...' : 'Checking your access...'}
+              {verifying ? t('pages.paymentSuccess.verifying') : t('pages.paymentSuccess.checking')}
             </div>
           ) : accessStatus ? (
             <div className="access-status">
               {accessStatus.hasUnlimitedAccess ? (
                 <div className="status-item">
                   <span className="status-icon">∞</span>
-                  <span>Unlimited Access Active</span>
+                  <span>{t('pages.paymentSuccess.unlimitedActive')}</span>
                   {accessStatus.unlimitedExpiresAt && (
                     <span className="status-detail">
-                      (expires {new Date(accessStatus.unlimitedExpiresAt).toLocaleDateString()})
+                      {t('pages.paymentSuccess.expires', {
+                        date: new Date(accessStatus.unlimitedExpiresAt).toLocaleDateString(i18n.resolvedLanguage || i18n.language),
+                      })}
                     </span>
                   )}
                 </div>
               ) : accessStatus.tokensRemaining > 0 && accessStatus.tokensRemaining < 999999 ? (
                 <div className="status-item">
                   <span className="status-icon">💪</span>
-                  <span>{accessStatus.tokensRemaining} Workouts Available</span>
+                  <span>{t('pages.paymentSuccess.workoutsAvailable', { count: accessStatus.tokensRemaining })}</span>
                 </div>
               ) : accessStatus.tokensRemaining >= 999999 ? (
                 <div className="status-item">
                   <span className="status-icon">∞</span>
-                  <span>Unlimited Access Active</span>
+                  <span>{t('pages.paymentSuccess.unlimitedActive')}</span>
                 </div>
               ) : null}
             </div>
@@ -134,13 +138,13 @@ function PaymentSuccess() {
           
           {!loading && !verifying && (
             <p className="redirect-message" style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#64748b' }}>
-              Redirecting to home page in 3 seconds...
+              {t('pages.paymentSuccess.redirecting')}
             </p>
           )}
 
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button onClick={handleGoHome} className="cta-button">
-              Start Generating Workouts
+              {t('pages.paymentSuccess.start')}
             </button>
             <button onClick={handleGoHome} className="back-button" style={{ 
               padding: '0.75rem 1.5rem',
@@ -152,7 +156,7 @@ function PaymentSuccess() {
               fontSize: '0.875rem',
               fontWeight: '500'
             }}>
-              ← Back to Home
+              {t('pages.paymentSuccess.backToHome')}
             </button>
           </div>
 

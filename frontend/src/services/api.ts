@@ -65,7 +65,8 @@ export interface WorkoutResponse {
 export async function generateWorkout(
   preferences: WorkoutPreferences,
   deviceId: string,
-  isFreeUser: boolean
+  isFreeUser: boolean,
+  lang?: string
 ): Promise<WorkoutResponse> {
   try {
     const response = await fetch(`${API_BASE_URL}/generate-workout`, {
@@ -77,6 +78,7 @@ export async function generateWorkout(
         ...preferences,
         deviceId,
         isFreeUser,
+        lang: lang ?? 'en',
       }),
     });
 

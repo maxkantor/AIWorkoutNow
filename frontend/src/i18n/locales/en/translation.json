@@ -1,0 +1,521 @@
+{
+  "language": {
+    "en": "EN 🇺🇸",
+    "es": "ES 🇪🇸",
+    "ru": "RU 🇷🇺",
+    "hi": "HI 🇮🇳",
+    "zh": "ZH 🇨🇳"
+  },
+  "common": {
+    "language": "Language"
+  },
+  "hero": {
+    "title": "Get Your Perfect Workout in Seconds",
+    "cta": "Generate AI Workout",
+    "ctaAria": "Scroll to workout generator",
+    "chips": {
+      "free": "🎁 3 Free Workouts",
+      "noSignup": "🚫 No Signup",
+      "oneTime": "💳 One-Time Payment",
+      "instant": "⚡ Instant Access"
+    },
+    "status": {
+      "unlimited": "∞ Unlimited Access",
+      "expires": "(expires {{date}})",
+      "freeRemaining": "Free workouts remaining: {{remaining}} / {{total}}",
+      "remainingWorkouts": "💪 Remaining Workouts: {{remaining}}/{{total}}",
+      "remainingWorkoutsTitle": "X/Y shows remaining workouts / lifetime total workouts granted. Admin resets can change X without changing lifetime total.",
+      "freeExhausted": "Free workouts exhausted"
+    }
+  },
+  "generator": {
+    "fitnessLevel": "Fitness Level",
+    "workoutType": "Workout Type",
+    "duration": "Duration (minutes)",
+    "equipment": "Equipment Available",
+    "injuries": "Injuries or Limitations (comma-separated, optional)",
+    "goals": "Fitness Goals (comma-separated, optional)",
+    "placeholders": {
+      "injuries": "e.g., knee injury, lower back pain",
+      "goals": "e.g., weight loss, muscle gain, endurance"
+    },
+    "options": {
+      "fitnessLevel": {
+        "beginner": "Beginner",
+        "intermediate": "Intermediate",
+        "advanced": "Advanced"
+      },
+      "workoutType": {
+        "full-body": "Full Body",
+        "upper-body": "Upper Body",
+        "lower-body": "Lower Body",
+        "cardio": "Cardio",
+        "strength": "Strength",
+        "hiit": "HIIT",
+        "yoga": "Yoga"
+      },
+      "duration": {
+        "15": "15 min",
+        "30": "30 min",
+        "45": "45 min",
+        "60": "60 min"
+      },
+      "equipment": {
+        "minimal": "Minimal (Bodyweight)",
+        "dumbbells": "Dumbbells",
+        "full-gym": "Full Gym",
+        "resistance-bands": "Resistance Bands"
+      }
+    },
+    "button": {
+      "loading": "Generating...",
+      "retry": "Try again",
+      "default": "Generate AI Workout"
+    }
+  },
+  "pricing": {
+    "header": "Unlock More AI Workouts",
+    "loadingPlans": "Loading pricing plans...",
+    "processing": "Processing...",
+    "perWorkout": "(${price} per workout)",
+    "noLoginNoSubscription": "No login. No subscription.",
+    "comparison": "Other fitness apps charge $10–$30/month. We don't.",
+    "badges": {
+      "starter": "Quick Start",
+      "popular": "Most Popular",
+      "value": "Best Value"
+    },
+    "planName": {
+      "10": "Starter",
+      "30": "Popular",
+      "100": "Best Value"
+    },
+    "cta": {
+      "10": "Try 10 Workouts",
+      "30": "Unlock 30 Workouts",
+      "100": "Get 100 Workouts",
+      "default": "Get Started"
+    },
+    "benefits": {
+      "10": ["Instant access", "No signup", "Great for testing", "Restore workouts anytime"],
+      "30": ["Best for regular use", "No signup", "Better value per workout", "Restore workouts anytime"],
+      "100": ["Best savings", "No signup", "Long-term access", "Restore workouts anytime"],
+      "default": ["Instant access", "No signup", "Restore workouts anytime"]
+    }
+  },
+  "restore": {
+    "title": "Restore Workouts from Another Device",
+    "description": "Enter the email address you used when purchasing credits. We'll send you a verification code to restore your credits on this device.",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "your@email.com",
+    "sendCode": "Send Verification Code",
+    "sending": "Sending...",
+    "codeSentTo": "Verification code sent to {{email}}",
+    "codeHint": "Check your email and enter the 6-digit code below.",
+    "codeLabel": "Verification Code",
+    "attemptsRemaining": "Attempts remaining: {{count}}",
+    "verifyRestore": "Verify & Restore Workouts",
+    "verifying": "Verifying...",
+    "useDifferentEmail": "Use Different Email",
+    "successTitle": "Credits Restored Successfully!",
+    "unlimited": "Unlimited Access",
+    "expires": "Expires: {{date}}",
+    "paidWorkouts": "{{count}} Paid Workouts",
+    "paidDetail": "Available on this device",
+    "freeWorkouts": "{{count}} Free Workouts",
+    "freeDetail": "Reset and available",
+    "restoreMore": "Restore More Workouts",
+    "errors": {
+      "invalidEmail": "Please enter a valid email address",
+      "invalidCode": "Please enter the 6-digit verification code",
+      "sendFailed": "Failed to send verification code. Please try again.",
+      "verifyFailed": "Failed to verify code"
+    }
+  },
+  "paywall": {
+    "backToHome": "← Back to Home",
+    "title": "You've Used Your 3 Free Workouts 💪",
+    "subheadline": "Unlock more AI workouts instantly. Pay once. No login.",
+    "loadingPlans": "Loading plans...",
+    "mostPopular": "⭐ Most Popular",
+    "oneTime": "one-time",
+    "unlimitedWorkouts": "Unlimited workouts",
+    "workouts": "{{count}} workouts",
+    "cta": "Get Started",
+    "disclaimerLine": "No login. No subscription. Pay once."
+  },
+  "workoutDisplay": {
+    "titleFallback": "Your AI Workout",
+    "workoutTypeAria": "Workout type: {{type}}",
+    "exercises": "Exercises",
+    "setsReps": "{{sets}} sets × {{reps}} reps",
+    "rest": "Rest: {{rest}}",
+    "tips": "Tips",
+    "generatedOn": "Generated on {{date}}"
+  },
+  "products": {
+    "heading": "Recommended Equipment",
+    "subtitle": "Enhance your workout with these recommended products",
+    "why": "Why:",
+    "button": "View on Amazon",
+    "ariaViewOnAmazon": "View {{title}} on Amazon",
+    "disclaimer": "As an Amazon Associate, we earn from qualifying purchases."
+  },
+  "promo": {
+    "videoAria": "Workout promo video",
+    "videoUnavailable": "Workout promo video unavailable"
+  },
+  "footer": {
+    "tagline": "Your AI-powered fitness companion. Get personalized workouts instantly.",
+    "legal": "Legal",
+    "support": "Support",
+    "links": {
+      "privacy": "Privacy Policy",
+      "disclaimer": "Disclaimer",
+      "about": "About Us",
+      "contact": "Contact Us",
+      "faq": "FAQ"
+    },
+    "copyright": "© {{year}} AIWorkoutNow. All rights reserved.",
+    "amazonDisclosure": "As an Amazon Associate, we earn from qualifying purchases."
+  },
+  "pages": {
+    "home": {
+      "seo": {
+        "title": "AI Workout Generator (No Signup) | One-Time Payment",
+        "description": "Generate a personalized workout plan instantly—no signup. Try 3 free workouts, then unlock more with a one-time payment. Gym or home, equipment-aware, goals-based."
+      },
+      "h1Sr": "AI Workout Generator — Get Your Perfect Workout in Seconds",
+      "whyTitle": "Why Choose AIWorkoutNow?",
+      "whyCards": [
+        {
+          "title": "100% Personalized",
+          "body": "Every workout is tailored to your fitness level, goals, and available equipment."
+        },
+        {
+          "title": "Instant Generation",
+          "body": "Get professional-quality workout plans in seconds, not hours of research."
+        },
+        {
+          "title": "Home or Gym",
+          "body": "Works with any equipment—from bodyweight to full gym setups."
+        },
+        {
+          "title": "No Commitment",
+          "body": "Pay once. No subscriptions. No recurring charges. Ever."
+        }
+      ],
+      "restore": {
+        "promptTitle": "Access Your Workouts from Another Device?",
+        "promptBody": "Purchased credits on another device? Enter your email to restore them here.",
+        "restoreTitle": "Restore Workouts",
+        "restoreBody": "Enter the email you used when purchasing to restore your credits.",
+        "button": "Restore Workouts"
+      },
+      "trustBadges": {
+        "securePayment": "Secure Payment",
+        "noSubscription": "No Subscription",
+        "instantAccess": "Instant Access",
+        "moneyBack": "Money-Back Guarantee"
+      },
+      "pricingSide": {
+        "title": "Unlock More AI Workouts",
+        "sub": "Pay once • No login • Instant access"
+      },
+      "seoBlock": {
+        "title": "AI Workout Generator",
+        "p1": "AIWorkoutNow is an AI workout generator that creates a personalized workout plan based on your fitness level, goals, equipment, and time. Get an instant workout plan in seconds—no signup required.",
+        "p2": "Start free, then unlock more workouts with a one-time payment workout model. No subscriptions. No recurring charges.",
+        "listTitle": "Personalized Workout Plans in Seconds",
+        "bullets": [
+          "Beginner to advanced difficulty",
+          "Home or gym setups",
+          "Equipment-aware recommendations",
+          "Goals-based workouts (strength, fat loss, endurance)",
+          "Instant access — no signup required"
+        ],
+        "noSignupTitle": "No Signup. One-Time Payment.",
+        "noSignupBody": "Try the workout generator free, then choose a one-time payment pack when you’re ready. No recurring subscription."
+      },
+      "faq": {
+        "title": "FAQ",
+        "items": {
+          "chatgpt": {
+            "q": "Why not just use ChatGPT?",
+            "intro": "ChatGPT is great for many things — AIWorkoutNow is built specifically to generate workouts fast and consistently.",
+            "bullets": [
+              "No prompts needed: pick level, goal, time, equipment",
+              "Consistent workout structure (warm-up → main → cooldown)",
+              "Equipment-aware plans (home vs gym)",
+              "One-click variations (regenerate instantly)",
+              "Credits are simple (no subscription)"
+            ],
+            "outro": "We love ChatGPT — this is just a focused workout generator for speed and simplicity."
+          },
+          "signup": {
+            "q": "Do I need to sign up?",
+            "a": "No. You can generate workouts immediately—no account or login required."
+          },
+          "subscription": {
+            "q": "Is this a subscription?",
+            "a": "No. Purchases are one-time payments (no recurring charges)."
+          },
+          "restore": {
+            "q": "How do I restore workouts on another device?",
+            "a": "Use \"Restore Workouts\" and enter the email used at checkout. We'll send a verification code."
+          },
+          "counts": {
+            "q": "What counts as a workout generation?",
+            "a": "Each time you create a new workout plan, it uses 1 workout credit (unless you’re using free trial credits)."
+          }
+        }
+      },
+      "errors": {
+        "noFreeRemaining": "No free workouts remaining. Please purchase more workouts to continue.",
+        "noWorkoutsRemaining": "No workouts remaining. Please purchase more workouts to continue."
+      },
+      "schema": {
+        "faq": {
+          "q1": "How does an AI workout generator work?",
+          "a1": "You select your level, time, and equipment. AIWorkoutNow generates a personalized workout plan instantly based on your inputs.",
+          "q2": "Do I need to sign up?",
+          "a2": "No. You can generate workouts immediately—no account or login required.",
+          "q3": "Is this a subscription?",
+          "a3": "No. Purchases are one-time payments (no recurring charges).",
+          "q4": "Can I restore workouts on another device?",
+          "a4": "Use “Restore Workouts” and enter the email used at checkout. We’ll send a verification code.",
+          "offerDesc": "3 free workouts, then one-time payment workout packs"
+        }
+    },
+    "faq": {
+      "seo": {
+        "title": "FAQ | AIWorkoutNow — AI Workout Generator (No Signup)",
+        "description": "Answers about AIWorkoutNow: how the AI workout generator works, no-signup access, credits, home vs gym workouts, and safety."
+      },
+      "title": "FAQ",
+      "items": [
+        {
+          "q": "How does an AI workout generator work?",
+          "a": "You choose your fitness level, time, workout type, equipment, and any limitations. AIWorkoutNow generates an AI-powered workout plan in seconds based on your inputs."
+        },
+        {
+          "q": "Do I need to sign up?",
+          "a": "No. You can generate workouts without creating an account."
+        },
+        {
+          "q": "Is it good for beginners?",
+          "a": "Yes. Choose “Beginner” and your available equipment. The workout is tailored to your level so it’s approachable and safe."
+        },
+        {
+          "q": "Can I use it for home workouts or gym workouts?",
+          "a": "Both. Select your equipment (or “No equipment”) and AIWorkoutNow adapts the plan for home or gym."
+        },
+        {
+          "q": "How do credits work?",
+          "a": "You can try a few workouts for free. After that, you can purchase workout credits with a one-time payment (no subscription)."
+        },
+        {
+          "q": "Can I restore workouts on another device?",
+          "a": "Yes. Use “Restore Workouts” and verify the email you used at checkout."
+        },
+        {
+          "q": "How fast is generation?",
+          "a": "Most workouts generate in seconds. If it’s busy, it can take a little longer."
+        },
+        {
+          "q": "Is this medical advice?",
+          "a": "No. Workouts are informational. If you have injuries or medical concerns, consult a professional before starting a new program."
+        }
+      ]
+    },
+    "workoutPlans": {
+      "seo": {
+        "title": "Workout Plans | AIWorkoutNow — AI Workout Generator",
+        "description": "Explore workout plan goals (fat loss, strength, muscle gain, HIIT, and more). Generate an instant AI workout plan with no signup."
+      },
+      "title": "Workout Plans",
+      "intro": "Pick a goal, then generate an instant AI workout plan. These are “plan intents” to help you get started quickly—AIWorkoutNow personalizes each workout to your level, time, and equipment.",
+      "popularGoals": "Popular plan goals",
+      "generateNow": "Generate now",
+      "generateNowPrefix": "Ready to go? Head to the",
+      "generateNowSuffix": "and build a workout in seconds.",
+      "intents": {
+        "fat-loss": "Fat loss",
+        "strength": "Strength",
+        "muscle-gain": "Muscle gain",
+        "endurance": "Endurance",
+        "hiit": "HIIT",
+        "bodyweight": "Bodyweight-only"
+      },
+      "linkToGenerator": "AI Workout Generator"
+    },
+    "aiWorkoutGenerator": {
+      "seo": {
+        "title": "AI Workout Generator (No Signup) | AIWorkoutNow",
+        "description": "Generate an AI workout plan in seconds—personalized for home or gym. No signup. Try free workouts, then unlock more with a one-time payment."
+      },
+      "title": "AI Workout Generator",
+      "intro": "Build an AI-generated workout plan in seconds. Choose your level, available time, equipment, and goals—then get a personalized workout for home or gym with no signup required.",
+      "generateSection": "Generate your workout",
+      "restoreTitle": "Restore Workouts",
+      "unlockTitle": "Unlock more workouts",
+      "faqTitle": "Frequently asked questions",
+      "faq": {
+        "signupQ": "Do I need to sign up?",
+        "signupA": "No. You can generate workouts instantly.",
+        "subQ": "Is this a subscription?",
+        "subA": "No. It’s a one-time payment for workout credits.",
+        "homeGymQ": "Home or gym?",
+        "homeGymA": "Both—select your equipment and your plan adapts."
+      }
+    },
+    "about": {
+      "seo": {
+        "title": "About | AIWorkoutNow — AI Workout Generator (No Signup)",
+        "description": "Learn about AIWorkoutNow and how our AI workout generator creates personalized workout plans instantly for home or gym—no signup required."
+      },
+      "backToHome": "← Back to Home",
+      "title": "About AIWorkoutNow",
+      "missionTitle": "Our Mission",
+      "missionBody": "AIWorkoutNow was created to make personalized fitness accessible to everyone. We believe that everyone deserves access to high-quality, customized workout plans without the barriers of expensive gym memberships or personal trainers.",
+      "howTitle": "How It Works",
+      "howBody": "Our AI-powered platform uses advanced algorithms to generate personalized workout plans based on your fitness level, goals, available equipment, and any injuries or limitations. Simply input your preferences, and get a complete workout plan in seconds - no signup required for your first workout.",
+      "whyTitle": "Why Choose AIWorkoutNow?",
+      "whyBullets": [
+        { "strong": "No Signup Required:", "text": "Try our free workout generator instantly" },
+        { "strong": "Personalized Plans:", "text": "Every workout is tailored to your needs" },
+        { "strong": "Flexible Pricing:", "text": "Pay for what you use with token packs" },
+        { "strong": "Offline Access:", "text": "Save workouts and access them anytime" },
+        { "strong": "Privacy First:", "text": "We respect your data and privacy" }
+      ],
+      "contactTitle": "Contact Us",
+      "contactBody": "Have questions or feedback? We'd love to hear from you. Visit our contact page to get in touch.",
+      "contactLinkText": "Visit our contact page"
+    },
+    "contact": {
+      "seo": {
+        "title": "Contact | AIWorkoutNow",
+        "description": "Contact AIWorkoutNow support for help, feedback, or questions about the AI workout generator and workout credits."
+      },
+      "backToHome": "← Back to Home",
+      "title": "Contact Us",
+      "intro": "Have a question, suggestion, or feedback? We'd love to hear from you! Fill out the form below and we'll get back to you as soon as possible.",
+      "success": "Thank you for your message! We'll get back to you soon.",
+      "form": {
+        "name": "Your Name",
+        "email": "Your Email",
+        "subject": "Subject",
+        "message": "Message",
+        "placeholders": {
+          "name": "John Doe",
+          "email": "your.email@example.com",
+          "subject": "What is this regarding?",
+          "message": "Tell us what's on your mind..."
+        },
+        "send": "Send Message",
+        "sending": "Sending..."
+      },
+      "validation": {
+        "nameRequired": "Name is required",
+        "nameMax": "Name must be 100 characters or less",
+        "emailRequired": "Email is required",
+        "emailInvalid": "Please enter a valid email address",
+        "subjectRequired": "Subject is required",
+        "subjectMax": "Subject must be 200 characters or less",
+        "messageRequired": "Message is required",
+        "messageMax": "Message must be 5000 characters or less"
+      }
+    },
+    "privacy": {
+      "seo": {
+        "title": "Privacy Policy | AIWorkoutNow",
+        "description": "Read AIWorkoutNow's privacy policy to understand how we collect, use, and protect your data when you use our AI workout generator."
+      },
+      "backToHome": "← Back to Home",
+      "title": "Privacy Policy",
+      "lastUpdated": "Last Updated: {{date}}",
+      "sections": {
+        "introTitle": "Introduction",
+        "introBody": "At AIWorkoutNow, we respect your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you use our service.",
+        "collectTitle": "Information We Collect",
+        "deviceTitle": "Device Information",
+        "deviceBody": "We generate a unique device identifier stored locally on your device to track workout usage and token balances. This identifier is not linked to your personal identity.",
+        "prefsTitle": "Workout Preferences",
+        "prefsBody": "When you generate a workout, we collect your fitness preferences (level, type, duration, equipment, etc.) to create personalized workout plans. This data is stored locally on your device and may be stored on our servers for service improvement purposes.",
+        "useTitle": "How We Use Your Information",
+        "useBullets": [
+          "To generate personalized workout plans",
+          "To track your token balance and usage",
+          "To improve our AI algorithms and service quality",
+          "To provide customer support when requested"
+        ],
+        "storageTitle": "Data Storage",
+        "storageBody": "Workout data and preferences are stored locally on your device using browser localStorage. We also store anonymized usage data on our servers to improve our service. We do not store personally identifiable information unless you explicitly provide it (e.g., through our contact form).",
+        "thirdPartyTitle": "Third-Party Services",
+        "thirdPartyBody": "We use Amazon Associates links for product recommendations. When you click these links, Amazon may collect information according to their privacy policy. We are not responsible for Amazon's data practices.",
+        "rightsTitle": "Your Rights",
+        "rightsBody": "You can clear your local data at any time by clearing your browser's localStorage. To request deletion of server-side data, please contact us through our contact form.",
+        "contactTitle": "Contact",
+        "contactBody": "If you have questions about this privacy policy, please contact us."
+      }
+    },
+    "disclaimer": {
+      "seo": {
+        "title": "Disclaimer | AIWorkoutNow",
+        "description": "Important safety and medical disclaimer for AIWorkoutNow workout recommendations. Workouts are informational and not medical advice."
+      },
+      "backToHome": "← Back to Home",
+      "title": "Disclaimer",
+      "sections": {
+        "medicalTitle": "Medical Disclaimer",
+        "medicalBody": "AIWorkoutNow is not a medical service. The workouts generated by our AI are for informational and educational purposes only. Before beginning any exercise program, consult with a healthcare provider, especially if you have any pre-existing medical conditions, injuries, or concerns about your health.",
+        "fitnessTitle": "Fitness Disclaimer",
+        "fitnessBody": "While we strive to provide safe and effective workout recommendations, individual fitness levels, health conditions, and capabilities vary. You are responsible for:",
+        "fitnessBullets": [
+          "Assessing your own fitness level and capabilities",
+          "Modifying exercises to suit your needs and limitations",
+          "Stopping any exercise that causes pain or discomfort",
+          "Ensuring proper form and technique",
+          "Using appropriate safety equipment when necessary"
+        ],
+        "warrantyTitle": "No Warranty",
+        "warrantyBody": "AIWorkoutNow provides workouts \"as is\" without warranties of any kind, express or implied. We do not guarantee that our workouts will produce specific results or that they are suitable for your individual circumstances.",
+        "liabilityTitle": "Limitation of Liability",
+        "liabilityBody": "AIWorkoutNow, its operators, and affiliates shall not be liable for any injuries, damages, or losses resulting from the use of our service or following our workout recommendations. You assume all risks associated with physical exercise.",
+        "adviceTitle": "Professional Advice",
+        "adviceBody": "For personalized fitness guidance, nutrition advice, or medical clearance, please consult with qualified professionals such as certified personal trainers, registered dietitians, or licensed healthcare providers.",
+        "riskTitle": "Assumption of Risk",
+        "riskBody": "By using AIWorkoutNow, you acknowledge that physical exercise involves inherent risks and that you voluntarily assume all risks associated with participating in any workout program."
+      }
+    },
+    "paymentSuccess": {
+      "seo": {
+        "title": "Payment Successful | AIWorkoutNow",
+        "description": "Payment successful."
+      },
+      "title": "Payment Successful!",
+      "message": "Thank you for your purchase. Your account has been upgraded.",
+      "verifying": "Verifying payment and granting tokens...",
+      "checking": "Checking your access...",
+      "unlimitedActive": "Unlimited Access Active",
+      "expires": "(expires {{date}})",
+      "workoutsAvailable": "{{count}} Workouts Available",
+      "redirecting": "Redirecting to home page in 3 seconds...",
+      "start": "Start Generating Workouts",
+      "backToHome": "← Back to Home"
+    },
+    "paymentCancel": {
+      "seo": {
+        "title": "Payment Cancelled | AIWorkoutNow",
+        "description": "Payment cancelled."
+      },
+      "title": "Payment Cancelled",
+      "message": "Your payment was not completed. No charges were made.",
+      "submessage": "You can try again anytime. Your 3 free workouts are still available!",
+      "tryAgain": "Try Again",
+      "goHome": "Go Home"
+    }
+  }
+}
+}
+

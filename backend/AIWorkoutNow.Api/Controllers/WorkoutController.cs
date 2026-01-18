@@ -113,7 +113,8 @@ public class WorkoutController : ControllerBase
                 Duration = request.Duration,
                 Equipment = request.Equipment,
                 Injuries = request.Injuries ?? new List<string>(),
-                Goals = request.Goals ?? new List<string>()
+                Goals = request.Goals ?? new List<string>(),
+                Lang = string.IsNullOrWhiteSpace(request.Lang) ? "en" : request.Lang
             });
             Console.WriteLine("[WorkoutController] Workout generated successfully");
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import WorkoutGenerator from '../components/WorkoutGenerator';
 import PricingPlans from '../components/PricingPlans';
 import RestoreCredits from '../components/RestoreCredits';
@@ -10,6 +11,7 @@ import { useHeroContext } from '../components/Layout';
 import './Home.css';
 
 function Home() {
+  const { t, i18n } = useTranslation();
   const [workout, setWorkout] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,9 +25,8 @@ function Home() {
   const { setHeroContent } = useHeroContext();
 
   // SEO: keep title ~50–60 chars and description ~140–160 chars
-  const seoTitle = "AI Workout Generator (No Signup) | One-Time Payment";
-  const seoDescription =
-    "Generate a personalized workout plan instantly—no signup. Try 3 free workouts, then unlock more with a one-time payment. Gym or home, equipment-aware, goals-based.";
+  const seoTitle = t('pages.home.seo.title');
+  const seoDescription = t('pages.home.seo.description');
 
   useEffect(() => {
     checkAccessStatus();
@@ -156,18 +157,18 @@ function Home() {
       
       // If no workouts remaining, just return without generating
       if (isFreeUser && freeRemaining <= 0 && !hasUnlimited) {
-        setError('No free workouts remaining. Please purchase more workouts to continue.');
+        setError(t('pages.home.errors.noFreeRemaining'));
           setLoading(false);
           return;
         }
       
       if (!isFreeUser && tokensRemaining <= 0 && !hasUnlimited && freeRemaining <= 0) {
-        setError('No workouts remaining. Please purchase more workouts to continue.');
+        setError(t('pages.home.errors.noWorkoutsRemaining'));
         setLoading(false);
         return;
       }
       
-      const result = await generateWorkout(preferences, deviceId, isFreeUser);
+      const result = await generateWorkout(preferences, deviceId, isFreeUser, i18n.resolvedLanguage || i18n.language || 'en');
       setWorkout(result);
       
       // Update tokens immediately from response
@@ -240,7 +241,7 @@ function Home() {
               '@type': 'Offer',
               price: '0',
               priceCurrency: 'USD',
-              description: '3 free workouts, then one-time payment workout packs',
+              description: t('pages.home.schema.faq.offerDesc'),
             },
           },
           {
@@ -249,34 +250,34 @@ function Home() {
             mainEntity: [
               {
                 '@type': 'Question',
-                name: 'How does an AI workout generator work?',
+                name: t('pages.home.schema.faq.q1'),
                 acceptedAnswer: {
                   '@type': 'Answer',
-                  text: 'You select your level, time, and equipment. AIWorkoutNow generates a personalized workout plan instantly based on your inputs.',
+                  text: t('pages.home.schema.faq.a1'),
                 },
               },
               {
                 '@type': 'Question',
-                name: 'Do I need to sign up?',
+                name: t('pages.home.schema.faq.q2'),
                 acceptedAnswer: {
                   '@type': 'Answer',
-                  text: 'No. You can generate workouts immediately—no account or login required.',
+                  text: t('pages.home.schema.faq.a2'),
                 },
               },
               {
                 '@type': 'Question',
-                name: 'Is this a subscription?',
+                name: t('pages.home.schema.faq.q3'),
                 acceptedAnswer: {
                   '@type': 'Answer',
-                  text: 'No. Purchases are one-time payments (no recurring charges).',
+                  text: t('pages.home.schema.faq.a3'),
                 },
               },
               {
                 '@type': 'Question',
-                name: 'Can I restore workouts on another device?',
+                name: t('pages.home.schema.faq.q4'),
                 acceptedAnswer: {
                   '@type': 'Answer',
-                  text: 'Use “Restore Workouts” and enter the email used at checkout. We’ll send a verification code.',
+                  text: t('pages.home.schema.faq.a4'),
                 },
               },
             ],
@@ -285,7 +286,7 @@ function Home() {
       />
 
       {/* One H1 for SEO without changing the visual hero headline */}
-      <h1 className="sr-only">AI Workout Generator — Get Your Perfect Workout in Seconds</h1>
+      <h1 className="sr-only">{t('pages.home.h1Sr')}</h1>
       
       <main className="min-h-screen py-6 relative homeMainBg" style={{
         backgroundImage: "url('/images/main-bg.png')",
@@ -304,30 +305,24 @@ function Home() {
               {/* Why Choose Us */}
               <section className="homePanelCard">
                 <h2 className="homePanelTitle" title="Why Choose AIWorkoutNow?">
-                  Why Choose AIWorkoutNow?
+                  {t('pages.home.whyTitle')}
                 </h2>
                 <PromoWorkoutVideo />
                 <div className="homeWhyStack">
-                  <div className="homeWhyCard">
-                    <div className="homeWhyIcon" aria-hidden="true">🎯</div>
-                    <h3 className="homeWhyTitle">100% Personalized</h3>
-                    <p className="homeWhyBody">Every workout is tailored to your fitness level, goals, and available equipment.</p>
-                  </div>
-                  <div className="homeWhyCard">
-                    <div className="homeWhyIcon" aria-hidden="true">⚡</div>
-                    <h3 className="homeWhyTitle">Instant Generation</h3>
-                    <p className="homeWhyBody">Get professional-quality workout plans in seconds, not hours of research.</p>
-                  </div>
-                  <div className="homeWhyCard">
-                    <div className="homeWhyIcon" aria-hidden="true">🏠</div>
-                    <h3 className="homeWhyTitle">Home or Gym</h3>
-                    <p className="homeWhyBody">Works with any equipment—from bodyweight to full gym setups.</p>
-                  </div>
-                  <div className="homeWhyCard">
-                    <div className="homeWhyIcon" aria-hidden="true">🔒</div>
-                    <h3 className="homeWhyTitle">No Commitment</h3>
-                    <p className="homeWhyBody">Pay once. No subscriptions. No recurring charges. Ever.</p>
-                  </div>
+                  {(
+                    t('pages.home.whyCards', { returnObjects: true }) as unknown as Array<{
+                      title: string;
+                      body: string;
+                    }>
+                  ).map((card, idx) => (
+                    <div key={idx} className="homeWhyCard">
+                      <div className="homeWhyIcon" aria-hidden="true">
+                        {idx === 0 ? '🎯' : idx === 1 ? '⚡' : idx === 2 ? '🏠' : '🔒'}
+                      </div>
+                      <h3 className="homeWhyTitle">{card.title}</h3>
+                      <p className="homeWhyBody">{card.body}</p>
+                    </div>
+                  ))}
                 </div>
               </section>
             </aside>
@@ -351,12 +346,12 @@ function Home() {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h3 className="text-lg font-bold text-slate-800 mb-1">
-                        {!showRestoreCredits ? 'Access Your Workouts from Another Device?' : 'Restore Workouts'}
+                        {!showRestoreCredits ? t('pages.home.restore.promptTitle') : t('pages.home.restore.restoreTitle')}
                       </h3>
                       <p className="text-sm text-slate-600">
-                        {!showRestoreCredits 
-                          ? 'Purchased credits on another device? Enter your email to restore them here.' 
-                          : 'Enter the email you used when purchasing to restore your credits.'}
+                        {!showRestoreCredits
+                          ? t('pages.home.restore.promptBody')
+                          : t('pages.home.restore.restoreBody')}
                       </p>
                     </div>
                   </div>
@@ -365,7 +360,7 @@ function Home() {
                       onClick={() => setShowRestoreCredits(true)}
                       className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all hover:-translate-y-0.5"
                     >
-                      Restore Workouts
+                      {t('pages.home.restore.button')}
                     </button>
                   ) : (
                     <RestoreCredits
@@ -382,19 +377,19 @@ function Home() {
               <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
                 <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
                   <span className="text-2xl block mb-2">🔒</span>
-                  <span className="text-sm font-bold text-slate-800">Secure Payment</span>
+                  <span className="text-sm font-bold text-slate-800">{t('pages.home.trustBadges.securePayment')}</span>
                 </div>
                 <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
                   <span className="text-2xl block mb-2">🚫</span>
-                  <span className="text-sm font-bold text-slate-800">No Subscription</span>
+                  <span className="text-sm font-bold text-slate-800">{t('pages.home.trustBadges.noSubscription')}</span>
                 </div>
                 <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
                   <span className="text-2xl block mb-2">⚡</span>
-                  <span className="text-sm font-bold text-slate-800">Instant Access</span>
+                  <span className="text-sm font-bold text-slate-800">{t('pages.home.trustBadges.instantAccess')}</span>
                 </div>
                 <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
                   <span className="text-2xl block mb-2">💯</span>
-                  <span className="text-sm font-bold text-slate-800">Money-Back Guarantee</span>
+                  <span className="text-sm font-bold text-slate-800">{t('pages.home.trustBadges.moneyBack')}</span>
                 </div>
               </section>
             </section>
@@ -403,8 +398,8 @@ function Home() {
             <aside className="homeColRight">
               <div className="homePanelCard">
                 <div className="homePricingHeader">
-                  <h2 className="homePanelTitle" title="Unlock More AI Workouts">Unlock More AI Workouts</h2>
-                  <p className="homePricingSub">Pay once • No login • Instant access</p>
+                  <h2 className="homePanelTitle" title={t('pages.home.pricingSide.title')}>{t('pages.home.pricingSide.title')}</h2>
+                  <p className="homePricingSub">{t('pages.home.pricingSide.sub')}</p>
                 </div>
                 <PricingPlans showHeader={false} vertical={true} />
               </div>
@@ -413,62 +408,57 @@ function Home() {
 
           {/* SEO Content (visible, below generator and above footer) */}
           <section className="mt-10 bg-white/70 rounded-2xl p-6 border border-slate-200 shadow-sm">
-            <h2 className="text-2xl font-extrabold text-slate-900 mb-3">AI Workout Generator</h2>
+            <h2 className="text-2xl font-extrabold text-slate-900 mb-3">{t('pages.home.seoBlock.title')}</h2>
             <p className="text-slate-700 leading-relaxed mb-3">
-              AIWorkoutNow is an <strong>AI workout generator</strong> that creates a <strong>personalized workout plan</strong> based on your fitness level,
-              goals, equipment, and time. Get an <strong>instant workout plan</strong> in seconds—no signup required.
+              {t('pages.home.seoBlock.p1')}
             </p>
             <p className="text-slate-700 leading-relaxed mb-4">
-              Start free, then unlock more workouts with a <strong>one-time payment workout</strong> model. No subscriptions. No recurring charges.
+              {t('pages.home.seoBlock.p2')}
             </p>
-            <h3 className="text-lg font-bold text-slate-900 mb-3">Personalized Workout Plans in Seconds</h3>
+            <h3 className="text-lg font-bold text-slate-900 mb-3">{t('pages.home.seoBlock.listTitle')}</h3>
             <ul className="list-disc pl-5 text-slate-700 space-y-1">
-              <li>Beginner to advanced difficulty</li>
-              <li>Home or gym setups</li>
-              <li>Equipment-aware recommendations</li>
-              <li>Goals-based workouts (strength, fat loss, endurance)</li>
-              <li>Instant access — no signup required</li>
+              {(t('pages.home.seoBlock.bullets', { returnObjects: true }) as unknown as string[]).map((b) => (
+                <li key={b}>{b}</li>
+              ))}
             </ul>
 
-            <h3 className="text-lg font-bold text-slate-900 mt-6 mb-2">No Signup. One-Time Payment.</h3>
+            <h3 className="text-lg font-bold text-slate-900 mt-6 mb-2">{t('pages.home.seoBlock.noSignupTitle')}</h3>
             <p className="text-slate-700 leading-relaxed">
-              Try the workout generator free, then choose a one-time payment pack when you’re ready. No recurring subscription.
+              {t('pages.home.seoBlock.noSignupBody')}
             </p>
           </section>
 
           {/* FAQ (small, appended — does not alter main layout) */}
           <section className="mt-6 bg-white/70 rounded-2xl p-6 border border-slate-200 shadow-sm" aria-labelledby="faq-heading">
-            <h2 id="faq-heading" className="text-2xl font-extrabold text-slate-900 mb-3">FAQ</h2>
+            <h2 id="faq-heading" className="text-2xl font-extrabold text-slate-900 mb-3">{t('pages.home.faq.title')}</h2>
             <div className="space-y-2">
               <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
-                <summary className="font-semibold text-slate-900 cursor-pointer">Why not just use ChatGPT?</summary>
+                <summary className="font-semibold text-slate-900 cursor-pointer">{t('pages.home.faq.items.chatgpt.q')}</summary>
                 <div className="text-slate-700 mt-2">
-                  <p className="mb-3">ChatGPT is great for many things — AIWorkoutNow is built specifically to generate workouts fast and consistently.</p>
+                  <p className="mb-3">{t('pages.home.faq.items.chatgpt.intro')}</p>
                   <ul className="list-disc pl-5 space-y-1 mb-3">
-                    <li>No prompts needed: pick level, goal, time, equipment</li>
-                    <li>Consistent workout structure (warm-up → main → cooldown)</li>
-                    <li>Equipment-aware plans (home vs gym)</li>
-                    <li>One-click variations (regenerate instantly)</li>
-                    <li>Credits are simple (no subscription)</li>
+                    {(t('pages.home.faq.items.chatgpt.bullets', { returnObjects: true }) as unknown as string[]).map((b) => (
+                      <li key={b}>{b}</li>
+                    ))}
                   </ul>
-                  <p className="text-slate-500 text-sm">We love ChatGPT — this is just a focused workout generator for speed and simplicity.</p>
+                  <p className="text-slate-500 text-sm">{t('pages.home.faq.items.chatgpt.outro')}</p>
                 </div>
               </details>
               <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
-                <summary className="font-semibold text-slate-900 cursor-pointer">Do I need to sign up?</summary>
-                <p className="text-slate-700 mt-2">No. You can generate workouts immediately—no account or login required.</p>
+                <summary className="font-semibold text-slate-900 cursor-pointer">{t('pages.home.faq.items.signup.q')}</summary>
+                <p className="text-slate-700 mt-2">{t('pages.home.faq.items.signup.a')}</p>
               </details>
               <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
-                <summary className="font-semibold text-slate-900 cursor-pointer">Is this a subscription?</summary>
-                <p className="text-slate-700 mt-2">No. Purchases are one-time payments (no recurring charges).</p>
+                <summary className="font-semibold text-slate-900 cursor-pointer">{t('pages.home.faq.items.subscription.q')}</summary>
+                <p className="text-slate-700 mt-2">{t('pages.home.faq.items.subscription.a')}</p>
               </details>
               <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
-                <summary className="font-semibold text-slate-900 cursor-pointer">How do I restore workouts on another device?</summary>
-                <p className="text-slate-700 mt-2">Use "Restore Workouts" and enter the email used at checkout. We'll send a verification code.</p>
+                <summary className="font-semibold text-slate-900 cursor-pointer">{t('pages.home.faq.items.restore.q')}</summary>
+                <p className="text-slate-700 mt-2">{t('pages.home.faq.items.restore.a')}</p>
               </details>
               <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
-                <summary className="font-semibold text-slate-900 cursor-pointer">What counts as a workout generation?</summary>
-                <p className="text-slate-700 mt-2">Each time you create a new workout plan, it uses 1 workout credit (unless you’re using free trial credits).</p>
+                <summary className="font-semibold text-slate-900 cursor-pointer">{t('pages.home.faq.items.counts.q')}</summary>
+                <p className="text-slate-700 mt-2">{t('pages.home.faq.items.counts.a')}</p>
               </details>
             </div>
           </section>

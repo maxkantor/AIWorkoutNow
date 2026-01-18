@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
+import { useTranslation } from 'react-i18next';
 import './PaymentCancel.css';
 
 function PaymentCancel() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleGoHome = () => {
     navigate('/');
@@ -23,8 +25,8 @@ function PaymentCancel() {
   return (
     <>
       <SEO
-        title="Payment Cancelled | AIWorkoutNow"
-        description="Payment cancelled."
+        title={t('pages.paymentCancel.seo.title')}
+        description={t('pages.paymentCancel.seo.description')}
         canonicalUrl="https://aiworkoutnow.com/payment-cancel"
         robots="noindex, nofollow"
       />
@@ -32,20 +34,20 @@ function PaymentCancel() {
       <div className="payment-cancel-container">
         <div className="payment-cancel-card">
           <div className="cancel-icon">✕</div>
-          <h1>Payment Cancelled</h1>
+          <h1>{t('pages.paymentCancel.title')}</h1>
           <p className="cancel-message">
-            Your payment was not completed. No charges were made.
+            {t('pages.paymentCancel.message')}
           </p>
           <p className="cancel-submessage">
-            You can try again anytime. Your 3 free workouts are still available!
+            {t('pages.paymentCancel.submessage')}
           </p>
 
           <div className="button-group">
             <button onClick={handleTryAgain} className="cta-button primary">
-              Try Again
+              {t('pages.paymentCancel.tryAgain')}
             </button>
             <button onClick={handleGoHome} className="cta-button secondary">
-              Go Home
+              {t('pages.paymentCancel.goHome')}
             </button>
           </div>
         </div>
