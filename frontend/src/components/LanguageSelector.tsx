@@ -28,6 +28,7 @@ export default function LanguageSelector() {
   const admin = isAdminRoute(location.pathname);
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
@@ -124,6 +125,14 @@ export default function LanguageSelector() {
   };
 
   const handleToggle = () => {
+    if (!isOpen && buttonRef.current) {
+      // Calculate position for fixed dropdown
+      const rect = buttonRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + 8, // 0.5rem gap
+        right: window.innerWidth - rect.right,
+      });
+    }
     setIsOpen((prev) => !prev);
     if (!isOpen) {
       setFocusedIndex(-1);
@@ -154,6 +163,10 @@ export default function LanguageSelector() {
           className="language-selector-menu"
           role="menu"
           aria-label="Language options"
+          style={{
+            top: `${menuPosition.top}px`,
+            right: `${menuPosition.right}px`,
+          }}
         >
           {languages.map((lang, index) => (
             <li key={lang.value} role="none">

@@ -3,6 +3,8 @@
 .language-selector-wrapper {
   position: relative;
   display: inline-block;
+  /* Allow dropdown to extend beyond parent overflow */
+  z-index: 10000;
 }
 
 .language-selector-button {
@@ -62,9 +64,7 @@
 
 /* Dropdown Menu */
 .language-selector-menu {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  right: 0;
+  position: fixed;
   min-width: 160px;
   max-width: 220px;
   margin: 0;
@@ -76,8 +76,10 @@
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 0.75rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  z-index: 1000;
+  z-index: 10000;
   animation: slideDown 0.2s ease-out;
+  /* Prevent clipping by parent overflow */
+  transform: translateZ(0);
 }
 
 @keyframes slideDown {
@@ -148,17 +150,9 @@
   }
 
   .language-selector-menu {
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-width: none;
-  }
-}
-
-/* Desktop/Tablet: Inline with CTA */
-@media (min-width: 481px) {
-  .language-selector-menu {
-    right: 0;
-    left: auto;
+    left: 1rem !important;
+    right: 1rem !important;
+    width: auto;
+    min-width: auto;
   }
 }
