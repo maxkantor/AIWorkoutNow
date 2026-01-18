@@ -20,13 +20,14 @@ export default function LanguageSelector() {
 
   const options = useMemo(
     () => [
-      { value: 'en', label: t('language.en') },
-      { value: 'es', label: t('language.es') },
-      { value: 'ru', label: t('language.ru') },
-      { value: 'hi', label: t('language.hi') },
-      { value: 'zh', label: t('language.zh') },
+      // Static labels so the selector itself never depends on i18n being ready.
+      { value: 'en', label: 'EN 🇺🇸' },
+      { value: 'es', label: 'ES 🇪🇸' },
+      { value: 'ru', label: 'RU 🇷🇺' },
+      { value: 'hi', label: 'HI 🇮🇳' },
+      { value: 'zh', label: 'ZH 🇨🇳' },
     ],
-    [t]
+    []
   );
 
   if (admin) return null;

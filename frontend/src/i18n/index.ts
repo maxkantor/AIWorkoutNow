@@ -71,6 +71,17 @@ if (!i18n.isInitialized) {
       returnObjects: true,
       react: { useSuspense: false },
     });
+
+  // Aggressive safety net: never show raw keys like "pages.home.faq.items.signup.q".
+  // If a key is missing in the active language, fall back to English automatically.
+  const originalT = i18n.t.bind(i18n);
+  (i18n as any).t = (key: any, options?: any) => {
+    const v = originalT(key, options);
+    if (typeof v === 'string' && typeof key === 'string' && v === key) {
+      return originalT(key, { ...(options ?? {}), lng: 'en' });
+    }
+    return v;
+  };
 }
 
 export default i18n;
