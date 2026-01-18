@@ -1,5 +1,4 @@
 import i18n from 'i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
 import { initReactI18next } from 'react-i18next';
 
 import en from './locales/en/translation.json';
@@ -58,7 +57,6 @@ const resources = {
 
 if (!i18n.isInitialized) {
   i18n
-    .use(LanguageDetector)
     .use(initReactI18next)
     .init({
       resources,
@@ -67,15 +65,11 @@ if (!i18n.isInitialized) {
       supportedLngs: SUPPORTED_LANGS as unknown as string[],
       load: 'languageOnly',
       lowerCaseLng: true,
+      initImmediate: false,
+      keySeparator: '.',
       interpolation: { escapeValue: false },
       returnObjects: true,
       react: { useSuspense: false },
-      detection: {
-        order: ['localStorage', 'navigator'],
-        lookupLocalStorage: STORAGE_KEY,
-        caches: [],
-        convertDetectedLanguage: (lng: string) => normalizeLang(lng) ?? 'en',
-      },
     });
 }
 
