@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { useTranslation } from 'react-i18next';
+import { getArray } from '../i18n/getArray';
 import './Privacy.css';
 
 function Privacy() {
@@ -45,7 +46,7 @@ function Privacy() {
             <section>
               <h2>{t('pages.privacy.sections.useTitle')}</h2>
               <ul>
-                {(t('pages.privacy.sections.useBullets', { returnObjects: true }) as unknown as string[]).map((b) => (
+                {getArray<string>(t('pages.privacy.sections.useBullets', { returnObjects: true }), []).map((b) => (
                   <li key={b}>{b}</li>
                 ))}
               </ul>

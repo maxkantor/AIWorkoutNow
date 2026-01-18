@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { useTranslation } from 'react-i18next';
+import { getArray } from '../i18n/getArray';
 import './Disclaimer.css';
 
 function Disclaimer() {
@@ -32,7 +33,7 @@ function Disclaimer() {
               <h2>{t('pages.disclaimer.sections.fitnessTitle')}</h2>
               <p>{t('pages.disclaimer.sections.fitnessBody')}</p>
               <ul>
-                {(t('pages.disclaimer.sections.fitnessBullets', { returnObjects: true }) as unknown as string[]).map((b) => (
+                {getArray<string>(t('pages.disclaimer.sections.fitnessBullets', { returnObjects: true }), []).map((b) => (
                   <li key={b}>{b}</li>
                 ))}
               </ul>

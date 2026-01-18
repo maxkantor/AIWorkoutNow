@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { useTranslation } from 'react-i18next';
+import { getArray } from '../i18n/getArray';
 import './About.css';
 
 function About() {
@@ -36,7 +37,7 @@ function About() {
             <section>
               <h2>{t('pages.about.whyTitle')}</h2>
               <ul>
-                {(t('pages.about.whyBullets', { returnObjects: true }) as unknown as Array<{ strong: string; text: string }>).map((b) => (
+                {getArray<{ strong: string; text: string }>(t('pages.about.whyBullets', { returnObjects: true }), []).map((b) => (
                   <li key={b.strong}>
                     <strong>{b.strong}</strong> {b.text}
                   </li>

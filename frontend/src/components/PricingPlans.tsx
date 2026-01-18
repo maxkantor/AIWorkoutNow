@@ -3,6 +3,7 @@ import { getPricingPlans, createCheckoutSession, PricingPlan } from '../services
 import { getDeviceId } from '../utils/storage';
 import PlanBadge, { PlanBadgeVariant } from './PlanBadge';
 import { useTranslation } from 'react-i18next';
+import { getArray } from '../i18n/getArray';
 
 interface PricingPlansProps {
   showHeader?: boolean;
@@ -42,7 +43,7 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
             ? 'pricing.benefits.100'
             : 'pricing.benefits.default';
 
-    return t(key, { returnObjects: true }) as unknown as string[];
+    return getArray<string>(t(key, { returnObjects: true }), []);
   };
 
   const getPlanDisplayName = (plan: PricingPlan) => {

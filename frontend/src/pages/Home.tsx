@@ -8,6 +8,7 @@ import SEO from '../components/SEO';
 import { getDeviceId, setTokenBalance as updateTokenStorage } from '../utils/storage';
 import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus } from '../services/api';
 import { useHeroContext } from '../components/Layout';
+import { getArray } from '../i18n/getArray';
 import './Home.css';
 
 function Home() {
@@ -309,11 +310,9 @@ function Home() {
                 </h2>
                 <PromoWorkoutVideo />
                 <div className="homeWhyStack">
-                  {(
-                    t('pages.home.whyCards', { returnObjects: true }) as unknown as Array<{
-                      title: string;
-                      body: string;
-                    }>
+                  {getArray<{ title: string; body: string }>(
+                    t('pages.home.whyCards', { returnObjects: true }),
+                    []
                   ).map((card, idx) => (
                     <div key={idx} className="homeWhyCard">
                       <div className="homeWhyIcon" aria-hidden="true">
@@ -417,7 +416,7 @@ function Home() {
             </p>
             <h3 className="text-lg font-bold text-slate-900 mb-3">{t('pages.home.seoBlock.listTitle')}</h3>
             <ul className="list-disc pl-5 text-slate-700 space-y-1">
-              {(t('pages.home.seoBlock.bullets', { returnObjects: true }) as unknown as string[]).map((b) => (
+              {getArray<string>(t('pages.home.seoBlock.bullets', { returnObjects: true }), []).map((b) => (
                 <li key={b}>{b}</li>
               ))}
             </ul>
@@ -437,7 +436,7 @@ function Home() {
                 <div className="text-slate-700 mt-2">
                   <p className="mb-3">{t('pages.home.faq.items.chatgpt.intro')}</p>
                   <ul className="list-disc pl-5 space-y-1 mb-3">
-                    {(t('pages.home.faq.items.chatgpt.bullets', { returnObjects: true }) as unknown as string[]).map((b) => (
+                    {getArray<string>(t('pages.home.faq.items.chatgpt.bullets', { returnObjects: true }), []).map((b) => (
                       <li key={b}>{b}</li>
                     ))}
                   </ul>

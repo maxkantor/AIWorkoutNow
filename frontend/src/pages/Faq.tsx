@@ -1,10 +1,11 @@
 import SEO from '../components/SEO';
 import { useTranslation } from 'react-i18next';
+import { getArray } from '../i18n/getArray';
 import './About.css';
 
 function Faq() {
   const { t } = useTranslation();
-  const faq = t('pages.faq.items', { returnObjects: true }) as unknown as Array<{ q: string; a: string }>;
+  const faq = getArray<{ q: string; a: string }>(t('pages.faq.items', { returnObjects: true }), []);
 
   return (
     <>
