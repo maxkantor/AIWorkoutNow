@@ -286,6 +286,7 @@
           "a4": "Usa “Restaurar entrenamientos” e ingresa el correo usado en el pago. Te enviaremos un código.",
           "offerDesc": "3 entrenamientos gratis y luego paquetes con pago único"
         }
+      }
     },
     "faq": {
       "seo": {
@@ -490,5 +491,3 @@
     }
   }
 }
-}
-

@@ -286,6 +286,7 @@
           "a4": "Use “Restore Workouts” and enter the email used at checkout. We’ll send a verification code.",
           "offerDesc": "3 free workouts, then one-time payment workout packs"
         }
+      }
     },
     "faq": {
       "seo": {
@@ -517,5 +518,3 @@
     }
   }
 }
-}
-
