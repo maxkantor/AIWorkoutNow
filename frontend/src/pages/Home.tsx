@@ -9,6 +9,7 @@ import { getDeviceId, setTokenBalance as updateTokenStorage } from '../utils/sto
 import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus } from '../services/api';
 import { useHeroContext } from '../components/Layout';
 import { getArray } from '../i18n/getArray';
+import { safeT } from '../i18n/safeT';
 import './Home.css';
 
 function Home() {
@@ -26,7 +27,6 @@ function Home() {
   const { setHeroContent } = useHeroContext();
 
   // SEO: keep title ~50–60 chars and description ~140–160 chars
-  const seoTitle = t('pages.home.seo.title');
   const seoDescription = t('pages.home.seo.description');
 
   useEffect(() => {
@@ -208,8 +208,8 @@ function Home() {
   return (
     <>
       <SEO
-        title={seoTitle}
-        description={seoDescription}
+        title={safeT(t, 'pages.home.seo.title')}
+        description={safeT(t, 'pages.home.seo.description')}
         canonicalUrl="https://aiworkoutnow.com/"
         jsonLd={[
           {
@@ -251,34 +251,34 @@ function Home() {
             mainEntity: [
               {
                 '@type': 'Question',
-                name: t('pages.home.schema.faq.q1'),
+                name: safeT(t, 'pages.home.schema.faq.q1'),
                 acceptedAnswer: {
                   '@type': 'Answer',
-                  text: t('pages.home.schema.faq.a1'),
+                  text: safeT(t, 'pages.home.schema.faq.a1'),
                 },
               },
               {
                 '@type': 'Question',
-                name: t('pages.home.schema.faq.q2'),
+                name: safeT(t, 'pages.home.schema.faq.q2'),
                 acceptedAnswer: {
                   '@type': 'Answer',
-                  text: t('pages.home.schema.faq.a2'),
+                  text: safeT(t, 'pages.home.schema.faq.a2'),
                 },
               },
               {
                 '@type': 'Question',
-                name: t('pages.home.schema.faq.q3'),
+                name: safeT(t, 'pages.home.schema.faq.q3'),
                 acceptedAnswer: {
                   '@type': 'Answer',
-                  text: t('pages.home.schema.faq.a3'),
+                  text: safeT(t, 'pages.home.schema.faq.a3'),
                 },
               },
               {
                 '@type': 'Question',
-                name: t('pages.home.schema.faq.q4'),
+                name: safeT(t, 'pages.home.schema.faq.q4'),
                 acceptedAnswer: {
                   '@type': 'Answer',
-                  text: t('pages.home.schema.faq.a4'),
+                  text: safeT(t, 'pages.home.schema.faq.a4'),
                 },
               },
             ],
@@ -287,7 +287,7 @@ function Home() {
       />
 
       {/* One H1 for SEO without changing the visual hero headline */}
-      <h1 className="sr-only">{t('pages.home.h1Sr')}</h1>
+      <h1 className="sr-only">{safeT(t, 'pages.home.h1Sr')}</h1>
       
       <main className="min-h-screen py-6 relative homeMainBg" style={{
         backgroundImage: "url('/images/main-bg.png')",
@@ -429,35 +429,35 @@ function Home() {
 
           {/* FAQ (small, appended — does not alter main layout) */}
           <section className="mt-6 bg-white/70 rounded-2xl p-6 border border-slate-200 shadow-sm" aria-labelledby="faq-heading">
-            <h2 id="faq-heading" className="text-2xl font-extrabold text-slate-900 mb-3">{t('pages.home.faq.title')}</h2>
+                <h2 id="faq-heading" className="text-2xl font-extrabold text-slate-900 mb-3">{safeT(t, 'pages.home.faq.title')}</h2>
             <div className="space-y-2">
               <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
-                <summary className="font-semibold text-slate-900 cursor-pointer">{t('pages.home.faq.items.chatgpt.q')}</summary>
+                    <summary className="font-semibold text-slate-900 cursor-pointer">{safeT(t, 'pages.home.faq.items.chatgpt.q')}</summary>
                 <div className="text-slate-700 mt-2">
-                  <p className="mb-3">{t('pages.home.faq.items.chatgpt.intro')}</p>
+                      <p className="mb-3">{safeT(t, 'pages.home.faq.items.chatgpt.intro')}</p>
                   <ul className="list-disc pl-5 space-y-1 mb-3">
-                    {getArray<string>(t('pages.home.faq.items.chatgpt.bullets', { returnObjects: true }), []).map((b) => (
+                        {getArray<string>(safeT(t, 'pages.home.faq.items.chatgpt.bullets', { returnObjects: true }), []).map((b) => (
                       <li key={b}>{b}</li>
                     ))}
                   </ul>
-                  <p className="text-slate-500 text-sm">{t('pages.home.faq.items.chatgpt.outro')}</p>
+                      <p className="text-slate-500 text-sm">{safeT(t, 'pages.home.faq.items.chatgpt.outro')}</p>
                 </div>
               </details>
               <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
-                <summary className="font-semibold text-slate-900 cursor-pointer">{t('pages.home.faq.items.signup.q')}</summary>
-                <p className="text-slate-700 mt-2">{t('pages.home.faq.items.signup.a')}</p>
+                    <summary className="font-semibold text-slate-900 cursor-pointer">{safeT(t, 'pages.home.faq.items.signup.q')}</summary>
+                    <p className="text-slate-700 mt-2">{safeT(t, 'pages.home.faq.items.signup.a')}</p>
               </details>
               <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
-                <summary className="font-semibold text-slate-900 cursor-pointer">{t('pages.home.faq.items.subscription.q')}</summary>
-                <p className="text-slate-700 mt-2">{t('pages.home.faq.items.subscription.a')}</p>
+                    <summary className="font-semibold text-slate-900 cursor-pointer">{safeT(t, 'pages.home.faq.items.subscription.q')}</summary>
+                    <p className="text-slate-700 mt-2">{safeT(t, 'pages.home.faq.items.subscription.a')}</p>
               </details>
               <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
-                <summary className="font-semibold text-slate-900 cursor-pointer">{t('pages.home.faq.items.restore.q')}</summary>
-                <p className="text-slate-700 mt-2">{t('pages.home.faq.items.restore.a')}</p>
+                    <summary className="font-semibold text-slate-900 cursor-pointer">{safeT(t, 'pages.home.faq.items.restore.q')}</summary>
+                    <p className="text-slate-700 mt-2">{safeT(t, 'pages.home.faq.items.restore.a')}</p>
               </details>
               <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
-                <summary className="font-semibold text-slate-900 cursor-pointer">{t('pages.home.faq.items.counts.q')}</summary>
-                <p className="text-slate-700 mt-2">{t('pages.home.faq.items.counts.a')}</p>
+                    <summary className="font-semibold text-slate-900 cursor-pointer">{safeT(t, 'pages.home.faq.items.counts.q')}</summary>
+                    <p className="text-slate-700 mt-2">{safeT(t, 'pages.home.faq.items.counts.a')}</p>
               </details>
             </div>
           </section>

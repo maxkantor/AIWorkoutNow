@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getDeviceId } from '../utils/storage';
 import { sendVerificationCode, verifyAndRestoreCredits } from '../services/api';
+import { safeT } from '../i18n/safeT';
 import './RestoreCredits.css';
 
 interface RestoreCreditsProps {
@@ -20,7 +21,7 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
 
   const handleSendCode = async () => {
     if (!email || !email.includes('@')) {
-      setError(t('restore.errors.invalidEmail'));
+      setError(safeT(t, 'restore.errors.invalidEmail'));
       return;
     }
 
@@ -31,7 +32,7 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
       await sendVerificationCode(email);
       setStep('code');
     } catch (err: any) {
-      setError(err.message || t('restore.errors.sendFailed'));
+      setError(err.message || safeT(t, 'restore.errors.sendFailed'));
     } finally {
       setLoading(false);
     }
@@ -39,7 +40,7 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
 
   const handleVerifyCode = async () => {
     if (!code || code.length !== 6) {
-      setError(t('restore.errors.invalidCode'));
+      setError(safeT(t, 'restore.errors.invalidCode'));
       return;
     }
 
@@ -58,7 +59,7 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
       // Also dispatch a global event to refresh access status across the app
       window.dispatchEvent(new CustomEvent('refreshAccessStatus'));
     } catch (err: any) {
-      const errorMessage = err.message || t('restore.errors.verifyFailed');
+      const errorMessage = err.message || safeT(t, 'restore.errors.verifyFailed');
       if (errorMessage.includes('attempts')) {
         const match = errorMessage.match(/(\d+)/);
         if (match) {
@@ -83,21 +84,21 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
   return (
     <div className="restore-credits-container">
       <div className="restore-credits-card">
-        <h2 className="restore-credits-title">{t('restore.title')}</h2>
+        <h2 className="restore-credits-title">{safeT(t, 'restore.title')}</h2>
         <p className="restore-credits-description">
-          {t('restore.description')}
+          {safeT(t, 'restore.description')}
         </p>
 
         {step === 'email' && (
           <div className="restore-credits-form">
             <div className="form-group">
-              <label htmlFor="email">{t('restore.emailLabel')}</label>
+              <label htmlFor="email">{safeT(t, 'restore.emailLabel')}</label>
               <input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={t('restore.emailPlaceholder')}
+                placeholder={safeT(t, 'restore.emailPlaceholder')}
                 className="form-input"
                 disabled={loading}
                 onKeyPress={(e) => {
@@ -113,7 +114,7 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
               disabled={loading || !email}
               className="cta-button"
             >
-              {loading ? t('restore.sending') : t('restore.sendCode')}
+              {loading ? safeT(t, 'restore.sending') : safeT(t, 'restore.sendCode')}
             </button>
           </div>
         )}
@@ -122,11 +123,11 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
           <div className="restore-credits-form">
             <div className="code-sent-message">
               <span className="check-icon">✓</span>
-              <p>{t('restore.codeSentTo', { email })}</p>
-              <p className="code-hint">{t('restore.codeHint')}</p>
+              <p>{safeT(t, 'restore.codeSentTo', { email })}</p>
+              <p className="code-hint">{safeT(t, 'restore.codeHint')}</p>
             </div>
             <div className="form-group">
-              <label htmlFor="code">{t('restore.codeLabel')}</label>
+              <label htmlFor="code">{safeT(t, 'restore.codeLabel')}</label>
               <input
                 id="code"
                 type="text"
@@ -146,7 +147,7 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
                 }}
               />
               {attemptsRemaining !== null && (
-                <p className="attempts-remaining">{t('restore.attemptsRemaining', { count: attemptsRemaining })}</p>
+                <p className="attempts-remaining">{safeT(t, 'restore.attemptsRemaining', { count: attemptsRemaining })}</p>
               )}
             </div>
             {error && <div className="error-message">{error}</div>}
@@ -156,14 +157,14 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
                 disabled={loading || code.length !== 6}
                 className="cta-button"
               >
-              {loading ? t('restore.verifying') : t('restore.verifyRestore')}
+              {loading ? safeT(t, 'restore.verifying') : safeT(t, 'restore.verifyRestore')}
               </button>
               <button
                 onClick={handleReset}
                 disabled={loading}
                 className="secondary-button"
               >
-                {t('restore.useDifferentEmail')}
+                {safeT(t, 'restore.useDifferentEmail')}
               </button>
             </div>
           </div>
@@ -172,16 +173,16 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
         {step === 'success' && success && (
           <div className="restore-credits-success">
             <div className="success-icon">✓</div>
-            <h3>{t('restore.successTitle')}</h3>
+            <h3>{safeT(t, 'restore.successTitle')}</h3>
             <div className="credits-info">
               {success.hasUnlimited ? (
                 <div className="credits-item">
                   <span className="credits-icon">∞</span>
                   <div>
-                    <strong>{t('restore.unlimited')}</strong>
+                    <strong>{safeT(t, 'restore.unlimited')}</strong>
                     {success.expiresAt && (
                       <p className="credits-detail">
-                        {t('restore.expires', {
+                        {safeT(t, 'restore.expires', {
                           date: new Date(success.expiresAt).toLocaleDateString(i18n.resolvedLanguage || i18n.language),
                         })}
                       </p>
@@ -194,8 +195,8 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
                     <div className="credits-item">
                       <span className="credits-icon">💪</span>
                       <div>
-                        <strong>{t('restore.paidWorkouts', { count: success.tokensRemaining })}</strong>
-                        <p className="credits-detail">{t('restore.paidDetail')}</p>
+                        <strong>{safeT(t, 'restore.paidWorkouts', { count: success.tokensRemaining })}</strong>
+                        <p className="credits-detail">{safeT(t, 'restore.paidDetail')}</p>
                       </div>
                     </div>
                   )}
@@ -203,8 +204,8 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
                     <div className="credits-item">
                       <span className="credits-icon">🎁</span>
                       <div>
-                        <strong>{t('restore.freeWorkouts', { count: success.freeWorkoutsRemaining })}</strong>
-                        <p className="credits-detail">{t('restore.freeDetail')}</p>
+                        <strong>{safeT(t, 'restore.freeWorkouts', { count: success.freeWorkoutsRemaining })}</strong>
+                        <p className="credits-detail">{safeT(t, 'restore.freeDetail')}</p>
                       </div>
                     </div>
                   )}
@@ -212,7 +213,7 @@ function RestoreCredits({ onCreditsRestored }: RestoreCreditsProps) {
               )}
             </div>
             <button onClick={handleReset} className="cta-button">
-              {t('restore.restoreMore')}
+              {safeT(t, 'restore.restoreMore')}
             </button>
           </div>
         )}

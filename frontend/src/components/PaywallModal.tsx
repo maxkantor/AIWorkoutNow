@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getPricingPlans, createCheckoutSession, PricingPlan } from '../services/api';
 import { getDeviceId } from '../utils/storage';
 import { useTranslation } from 'react-i18next';
+import { safeT } from '../i18n/safeT';
 import './PaywallModal.css';
 
 interface PaywallModalProps {
@@ -86,13 +87,13 @@ function PaywallModal({ isOpen, onClose, onPurchaseComplete: _onPurchaseComplete
         <button className="paywall-close" onClick={onClose}>×</button>
         
         <button className="paywall-back" onClick={handleBackToHome}>
-          {t('paywall.backToHome')}
+          {safeT(t, 'paywall.backToHome')}
         </button>
         
         <div className="paywall-header">
-          <h2>{t('paywall.title')}</h2>
+          <h2>{safeT(t, 'paywall.title')}</h2>
           <p className="paywall-subheadline">
-            {t('paywall.subheadline')}
+            {safeT(t, 'paywall.subheadline')}
           </p>
         </div>
 
@@ -101,7 +102,7 @@ function PaywallModal({ isOpen, onClose, onPurchaseComplete: _onPurchaseComplete
         )}
 
         {loading ? (
-          <div className="paywall-loading">{t('paywall.loadingPlans')}</div>
+          <div className="paywall-loading">{safeT(t, 'paywall.loadingPlans')}</div>
         ) : (
           <>
             <div className="pricing-plans-grid">
@@ -112,35 +113,35 @@ function PaywallModal({ isOpen, onClose, onPurchaseComplete: _onPurchaseComplete
                 >
                   {plan.isRecommended && (
                     <div className="recommended-badge">
-                      {t('paywall.mostPopular')}
+                      {safeT(t, 'paywall.mostPopular')}
                     </div>
                   )}
                   
                   <h3>
                     {plan.tokenCount === 10
-                      ? t('pricing.planName.10')
+                      ? safeT(t, 'pricing.planName.10')
                       : plan.tokenCount === 30
-                        ? t('pricing.planName.30')
+                        ? safeT(t, 'pricing.planName.30')
                         : plan.tokenCount === 100
-                          ? t('pricing.planName.100')
+                          ? safeT(t, 'pricing.planName.100')
                           : plan.name}
                   </h3>
                   
                   <div className="plan-price">
                     <span className="price-amount">${plan.price.toFixed(2)}</span>
-                    <span className="price-period">{t('paywall.oneTime')}</span>
+                    <span className="price-period">{safeT(t, 'paywall.oneTime')}</span>
                   </div>
 
                   <div className="plan-features">
                     {plan.isUnlimited ? (
                       <div className="feature-item">
                         <span className="feature-icon">∞</span>
-                        <span>{t('paywall.unlimitedWorkouts')}</span>
+                        <span>{safeT(t, 'paywall.unlimitedWorkouts')}</span>
                       </div>
                     ) : (
                       <div className="feature-item">
                         <span className="feature-icon">💪</span>
-                        <span>{t('paywall.workouts', { count: plan.tokenCount })}</span>
+                        <span>{safeT(t, 'paywall.workouts', { count: plan.tokenCount })}</span>
                       </div>
                     )}
                   </div>
@@ -154,16 +155,16 @@ function PaywallModal({ isOpen, onClose, onPurchaseComplete: _onPurchaseComplete
                     onClick={() => handlePurchase(plan)}
                     disabled={checkoutLoading === plan.planId}
                   >
-                    {checkoutLoading === plan.planId ? t('pricing.processing') : t('paywall.cta')}
+                    {checkoutLoading === plan.planId ? safeT(t, 'pricing.processing') : safeT(t, 'paywall.cta')}
                   </button>
                 </div>
               ))}
             </div>
 
             <div className="pricing-disclaimer">
-              <p>{t('paywall.disclaimerLine')}</p>
+              <p>{safeT(t, 'paywall.disclaimerLine')}</p>
               <p className="comparison-text">
-                {t('pricing.comparison')}
+                {safeT(t, 'pricing.comparison')}
               </p>
             </div>
           </>
