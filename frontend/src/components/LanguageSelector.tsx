@@ -5,6 +5,14 @@ import { isAdminRoute } from '../i18n/isAdminRoute';
 
 const STORAGE_KEY = 'aiworkoutnow_lang';
 
+function normalizeLang(input: string | undefined | null): string {
+  if (!input) return 'en';
+  const raw = input.toLowerCase().trim();
+  if (!raw) return 'en';
+  const base = raw.split(/[-_]/)[0];
+  return base === 'zh' ? 'zh' : base;
+}
+
 export default function LanguageSelector() {
   const { i18n, t } = useTranslation();
   const location = useLocation();
@@ -31,9 +39,9 @@ export default function LanguageSelector() {
       <select
         id="language-selector"
         className="px-2 py-1 rounded-md text-sm font-semibold bg-white/90 text-slate-800 border border-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-        value={i18n.resolvedLanguage || i18n.language || 'en'}
+        value={normalizeLang(i18n.resolvedLanguage || i18n.language || 'en')}
         onChange={(e) => {
-          const next = e.target.value;
+          const next = normalizeLang(e.target.value);
           i18n.changeLanguage(next);
           try {
             window.localStorage.setItem(STORAGE_KEY, next);
