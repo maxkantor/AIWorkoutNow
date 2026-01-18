@@ -77,7 +77,7 @@
     "header": "Unlock More AI Workouts",
     "loadingPlans": "Loading pricing plans...",
     "processing": "Processing...",
-    "perWorkout": "(${price} per workout)",
+    "perWorkout": "(${{price}} per workout)",
     "noLoginNoSubscription": "No login. No subscription.",
     "comparison": "Other fitness apps charge $10–$30/month. We don't.",
     "badges": {

@@ -77,7 +77,7 @@
     "header": "Desbloquea más entrenamientos con IA",
     "loadingPlans": "Cargando planes de precios...",
     "processing": "Procesando...",
-    "perWorkout": "(${price} por entrenamiento)",
+    "perWorkout": "(${{price}} por entrenamiento)",
     "noLoginNoSubscription": "Sin inicio de sesión. Sin suscripción.",
     "comparison": "Otras apps de fitness cobran $10–$30/mes. Nosotros no.",
     "badges": {

@@ -77,7 +77,7 @@
     "header": "解锁更多 AI 训练",
     "loadingPlans": "正在加载价格方案...",
     "processing": "处理中...",
-    "perWorkout": "（每次 ${price}）",
+    "perWorkout": "（每次 ${{price}}）",
     "noLoginNoSubscription": "无需登录。无需订阅。",
     "comparison": "其他健身应用每月收费 $10–$30。我们不收。",
     "badges": {
