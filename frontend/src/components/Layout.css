@@ -110,6 +110,31 @@
   margin-bottom: 1.5rem;
 }
 
+.hero-title-emoji {
+  font-size: clamp(1.75rem, 6vw, 2.5rem);
+  line-height: 1;
+}
+
+/* Hero headline styling (we use a <p> for SEO, but keep the old bold/glow look) */
+.hero-title-section .hero-main-title {
+  font-size: clamp(1.75rem, 6vw, 2.5rem);
+  font-weight: 900;
+  line-height: 1.1;
+  margin: 0;
+  color: #ffffff !important;
+  text-shadow:
+    0 12px 48px rgba(0, 0, 0, 1),
+    0 8px 32px rgba(0, 0, 0, 1),
+    0 6px 24px rgba(0, 0, 0, 1),
+    0 4px 16px rgba(0, 0, 0, 1),
+    0 2px 8px rgba(0, 0, 0, 1),
+    0 0 4px rgba(0, 0, 0, 1),
+    4px 4px 8px rgba(0, 0, 0, 1);
+  -webkit-text-fill-color: #ffffff !important;
+  letter-spacing: -0.02em;
+  animation: slideUpFade 0.4s ease-out 0.1s both;
+}
+
 .hero-title-section h1 {
   font-size: clamp(1.75rem, 6vw, 2.5rem);
   font-weight: 900;
