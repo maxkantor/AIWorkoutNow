@@ -78,8 +78,6 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
         const pricingPlans: PricingPlan[] = JSON.parse(cached);
         setPlans(pricingPlans.sort((a: PricingPlan, b: PricingPlan) => a.displayOrder - b.displayOrder));
         setLoading(false);
-        // Still fetch in background to refresh cache
-        fetchPlansInBackground();
         return;
       } catch (parseErr) {
         console.error('[PricingPlans] Error parsing cached plans:', parseErr);
@@ -117,21 +115,8 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
     }
   };
 
-  const fetchPlansInBackground = async () => {
-    try {
-      const pricingPlans = await getPricingPlans();
-      const sortedPlans = pricingPlans.sort((a: PricingPlan, b: PricingPlan) => a.displayOrder - b.displayOrder);
-      setPlans(sortedPlans);
-      
-      // Update cache
-      const cacheKey = 'pricing_plans_cache';
-      const cacheExpiryKey = 'pricing_plans_cache_expiry';
-      localStorage.setItem(cacheKey, JSON.stringify(sortedPlans));
-      localStorage.setItem(cacheExpiryKey, (new Date().getTime() + 5 * 60 * 1000).toString());
-    } catch (err) {
-      console.error('[PricingPlans] Background fetch failed (non-critical):', err);
-    }
-  };
+  // NOTE: We intentionally do NOT background-refresh on cache hits.
+  // This avoids spammy duplicate requests and keeps pricing calls predictable.
 
   const handlePurchase = async (plan: PricingPlan) => {
     try {

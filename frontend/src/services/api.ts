@@ -23,6 +23,22 @@ function getApiBaseUrl() {
 
 const API_BASE_URL = getApiBaseUrl();
 
+// =========================================================
+// In-flight request de-duplication (prevents spammy repeats)
+// =========================================================
+const inflight = new Map<string, Promise<any>>();
+
+async function dedupe<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const existing = inflight.get(key) as Promise<T> | undefined;
+  if (existing) return existing;
+
+  const p = fn().finally(() => {
+    inflight.delete(key);
+  });
+  inflight.set(key, p);
+  return p;
+}
+
 export interface WorkoutPreferences {
   fitnessLevel: string;
   workoutType: string;
@@ -266,45 +282,47 @@ export interface UserAccessStatus {
 }
 
 export async function getPricingPlans(): Promise<PricingPlan[]> {
-  try {
-    console.log(`[API] Fetching pricing plans from: ${API_BASE_URL}/pricing-plans`);
-    const response = await fetch(`${API_BASE_URL}/pricing-plans`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+  return dedupe('pricing-plans', async () => {
+    try {
+      console.log(`[API] Fetching pricing plans from: ${API_BASE_URL}/pricing-plans`);
+      const response = await fetch(`${API_BASE_URL}/pricing-plans`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-    console.log(`[API] Pricing plans response status: ${response.status}`);
+      console.log(`[API] Pricing plans response status: ${response.status}`);
 
-    if (!response.ok) {
-      let errorMessage = 'Failed to fetch pricing plans';
-      try {
-        const raw = await response.text();
+      if (!response.ok) {
+        let errorMessage = 'Failed to fetch pricing plans';
         try {
-          const errorData = JSON.parse(raw);
-          errorMessage = errorData.message || errorData.error || errorMessage;
-          console.error('[API] Pricing plans error response:', errorData);
-        } catch {
-          console.error('[API] Pricing plans raw error response:', raw);
+          const raw = await response.text();
+          try {
+            const errorData = JSON.parse(raw);
+            errorMessage = errorData.message || errorData.error || errorMessage;
+            console.error('[API] Pricing plans error response:', errorData);
+          } catch {
+            console.error('[API] Pricing plans raw error response:', raw);
+            errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          }
+        } catch (e) {
           errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         }
-      } catch (e) {
-        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        throw new Error(errorMessage);
       }
-      throw new Error(errorMessage);
-    }
 
-    const data = await response.json();
-    console.log(`[API] Successfully fetched ${data.length} pricing plans`);
-    return data;
-  } catch (error: any) {
-    console.error('[API] Pricing plans fetch exception:', error);
-    if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      throw new Error(`Connection failed. Please check your internet connection and API URL (${API_BASE_URL}).`);
+      const data = await response.json();
+      console.log(`[API] Successfully fetched ${data.length} pricing plans`);
+      return data;
+    } catch (error: any) {
+      console.error('[API] Pricing plans fetch exception:', error);
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new Error(`Connection failed. Please check your internet connection and API URL (${API_BASE_URL}).`);
+      }
+      throw error;
     }
-    throw error;
-  }
+  });
 }
 
 export async function getFreeWorkoutsRemaining(deviceId: string): Promise<{ remaining: number; totalUsed: number }> {
@@ -330,31 +348,34 @@ export async function getFreeWorkoutsRemaining(deviceId: string): Promise<{ rema
 }
 
 export async function getUserAccessStatus(deviceId: string, cacheBust?: boolean): Promise<UserAccessStatus> {
-  try {
-    // Add cache busting timestamp to prevent browser/CDN caching
-    const timestamp = cacheBust ? `&_t=${Date.now()}` : '';
-    const response = await fetch(`${API_BASE_URL}/user-access-status?deviceId=${deviceId}${timestamp}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-      },
-      cache: 'no-store',
-    });
+  const key = `user-access-status:${deviceId}:${cacheBust ? '1' : '0'}`;
+  return dedupe(key, async () => {
+    try {
+      // Add cache busting timestamp to prevent browser/CDN caching
+      const timestamp = cacheBust ? `&_t=${Date.now()}` : '';
+      const response = await fetch(`${API_BASE_URL}/user-access-status?deviceId=${deviceId}${timestamp}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
+        cache: 'no-store',
+      });
 
-    if (!response.ok) {
-      throw new Error('Failed to get access status');
-    }
+      if (!response.ok) {
+        throw new Error('Failed to get access status');
+      }
 
-    return response.json();
-  } catch (error: any) {
-    if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      throw new Error('Connection failed. Please check your internet connection.');
+      return response.json();
+    } catch (error: any) {
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new Error('Connection failed. Please check your internet connection.');
+      }
+      throw error;
     }
-    throw error;
-  }
+  });
 }
 
 export async function verifyPayment(sessionId: string, deviceId: string): Promise<{ verified: boolean; alreadyProcessed?: boolean; tokensGranted?: number }> {
