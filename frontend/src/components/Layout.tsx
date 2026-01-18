@@ -73,7 +73,6 @@ function Layout({ children }: LayoutProps) {
             {/* Main Title */}
             <div className="hero-title-section">
               <div className="flex items-center justify-center gap-3 mb-3">
-                <span className="hero-title-emoji">💪</span>
                 <p className="hero-main-title">
                   {t('hero.title')}
                 </p>
