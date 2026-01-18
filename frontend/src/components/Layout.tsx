@@ -66,9 +66,6 @@ function Layout({ children }: LayoutProps) {
           <div className="hero-side hero-side-right" />
         </div>
         <div className="hero-container">
-          <div className="absolute top-4 right-4 z-20">
-            <LanguageSelector />
-          </div>
           <div className="hero-content">
             {/* Main Title */}
             <div className="hero-title-section">
@@ -78,11 +75,11 @@ function Layout({ children }: LayoutProps) {
                 </p>
               </div>
               
-              {/* Primary CTA Button - Visually Dominant with Glow Effect */}
-              <div className="mb-5">
+              {/* Primary CTA Button with Language Selector */}
+              <div className="hero-cta-container mb-5">
                 <a 
                   href="#workout-generator" 
-                  className="inline-block px-10 py-5 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 text-white font-black text-xl rounded-2xl shadow-2xl hover:shadow-[0_0_30px_rgba(59,130,246,0.6)] transform hover:-translate-y-1.5 transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-400 focus:ring-offset-4 focus:ring-offset-transparent relative overflow-hidden group"
+                  className="hero-cta-button inline-block px-10 py-5 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 text-white font-black text-xl rounded-2xl shadow-2xl hover:shadow-[0_0_30px_rgba(59,130,246,0.6)] transform hover:-translate-y-1.5 transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-400 focus:ring-offset-4 focus:ring-offset-transparent relative overflow-hidden group"
                   aria-label={t('hero.ctaAria')}
                   style={{
                     animation: 'slideUpFade 0.4s ease-out 0.3s both'
@@ -95,6 +92,9 @@ function Layout({ children }: LayoutProps) {
                     <span className="text-2xl group-hover:translate-x-1 transition-transform duration-300">→</span>
                   </span>
                 </a>
+                <div className="hero-language-selector">
+                  <LanguageSelector />
+                </div>
               </div>
             </div>
 
