@@ -439,6 +439,7 @@ public class AdminController : ControllerBase
                         RemainingTokens = summary.RemainingTokens,
                         GeneratedWorkouts = summary.GeneratedWorkouts,
                         RemainingWorkouts = summary.RemainingWorkouts,
+                        TotalWorkouts = summary.TotalWorkouts,
                         PurchasesCount = summary.PurchasesCount,
                         TotalSpentCents = summary.TotalSpentCents,
                         TotalSpentFormatted = summary.TotalSpentFormatted,

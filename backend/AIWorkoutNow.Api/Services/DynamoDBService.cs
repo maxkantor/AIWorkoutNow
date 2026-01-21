@@ -578,8 +578,13 @@ public class DynamoDBService : IDynamoDBService
         }
         else
         {
+            // Free-only (or legacy) accounts without an explicit stored denominator.
+            // IMPORTANT: totalWorkouts should represent the free cap (3) + any paid tokens remaining.
+            // If we set totalWorkouts = remainingWorkouts, a user who has used 2/3 free workouts
+            // would incorrectly display as 1/1.
             remainingWorkouts = tokens.TokensRemaining + freeRemaining;
-            totalWorkouts = remainingWorkouts;
+            totalWorkouts = (tokens.TokensRemaining > 0 ? tokens.TokensRemaining : 0) + 3;
+            if (totalWorkouts < remainingWorkouts) totalWorkouts = remainingWorkouts;
         }
 
         var dto = new BalanceDto
