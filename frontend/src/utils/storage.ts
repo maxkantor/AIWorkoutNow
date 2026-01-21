@@ -1,20 +1,87 @@
 const DEVICE_ID_KEY = 'aiworkoutnow_device_id';
+const DEVICE_ID_COOKIE = 'aiworkoutnow_device_id';
 const WORKOUTS_KEY = 'aiworkoutnow_workouts';
 const TOKENS_KEY = 'aiworkoutnow_tokens';
 const FREE_TRIAL_KEY = 'aiworkoutnow_free_trial';
 
+// Cookie utilities for device ID persistence (fallback when localStorage is cleared)
+function setCookie(name: string, value: string, days: number = 365): void {
+  try {
+    const expires = new Date();
+    expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+  } catch (e) {
+    // Cookie setting failed (e.g., in some privacy modes) - silently fail
+    console.warn('[storage] Failed to set cookie:', e);
+  }
+}
+
+function getCookie(name: string): string | null {
+  try {
+    const nameEQ = name + '=';
+    const ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+      let c = ca[i];
+      while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+      if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    }
+  } catch (e) {
+    // Cookie reading failed - silently fail
+    console.warn('[storage] Failed to read cookie:', e);
+  }
+  return null;
+}
+
 export function getDeviceId(): string {
-  let deviceId = localStorage.getItem(DEVICE_ID_KEY);
+  // Try localStorage first (preferred)
+  let deviceId: string | null = null;
+  try {
+    deviceId = localStorage.getItem(DEVICE_ID_KEY);
+  } catch (e) {
+    console.warn('[storage] localStorage access failed, trying cookie:', e);
+  }
+
+  // Fallback to cookie if localStorage is empty or unavailable
+  if (!deviceId) {
+    deviceId = getCookie(DEVICE_ID_COOKIE);
+    // If found in cookie but not in localStorage, sync it to localStorage
+    if (deviceId) {
+      try {
+        localStorage.setItem(DEVICE_ID_KEY, deviceId);
+      } catch (e) {
+        console.warn('[storage] Failed to sync cookie to localStorage:', e);
+      }
+    }
+  }
+
+  // Generate new device ID if neither localStorage nor cookie has it
   if (!deviceId) {
     deviceId = generateDeviceId();
-    localStorage.setItem(DEVICE_ID_KEY, deviceId);
+    // Save to both localStorage and cookie for redundancy
+    try {
+      localStorage.setItem(DEVICE_ID_KEY, deviceId);
+    } catch (e) {
+      console.warn('[storage] Failed to save to localStorage:', e);
+    }
+    setCookie(DEVICE_ID_COOKIE, deviceId, 365); // 1 year expiration
+  } else {
+    // Ensure cookie is also set (in case it was missing)
+    setCookie(DEVICE_ID_COOKIE, deviceId, 365);
   }
+
   return deviceId;
 }
 
 export function setDeviceId(deviceId: string) {
   if (!deviceId) return;
-  localStorage.setItem(DEVICE_ID_KEY, deviceId);
+  
+  // Save to both localStorage and cookie for redundancy
+  try {
+    localStorage.setItem(DEVICE_ID_KEY, deviceId);
+  } catch (e) {
+    console.warn('[storage] Failed to save to localStorage:', e);
+  }
+  setCookie(DEVICE_ID_COOKIE, deviceId, 365); // 1 year expiration
 }
 
 function generateDeviceId(): string {
