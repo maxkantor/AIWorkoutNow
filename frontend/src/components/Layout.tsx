@@ -1,6 +1,7 @@
 import { ReactNode, createContext, useContext, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import Header from './Header';
 import Footer from './Footer';
 import LanguageSelector from './LanguageSelector';
 import './Layout.css';
@@ -57,6 +58,9 @@ function Layout({ children }: LayoutProps) {
 
   return (
     <div className={`layout ${isAdminPage ? 'admin-layout' : ''}`}>
+      {/* Header Navigation - Hide on admin pages */}
+      {!isAdminPage && <Header />}
+      
       {/* Hero Section - Hide on admin pages */}
       {!isAdminPage && (
       <section className="hero-section">
