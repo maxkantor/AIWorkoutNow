@@ -156,9 +156,10 @@ public class EmailVerificationController : ControllerBase
             // Save mapping
             await _dynamoService.SaveEmailVisitorMappingAsync(mapping);
 
-            // Reset free workout count for this device (fresh start after restore)
-            Console.WriteLine($"[EmailVerificationController] Resetting free workout count for device {request.DeviceId}");
-            await _dynamoService.ResetFreeWorkoutCountAsync(request.DeviceId);
+            // NOTE: We do NOT reset free workout count during restore.
+            // Free workouts are tied to the device ID and should persist across restores.
+            // Only paid tokens are restored. This prevents users from getting 3 free workouts every time they restore.
+            Console.WriteLine($"[EmailVerificationController] Skipping free workout reset - free workouts persist per device");
 
             // CRITICAL FIX: Get ALL purchases for this email (not just linked devices)
             // This ensures we restore credits even if purchases are on different devices
