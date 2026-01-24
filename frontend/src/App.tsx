@@ -11,7 +11,6 @@ const Contact = lazy(() => import('./pages/Contact'));
 const Faq = lazy(() => import('./pages/Faq'));
 const AIWorkoutGenerator = lazy(() => import('./pages/AIWorkoutGenerator'));
 const WorkoutPlans = lazy(() => import('./pages/WorkoutPlans'));
-const Sitemap = lazy(() => import('./pages/Sitemap'));
 
 const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -103,7 +102,6 @@ function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/disclaimer" element={<Disclaimer />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/sitemap" element={<Sitemap />} />
 
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/login" element={<AdminLogin />} />

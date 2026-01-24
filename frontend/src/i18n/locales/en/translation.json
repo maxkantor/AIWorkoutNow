@@ -9,14 +9,6 @@
   "common": {
     "language": "Language"
   },
-  "header": {
-    "home": "Home",
-    "generator": "Generator",
-    "plans": "Plans",
-    "about": "About",
-    "faq": "FAQ",
-    "contact": "Contact"
-  },
   "hero": {
     "title": "Get Your Perfect Workout in Seconds",
     "cta": "Generate AI Workout",
@@ -177,14 +169,13 @@
     "tagline": "Your AI-powered fitness companion. Get personalized workouts instantly.",
     "legal": "Legal",
     "support": "Support",
-      "links": {
-        "privacy": "Privacy Policy",
-        "disclaimer": "Disclaimer",
-        "about": "About Us",
-        "contact": "Contact Us",
-        "faq": "FAQ",
-        "sitemap": "Sitemap"
-      },
+    "links": {
+      "privacy": "Privacy Policy",
+      "disclaimer": "Disclaimer",
+      "about": "About Us",
+      "contact": "Contact Us",
+      "faq": "FAQ"
+    },
     "copyright": "© {{year}} AIWorkoutNow. All rights reserved.",
     "amazonDisclosure": "As an Amazon Associate, we earn from qualifying purchases."
   },
@@ -524,31 +515,6 @@
       "submessage": "You can try again anytime. Your 3 free workouts are still available!",
       "tryAgain": "Try Again",
       "goHome": "Go Home"
-    },
-    "sitemap": {
-      "seo": {
-        "title": "Sitemap | AIWorkoutNow",
-        "description": "Complete sitemap of all pages on AIWorkoutNow.com"
-      },
-      "title": "Sitemap",
-      "intro": "Find all pages and sections of AIWorkoutNow.com",
-      "home": "Home",
-      "homeDesc": "Main page with AI workout generator",
-      "generator": "AI Workout Generator",
-      "generatorDesc": "Generate personalized workout plans instantly",
-      "plans": "Workout Plans",
-      "plansDesc": "View pricing plans and purchase workout credits",
-      "about": "About Us",
-      "aboutDesc": "Learn about AIWorkoutNow and our mission",
-      "faq": "FAQ",
-      "faqDesc": "Frequently asked questions about the service",
-      "contact": "Contact",
-      "contactDesc": "Get in touch with our support team",
-      "privacy": "Privacy Policy",
-      "privacyDesc": "Read our privacy policy and data practices",
-      "disclaimer": "Disclaimer",
-      "disclaimerDesc": "Important safety and medical disclaimers",
-      "xmlTitle": "XML Sitemap:"
     }
   }
 }
