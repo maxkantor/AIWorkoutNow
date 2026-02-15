@@ -23,6 +23,7 @@ const AdminActivities = lazy(() => import('./pages/AdminActivities'));
 const AdminAnalytics = lazy(() => import('./pages/AdminAnalytics'));
 const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'));
 const PaymentCancel = lazy(() => import('./pages/PaymentCancel'));
+const Platform = lazy(() => import('./pages/Platform'));
 import Layout from './components/Layout';
 import OptionalAnalytics from './components/OptionalAnalytics';
 
@@ -102,6 +103,7 @@ function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/disclaimer" element={<Disclaimer />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/platform" element={<Platform />} />
 
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/login" element={<AdminLogin />} />

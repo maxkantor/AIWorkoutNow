@@ -41,6 +41,7 @@ function Layout({ children }: LayoutProps) {
   const { freeWorkoutsRemaining, accessStatus, tokenBalance, checkingAccess, remainingWorkouts, totalWorkouts } = heroContent || {};
   const location = useLocation();
   const isAdminPage = location.pathname.startsWith('/admin');
+  const isPlatformPage = location.pathname === '/platform';
   const { t, i18n } = useTranslation();
 
   // Add/remove admin-body class to body element
@@ -58,7 +59,7 @@ function Layout({ children }: LayoutProps) {
   return (
     <div className={`layout ${isAdminPage ? 'admin-layout' : ''}`}>
       {/* Hero Section - Hide on admin pages */}
-      {!isAdminPage && (
+      {!isAdminPage && !isPlatformPage && (
       <section className="hero-section">
         {/* Decorative side fills for wide screens (do not affect layout) */}
         <div className="hero-sides" aria-hidden="true">
@@ -159,7 +160,9 @@ function Layout({ children }: LayoutProps) {
       )}
 
       <HeroContext.Provider value={{ heroContent, setHeroContent }}>
-        {children}
+        <div className={isPlatformPage ? 'layout-main layout-main-platform' : 'layout-main'}>
+          {children}
+        </div>
       </HeroContext.Provider>
       {!isAdminPage && <Footer />}
     </div>

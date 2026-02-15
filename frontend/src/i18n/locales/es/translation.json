@@ -174,7 +174,8 @@
       "disclaimer": "Aviso legal",
       "about": "Sobre nosotros",
       "contact": "Contacto",
-      "faq": "Preguntas frecuentes"
+      "faq": "Preguntas frecuentes",
+      "platform": "Platform"
     },
     "copyright": "© {{year}} AIWorkoutNow. Todos los derechos reservados.",
     "amazonDisclosure": "Como Asociado de Amazon, ganamos con las compras que califican."

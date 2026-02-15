@@ -174,7 +174,8 @@
       "disclaimer": "Disclaimer",
       "about": "About Us",
       "contact": "Contact Us",
-      "faq": "FAQ"
+      "faq": "FAQ",
+      "platform": "Platform"
     },
     "copyright": "© {{year}} AIWorkoutNow. All rights reserved.",
     "amazonDisclosure": "As an Amazon Associate, we earn from qualifying purchases."
