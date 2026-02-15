@@ -11,6 +11,7 @@ import './About.css';
 function AIWorkoutGeneratorPage() {
   const { t, i18n } = useTranslation();
   const [workout, setWorkout] = useState<any>(null);
+  const [lastPreferences, setLastPreferences] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tokenBalance, setTokenBalance] = useState<number | null>(null);
@@ -84,6 +85,7 @@ function AIWorkoutGeneratorPage() {
       }
 
       const result = await generateWorkout(preferences, deviceId, isFreeUser, i18n.resolvedLanguage || i18n.language || 'en');
+      setLastPreferences(preferences);
       setWorkout(result);
 
       if (result.tokensRemaining !== undefined) {
@@ -141,6 +143,7 @@ function AIWorkoutGeneratorPage() {
                 loading={loading}
                 error={error}
                 workout={workout}
+                lastPreferences={lastPreferences ?? undefined}
                 disabled={!canGenerate || checkingAccess}
               />
             </section>

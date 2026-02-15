@@ -9,10 +9,11 @@ interface WorkoutGeneratorProps {
   loading: boolean;
   error: string | null;
   workout: any;
+  lastPreferences?: any;
   disabled?: boolean;
 }
 
-function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = false }: WorkoutGeneratorProps) {
+function WorkoutGenerator({ onGenerate, loading, error, workout, lastPreferences, disabled = false }: WorkoutGeneratorProps) {
   const { t } = useTranslation();
   const [fitnessLevel, setFitnessLevel] = useState('beginner');
   const [workoutType, setWorkoutType] = useState('full-body');
@@ -149,7 +150,21 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, disabled = fals
         </button>
       </form>
 
-      {workout && <WorkoutDisplay workout={workout} />}
+      {workout && (
+        <WorkoutDisplay
+          workout={workout}
+          preferences={
+            lastPreferences ?? {
+              fitnessLevel,
+              workoutType,
+              duration: parseInt(duration, 10),
+              equipment,
+              injuries: injuries.split(',').filter((i) => i.trim()),
+              goals: goals.split(',').filter((g) => g.trim()),
+            }
+          }
+        />
+      )}
     </div>
   );
 }

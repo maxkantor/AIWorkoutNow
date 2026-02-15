@@ -1,3 +1,4 @@
+import { getAffiliateTag } from '../utils/amazonAffiliate';
 import './AffiliateProducts.css';
 
 interface AffiliateProductsProps {
@@ -35,8 +36,7 @@ function AffiliateProducts({ workoutType }: AffiliateProductsProps) {
 
   const products = getProductsForWorkoutType(workoutType);
 
-  // Replace with your actual Amazon Associate tag
-  const associateTag = 'aiworkoutnow-20';
+  const associateTag = getAffiliateTag();
 
   const generateAffiliateLink = (asin: string) => {
     return `https://www.amazon.com/dp/${asin}?tag=${associateTag}&linkCode=ogi&th=1&psc=1`;

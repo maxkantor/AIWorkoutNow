@@ -6,7 +6,7 @@ import RestoreCredits from '../components/RestoreCredits';
 import PromoWorkoutVideo from '../components/PromoWorkoutVideo/PromoWorkoutVideo';
 import SEO from '../components/SEO';
 import { getDeviceId, setTokenBalance as updateTokenStorage } from '../utils/storage';
-import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus } from '../services/api';
+import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus, WorkoutPreferences } from '../services/api';
 import { useHeroContext } from '../components/Layout';
 import { getArray } from '../i18n/getArray';
 import { safeT } from '../i18n/safeT';
@@ -15,6 +15,7 @@ import './Home.css';
 function Home() {
   const { t, i18n } = useTranslation();
   const [workout, setWorkout] = useState<any>(null);
+  const [lastPreferences, setLastPreferences] = useState<WorkoutPreferences | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tokenBalance, setTokenBalance] = useState<number | null>(null);
@@ -170,6 +171,7 @@ function Home() {
       }
       
       const result = await generateWorkout(preferences, deviceId, isFreeUser, i18n.resolvedLanguage || i18n.language || 'en');
+      setLastPreferences(preferences);
       setWorkout(result);
       
       // Update tokens immediately from response
@@ -335,8 +337,9 @@ function Home() {
             loading={loading}
             error={error}
             workout={workout}
-                  disabled={!canGenerate && !checkingAccess}
-                />
+            lastPreferences={lastPreferences ?? undefined}
+            disabled={!canGenerate && !checkingAccess}
+          />
               </div>
 
               {/* Restore Credits Section - Always visible */}

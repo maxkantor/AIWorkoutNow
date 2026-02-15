@@ -1,0 +1,109 @@
+.affiliate-recommendations {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.affiliate-recommendations-title {
+  margin: 0 0 1.25rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary, #1f2937);
+}
+
+.affiliate-recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.affiliate-recommendations-card {
+  padding: 1.25rem;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.affiliate-recommendations-card-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary, #1f2937);
+}
+
+.affiliate-recommendations-card-desc {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-secondary, #6b7280);
+}
+
+.affiliate-recommendations-card-why {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: #4b5563;
+}
+
+.affiliate-recommendations-button {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 8px;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.affiliate-recommendations-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.affiliate-recommendations-button:focus-visible {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+.affiliate-recommendations-disclosure {
+  margin: 1.25rem 0 0;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .affiliate-recommendations {
+    padding: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .affiliate-recommendations-card {
+    padding: 1rem;
+  }
+
+  .affiliate-recommendations-button {
+    width: 100%;
+  }
+}
+
+@media (min-width: 769px) {
+  .affiliate-recommendations-button {
+    align-self: flex-start;
+  }
+}

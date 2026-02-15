@@ -2,14 +2,16 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { saveWorkout } from '../utils/storage';
 import { getDeviceId } from '../utils/storage';
-import ProductRecommendations from './ProductRecommendations';
+import AffiliateRecommendations from './AffiliateRecommendations';
+import type { WorkoutPreferences } from '../services/api';
 import './WorkoutDisplay.css';
 
 interface WorkoutDisplayProps {
   workout: any;
+  preferences?: WorkoutPreferences;
 }
 
-function WorkoutDisplay({ workout }: WorkoutDisplayProps) {
+function WorkoutDisplay({ workout, preferences }: WorkoutDisplayProps) {
   const { t, i18n } = useTranslation();
   useEffect(() => {
     // Save workout to localStorage for offline access
@@ -70,10 +72,12 @@ function WorkoutDisplay({ workout }: WorkoutDisplayProps) {
         </section>
       )}
       
-      <ProductRecommendations 
-        products={workout.productRecommendations} 
-        workoutId={workout.workoutId}
-      />
+      {preferences && (workout.workoutId || workout.workout_id) && (
+        <AffiliateRecommendations
+          preferences={preferences}
+          workoutId={workout.workoutId || workout.workout_id || `workout-${Date.now()}`}
+        />
+      )}
       
       <footer className="workout-footer">
         <p className="workout-meta">
