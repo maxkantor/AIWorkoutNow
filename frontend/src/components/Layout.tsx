@@ -164,7 +164,7 @@ function Layout({ children }: LayoutProps) {
           {children}
         </div>
       </HeroContext.Provider>
-      {!isAdminPage && <Footer />}
+      {!isAdminPage && !isPlatformPage && <Footer />}
     </div>
   );
 }

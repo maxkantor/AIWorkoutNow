@@ -35,37 +35,48 @@ function Platform() {
 
       <div className="platform-page">
         <header className="platform-header">
-          <button
-            onClick={() => navigate('/')}
-            className="platform-back-button"
-            aria-label="Back to Home"
-          >
-            ← Back to Home
-          </button>
-          <div className="platform-header-text">
-            <h1 className="platform-title">Platform</h1>
-            <p className="platform-subtitle">MK AI & Performance Systems</p>
-          </div>
+          <nav className="platform-nav" aria-label="Platform navigation">
+            <button
+              onClick={() => navigate('/')}
+              className="platform-back-button"
+              aria-label="Back to Home"
+            >
+              <span className="platform-back-arrow" aria-hidden="true">←</span>
+              Home
+            </button>
+            <span className="platform-breadcrumb" aria-hidden="true">/</span>
+            <span className="platform-breadcrumb-current">Platform</span>
+          </nav>
         </header>
 
         <div className="platform-iframe-container">
           {!loaded && !loadFailed && (
             <div className="platform-loading" role="status" aria-live="polite">
               <span className="platform-loading-spinner" aria-hidden="true" />
-              <p>Loading platform...</p>
+              <p className="platform-loading-text">Loading platform…</p>
+              <p className="platform-loading-hint">This may take a moment</p>
             </div>
           )}
           {loadFailed && (
             <div className="platform-fallback">
-              <p>Unable to load platform page. Open in a new tab.</p>
-              <a
-                href={CENTRAL_PLATFORM_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="platform-fallback-link"
-              >
-                Open MK AI Platform
-              </a>
+              <p className="platform-fallback-title">Unable to load platform</p>
+              <p className="platform-fallback-desc">Try opening in a new tab or return home.</p>
+              <div className="platform-fallback-actions">
+                <button onClick={() => window.location.reload()} className="platform-fallback-retry">
+                  Try again
+                </button>
+                <a
+                  href={CENTRAL_PLATFORM_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="platform-fallback-link"
+                >
+                  Open in new tab
+                </a>
+                <button onClick={() => navigate('/')} className="platform-fallback-home">
+                  Back to Home
+                </button>
+              </div>
             </div>
           )}
           <iframe
