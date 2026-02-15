@@ -31,10 +31,17 @@ function Footer() {
           </nav>
         </div>
         <div className="footer-bottom">
-          <p>{t('footer.copyright', { year: currentYear })}</p>
-          <p className="affiliate-disclosure">
-            {t('footer.amazonDisclosure')}
-          </p>
+          <div className="footer-bottom-row">
+            <div className="footer-bottom-meta">
+              <p>{t('footer.copyright', { year: currentYear })}</p>
+              <p className="affiliate-disclosure">
+                {t('footer.amazonDisclosure')}
+              </p>
+            </div>
+            <span className="footer-bottom-credit">
+              Engineered by MK AI & Performance Systems
+            </span>
+          </div>
         </div>
       </div>
     </footer>
