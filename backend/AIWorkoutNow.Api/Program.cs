@@ -3,6 +3,7 @@
 
 using Amazon.DynamoDBv2;
 using AIWorkoutNow.Api.Services;
+using AIWorkoutNow.Api.Middleware;
 using Amazon.Lambda.AspNetCoreServer.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -65,6 +66,10 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<TrafficClassifier>();
+builder.Services.AddSingleton<WriteRateLimiter>(_ => new WriteRateLimiter(maxWritesPerMinute: 60));
+
 // Register services
 builder.Services.AddSingleton<IAmazonDynamoDB>(sp => new AmazonDynamoDBClient());
 builder.Services.AddSingleton<IDynamoDBService, DynamoDBService>();
@@ -125,6 +130,7 @@ app.Use(async (context, next) =>
 });
 
 app.UseCors("AllowAll");
+app.UseMiddleware<TrafficClassificationMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

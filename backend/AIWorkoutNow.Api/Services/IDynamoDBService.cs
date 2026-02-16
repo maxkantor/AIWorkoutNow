@@ -65,6 +65,9 @@ public interface IDynamoDBService
     Task<List<UserPurchase>> GetPurchasesByEmailAsync(string email);
     Task DeleteCustomerAsync(string deviceId);
     Task DeactivateCustomerAsync(string deviceId);
+
+    /// <summary>Set TTL (expiresAt) for records belonging to the given device IDs. Used to auto-expire BOT/UNKNOWN data. Safe pagination; never touches HUMAN-only logic.</summary>
+    Task<int> SetExpiresAtForDevicesAsync(List<string> deviceIds, int expireDays = 7);
 }
 
 public class AdminStats

@@ -813,5 +813,32 @@ public class AdminController : ControllerBase
             return StatusCode(500, new { message = "Failed to delete pricing plan", error = ex.Message });
         }
     }
+
+    /// <summary>One-time or occasional maintenance: set TTL (expiresAt) for given device IDs so DynamoDB can auto-expire BOT/UNKNOWN data. Admin-only. Never touches HUMAN records.</summary>
+    [Authorize]
+    [HttpPost("admin/maintenance/set-ttl-for-devices")]
+    public async Task<IActionResult> SetTtlForDevices([FromBody] SetTtlForDevicesRequest? request)
+    {
+        if (request?.DeviceIds == null || request.DeviceIds.Count == 0)
+        {
+            return BadRequest(new { message = "deviceIds array is required and must not be empty" });
+        }
+        var expireDays = request.ExpireDays is > 0 and <= 365 ? request.ExpireDays.Value : 7;
+        try
+        {
+            var updated = await _dynamoService.SetExpiresAtForDevicesAsync(request.DeviceIds, expireDays);
+            return Ok(new { message = "TTL set", updatedCount = updated, deviceCount = request.DeviceIds.Count, expireDays });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to set TTL", error = ex.Message });
+        }
+    }
+}
+
+public class SetTtlForDevicesRequest
+{
+    public List<string> DeviceIds { get; set; } = new();
+    public int? ExpireDays { get; set; } = 7;
 }
 

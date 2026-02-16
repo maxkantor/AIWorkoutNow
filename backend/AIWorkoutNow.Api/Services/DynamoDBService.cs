@@ -3,6 +3,8 @@ using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using AIWorkoutNow.Api.Models;
+using AIWorkoutNow.Api.Middleware;
+using Microsoft.AspNetCore.Http;
 using System.Text.Json;
 
 namespace AIWorkoutNow.Api.Services;
@@ -10,6 +12,7 @@ namespace AIWorkoutNow.Api.Services;
 public class DynamoDBService : IDynamoDBService
 {
     private readonly IAmazonDynamoDB _dynamoDB;
+    private readonly IHttpContextAccessor? _httpContextAccessor;
     private readonly DynamoDBContext _context;
     private readonly string _workoutsTable;
     private readonly string _anonymousUsageTable;
@@ -30,9 +33,10 @@ public class DynamoDBService : IDynamoDBService
         string.Equals(Environment.GetEnvironmentVariable("DEBUG_PURCHASES"), "1", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(Environment.GetEnvironmentVariable("DEBUG_PURCHASES"), "true", StringComparison.OrdinalIgnoreCase);
 
-    public DynamoDBService(IAmazonDynamoDB dynamoDB)
+    public DynamoDBService(IAmazonDynamoDB dynamoDB, IHttpContextAccessor? httpContextAccessor = null)
     {
         _dynamoDB = dynamoDB;
+        _httpContextAccessor = httpContextAccessor;
         _context = new DynamoDBContext(_dynamoDB);
         
         // Get table prefix from environment variable or use default
@@ -46,6 +50,28 @@ public class DynamoDBService : IDynamoDBService
         _contactMessagesTable = Environment.GetEnvironmentVariable("CONTACT_MESSAGES_TABLE") ?? $"{tablePrefix}-ContactMessages";
         _emailVerificationTable = Environment.GetEnvironmentVariable("EMAIL_VERIFICATION_TABLE") ?? $"{tablePrefix}-EmailVerification";
         _emailVisitorMappingTable = Environment.GetEnvironmentVariable("EMAIL_VISITOR_MAPPING_TABLE") ?? $"{tablePrefix}-EmailVisitorMapping";
+    }
+
+    /// <summary>Returns true if we should skip this write (BOT/UNKNOWN traffic or rate limit exceeded). Logs and returns false for HUMAN or no context.</summary>
+    private bool ShouldSkipWrite(string methodName, out string? reason)
+    {
+        reason = null;
+        var ctx = _httpContextAccessor?.HttpContext;
+        if (ctx == null) return false;
+        if (ctx.Items[TrafficClassificationMiddleware.ItemKeyRateLimitExceeded] is true)
+        {
+            reason = "rate_limit_exceeded";
+            Console.WriteLine($"[TrafficFilter] skip_write {{ reason={reason}, method={methodName} }}");
+            return true;
+        }
+        var type = ctx.Items[TrafficClassificationMiddleware.ItemKeyType];
+        if (type == null || (TrafficType)type == TrafficType.HUMAN) return false;
+        reason = ctx.Items[TrafficClassificationMiddleware.ItemKeyReason] as string ?? "non-human";
+        var ipPrefix = ctx.Items[TrafficClassificationMiddleware.ItemKeyIpPrefix] as string ?? "";
+        var uaShort = ctx.Items[TrafficClassificationMiddleware.ItemKeyUserAgentShort] as string ?? "";
+        var path = ctx.Items[TrafficClassificationMiddleware.ItemKeyPath] as string ?? "";
+        Console.WriteLine($"[TrafficFilter] skip_write {{ trafficType={type}, reason={reason}, ipPrefix={ipPrefix}, userAgentShort={uaShort}, path={path}, method={methodName} }}");
+        return true;
     }
 
     private static bool ReadBool(Dictionary<string, AttributeValue> item, string key, bool defaultValue)
@@ -95,6 +121,7 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task SaveWorkoutAsync(Workout workout)
     {
+        if (ShouldSkipWrite(nameof(SaveWorkoutAsync), out _)) return;
         var document = new Document();
         document["WorkoutId"] = workout.WorkoutId;
         document["Hash"] = workout.Hash;
@@ -151,6 +178,7 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task IncrementAnonymousUsageAsync(string deviceId, string date)
     {
+        if (ShouldSkipWrite(nameof(IncrementAnonymousUsageAsync), out _)) return;
         try
         {
             await _dynamoDB.UpdateItemAsync(new UpdateItemRequest
@@ -199,6 +227,7 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task SaveUserTokensAsync(UserTokens tokens)
     {
+        if (ShouldSkipWrite(nameof(SaveUserTokensAsync), out _)) return;
         var document = new Document();
         document["DeviceId"] = tokens.DeviceId;
         document["TokensRemaining"] = tokens.TokensRemaining;
@@ -220,6 +249,8 @@ public class DynamoDBService : IDynamoDBService
     // Atomically increment tokens for a device, returning the new balance
     public async Task<int> IncrementUserTokensAsync(string deviceId, int tokensToAdd)
     {
+        if (ShouldSkipWrite(nameof(IncrementUserTokensAsync), out _))
+            return (await GetUserTokensAsync(deviceId))?.TokensRemaining ?? 0;
         if (tokensToAdd == 0) return (await GetUserTokensAsync(deviceId))?.TokensRemaining ?? 0;
 
         int? previous = null;
@@ -667,6 +698,7 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task SaveProgressLogAsync(ProgressLog log)
     {
+        if (ShouldSkipWrite(nameof(SaveProgressLogAsync), out _)) return;
         var document = new Document();
         document["DeviceId"] = log.DeviceId;
         document["Timestamp"] = log.Timestamp;
@@ -736,6 +768,7 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task SaveContactMessageAsync(ContactMessage message)
     {
+        if (ShouldSkipWrite(nameof(SaveContactMessageAsync), out _)) return;
         var document = new Document();
         document["MessageId"] = message.MessageId;
         document["Name"] = message.Name ?? string.Empty;
@@ -1544,6 +1577,7 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task SaveStripePurchaseAsync(StripePurchase purchase)
     {
+        if (ShouldSkipWrite(nameof(SaveStripePurchaseAsync), out _)) return;
         var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
         var purchasesTable = $"{tablePrefix}-StripePurchases";
         
@@ -1697,6 +1731,7 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task SaveCustomerActivityAsync(CustomerActivity activity)
     {
+        if (ShouldSkipWrite(nameof(SaveCustomerActivityAsync), out _)) return;
         var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
         var activitiesTable = $"{tablePrefix}-CustomerActivities";
 
@@ -2422,6 +2457,7 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task SaveUserPurchaseAsync(UserPurchase purchase)
     {
+        if (ShouldSkipWrite(nameof(SaveUserPurchaseAsync), out _)) return;
         var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
         var purchasesTable = $"{tablePrefix}-UserPurchases";
 
@@ -2710,6 +2746,7 @@ public class DynamoDBService : IDynamoDBService
     // Email Verification Methods
     public async Task SaveEmailVerificationCodeAsync(EmailVerificationCode code)
     {
+        if (ShouldSkipWrite(nameof(SaveEmailVerificationCodeAsync), out _)) return;
         try
         {
             var document = new Document();
@@ -2795,6 +2832,7 @@ public class DynamoDBService : IDynamoDBService
     // Email-Visitor ID Mapping Methods
     public async Task SaveEmailVisitorMappingAsync(EmailVisitorMapping mapping)
     {
+        if (ShouldSkipWrite(nameof(SaveEmailVisitorMappingAsync), out _)) return;
         try
         {
             var document = new Document();
@@ -2910,6 +2948,7 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task MergeCreditsFromVisitorIdsAsync(string targetDeviceId, List<string> sourceVisitorIds)
     {
+        if (ShouldSkipWrite(nameof(MergeCreditsFromVisitorIdsAsync), out _)) return;
         Console.WriteLine($"[DynamoDBService] Merging credits from {sourceVisitorIds.Count} visitor IDs to {targetDeviceId}");
         
         // Get target device tokens
@@ -3042,6 +3081,7 @@ public class DynamoDBService : IDynamoDBService
 
     public async Task ResetFreeWorkoutCountAsync(string deviceId)
     {
+        if (ShouldSkipWrite(nameof(ResetFreeWorkoutCountAsync), out _)) return;
         try
         {
             Console.WriteLine($"[DynamoDBService] Resetting free workout count for device {deviceId}");
@@ -3628,6 +3668,129 @@ public class DynamoDBService : IDynamoDBService
             Console.WriteLine($"[DynamoDBService] Error in DeactivateCustomer: {ex.Message}");
             throw;
         }
+    }
+
+    public async Task<int> SetExpiresAtForDevicesAsync(List<string> deviceIds, int expireDays = 7)
+    {
+        if (deviceIds == null || deviceIds.Count == 0) return 0;
+        var deviceSet = new HashSet<string>(deviceIds, StringComparer.OrdinalIgnoreCase);
+        var expiresAtUnix = (long)DateTime.UtcNow.AddDays(expireDays).Subtract(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+        var updated = 0;
+
+        // UserTokens: key = DeviceId (paginate with LastEvaluatedKey)
+        Dictionary<string, AttributeValue>? tokenLastKey = null;
+        do
+        {
+            var scanReq = new ScanRequest
+            {
+                TableName = _userTokensTable,
+                ProjectionExpression = "DeviceId",
+                Limit = 100,
+                ExclusiveStartKey = tokenLastKey
+            };
+            var tokenResp = await _dynamoDB.ScanAsync(scanReq);
+            foreach (var item in tokenResp.Items)
+            {
+                if (!item.TryGetValue("DeviceId", out var dv) || dv?.S == null) continue;
+                if (!deviceSet.Contains(dv.S)) continue;
+                try
+                {
+                    await _dynamoDB.UpdateItemAsync(new UpdateItemRequest
+                    {
+                        TableName = _userTokensTable,
+                        Key = new Dictionary<string, AttributeValue> { { "DeviceId", new AttributeValue { S = dv.S } } },
+                        UpdateExpression = "SET expiresAt = :ttl",
+                        ExpressionAttributeValues = new Dictionary<string, AttributeValue> { { ":ttl", new AttributeValue { N = expiresAtUnix.ToString() } } }
+                    });
+                    updated++;
+                }
+                catch (Exception ex) { Console.WriteLine($"[DynamoDBService] SetExpiresAt UserTokens {dv.S}: {ex.Message}"); }
+            }
+            tokenLastKey = tokenResp.LastEvaluatedKey;
+        } while (tokenLastKey != null && tokenLastKey.Count > 0);
+
+        // AnonymousUsage: key = DeviceId, Date
+        Dictionary<string, AttributeValue>? anonLastKey = null;
+        do
+        {
+            var scanReq = new ScanRequest
+            {
+                TableName = _anonymousUsageTable,
+                ProjectionExpression = "DeviceId, #d",
+                ExpressionAttributeNames = new Dictionary<string, string> { { "#d", "Date" } },
+                Limit = 100,
+                ExclusiveStartKey = anonLastKey
+            };
+            var anonResp = await _dynamoDB.ScanAsync(scanReq);
+            foreach (var item in anonResp.Items)
+            {
+                if (!item.TryGetValue("DeviceId", out var dv) || dv?.S == null) continue;
+                if (!deviceSet.Contains(dv.S)) continue;
+                if (!item.TryGetValue("Date", out var dt) || dt?.S == null) continue;
+                try
+                {
+                    await _dynamoDB.UpdateItemAsync(new UpdateItemRequest
+                    {
+                        TableName = _anonymousUsageTable,
+                        Key = new Dictionary<string, AttributeValue>
+                        {
+                            { "DeviceId", new AttributeValue { S = dv.S } },
+                            { "Date", new AttributeValue { S = dt.S } }
+                        },
+                        UpdateExpression = "SET expiresAt = :ttl",
+                        ExpressionAttributeValues = new Dictionary<string, AttributeValue> { { ":ttl", new AttributeValue { N = expiresAtUnix.ToString() } } }
+                    });
+                    updated++;
+                }
+                catch (Exception ex) { Console.WriteLine($"[DynamoDBService] SetExpiresAt AnonymousUsage {dv.S}: {ex.Message}"); }
+            }
+            anonLastKey = anonResp.LastEvaluatedKey;
+        } while (anonLastKey != null && anonLastKey.Count > 0);
+
+        // CustomerActivities: key = ActivityId
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var activitiesTable = $"{tablePrefix}-CustomerActivities";
+        Dictionary<string, AttributeValue>? actLastKey = null;
+        do
+        {
+            try
+            {
+                var scanReq = new ScanRequest
+                {
+                    TableName = activitiesTable,
+                    ProjectionExpression = "ActivityId, DeviceId",
+                    Limit = 100,
+                    ExclusiveStartKey = actLastKey
+                };
+                var actResp = await _dynamoDB.ScanAsync(scanReq);
+                foreach (var item in actResp.Items)
+                {
+                    if (!item.TryGetValue("DeviceId", out var dv) || dv?.S == null) continue;
+                    if (!deviceSet.Contains(dv.S)) continue;
+                    if (!item.TryGetValue("ActivityId", out var aid) || aid?.S == null) continue;
+                    try
+                    {
+                        await _dynamoDB.UpdateItemAsync(new UpdateItemRequest
+                        {
+                            TableName = activitiesTable,
+                            Key = new Dictionary<string, AttributeValue> { { "ActivityId", new AttributeValue { S = aid.S } } },
+                            UpdateExpression = "SET expiresAt = :ttl",
+                            ExpressionAttributeValues = new Dictionary<string, AttributeValue> { { ":ttl", new AttributeValue { N = expiresAtUnix.ToString() } } }
+                        });
+                        updated++;
+                    }
+                    catch (Exception ex) { Console.WriteLine($"[DynamoDBService] SetExpiresAt CustomerActivities {aid.S}: {ex.Message}"); }
+                }
+                actLastKey = actResp.LastEvaluatedKey;
+            }
+            catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+            {
+                break;
+            }
+        } while (actLastKey != null && actLastKey.Count > 0);
+
+        Console.WriteLine($"[DynamoDBService] SetExpiresAtForDevices updated {updated} items for {deviceIds.Count} device(s)");
+        return updated;
     }
 }
 

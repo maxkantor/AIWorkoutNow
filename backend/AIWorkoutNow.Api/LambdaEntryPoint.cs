@@ -13,6 +13,7 @@ using System;
 using System.Threading.Tasks;
 using System.Text.Json;
 using AIWorkoutNow.Api.Services;
+using AIWorkoutNow.Api.Middleware;
 
 namespace AIWorkoutNow.Api;
 
@@ -71,6 +72,10 @@ public class Startup
 
         services.AddAuthorization();
 
+        services.AddHttpContextAccessor();
+        services.AddSingleton<TrafficClassifier>();
+        services.AddSingleton<WriteRateLimiter>(_ => new WriteRateLimiter(maxWritesPerMinute: 60));
+
         // Register services
         services.AddSingleton<IAmazonDynamoDB>(sp => new AmazonDynamoDBClient());
         services.AddSingleton<IDynamoDBService, DynamoDBService>();
@@ -103,6 +108,7 @@ public class Startup
         // CRITICAL: CORS must be between UseRouting() and UseEndpoints()
         app.UseRouting();
         app.UseCors("AllowAll");
+        app.UseMiddleware<TrafficClassificationMiddleware>();
         app.UseAuthentication();
         app.UseAuthorization();
         

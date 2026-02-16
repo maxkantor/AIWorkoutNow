@@ -99,6 +99,8 @@ function AdminCustomers() {
             <Link to="/admin/dashboard" className="btn btn-secondary">Back to Dashboard</Link>
           </div>
 
+          <p className="admin-customers-note">Bot/proxy traffic is filtered before storage. Only human-originated sessions appear here.</p>
+
           {error && <div className="error-message">{error}</div>}
 
           <div className="search-bar">
