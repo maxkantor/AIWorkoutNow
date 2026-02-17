@@ -160,6 +160,7 @@ public class StripeController : ControllerBase
                 new("line_items[0][quantity]", "1"),
                 new("metadata[deviceId]", request.DeviceId),
                 new("metadata[planId]", plan.PlanId),
+                new("metadata[site]", "aiworkoutnow"),  // Enables HybridRace webhook to ignore our events
                 new("allow_promotion_codes", "true"),
                 // CRITICAL: Ensure customer email and name are collected
                 new("billing_address_collection", "required"), // collect address
@@ -264,6 +265,15 @@ public class StripeController : ControllerBase
                 Console.WriteLine("[StripeController] Processing checkout.session.completed event");
                 var sessionId = sessionObject?["id"]?.ToString();
                 var metadata = sessionObject?["metadata"] as Dictionary<string, object>;
+                var site = metadata?["site"]?.ToString();
+                
+                // Skip events from other sites (prevents processing HybridRace purchases)
+                if (!string.IsNullOrEmpty(site) && !string.Equals(site, "aiworkoutnow", StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine($"[StripeController] Ignoring event for other site: {site}");
+                    return Ok();
+                }
+                
                 var deviceId = metadata?["deviceId"]?.ToString();
                 var planId = metadata?["planId"]?.ToString();
                 var paymentIntentId = sessionObject?["payment_intent"]?.ToString() ?? "";

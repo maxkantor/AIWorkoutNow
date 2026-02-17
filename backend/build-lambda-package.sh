@@ -36,7 +36,7 @@ fi
 
 # Publish for Lambda (framework-dependent for dotnet8 runtime - smaller package)
 echo "📦 Publishing .NET application..."
-dotnet publish -c Release -r linux-x64 --self-contained false -o publish-lambda
+dotnet publish -c Release -r linux-arm64 --self-contained false -o publish-lambda
 
 if [ ! -d "publish-lambda" ]; then
     echo "❌ Publish failed"

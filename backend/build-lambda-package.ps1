@@ -28,7 +28,7 @@ Write-Host "Publishing .NET application..." -ForegroundColor Cyan
 Push-Location $projectDir
 
 try {
-    dotnet publish -c Release -r linux-x64 --self-contained false -o publish-lambda
+    dotnet publish -c Release -r linux-arm64 --self-contained false -o publish-lambda
 
     if (-not (Test-Path "publish-lambda")) {
         Write-Host "ERROR: Publish failed" -ForegroundColor Red
