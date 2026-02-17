@@ -34,26 +34,18 @@ if [ -f "$ZIP_PATH" ]; then
     rm -f "$ZIP_PATH"
 fi
 
-# Publish for Lambda (using arm64 for provided.al2023 runtime)
+# Publish for Lambda (framework-dependent for dotnet8 runtime - smaller package)
 echo "📦 Publishing .NET application..."
-dotnet publish -c Release -r linux-arm64 --self-contained true -o publish-lambda
+dotnet publish -c Release -r linux-x64 --self-contained false -o publish-lambda
 
 if [ ! -d "publish-lambda" ]; then
     echo "❌ Publish failed"
     exit 1
 fi
 
-# Create zip package (cross-platform)
+# Create zip package (cross-platform) - dotnet8 runtime, no bootstrap needed
 echo "📦 Creating deployment package..."
 cd publish-lambda
-
-# CRITICAL: For provided.al2023 runtime, rename executable to 'bootstrap'
-# This is required for Lambda to find the entry point
-if [ -f "AIWorkoutNow.Api" ] && [ ! -f "bootstrap" ]; then
-    echo "   Renaming AIWorkoutNow.Api to bootstrap for provided.al2023 runtime..."
-    mv AIWorkoutNow.Api bootstrap
-    chmod +x bootstrap
-fi
 
 # CRITICAL: Zip contents must be in ROOT of zip, not in publish-lambda/ subdirectory
 # Use PowerShell on Windows if available, otherwise use zip command

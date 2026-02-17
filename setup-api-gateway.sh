@@ -194,6 +194,14 @@ aws apigatewayv2 create-route \
     --region $REGION > /dev/null 2>&1 || echo "Route GET /api/email-verification/check-email already exists or failed"
 echo "✅ Route: GET /api/email-verification/check-email"
 
+# POST /stripe/webhook (Stripe payment webhooks)
+aws apigatewayv2 create-route \
+    --api-id "$API_ID" \
+    --route-key "POST /stripe/webhook" \
+    --target "integrations/$INTEGRATION_ID" \
+    --region $REGION > /dev/null 2>&1 || echo "Route POST /stripe/webhook already exists or failed"
+echo "✅ Route: POST /stripe/webhook"
+
 # Catch-all route for OPTIONS (CORS preflight)
 aws apigatewayv2 create-route \
     --api-id "$API_ID" \

@@ -23,25 +23,19 @@ if (Test-Path $zipFile) {
     Remove-Item -Path $zipFile -Force
 }
 
-# Publish for Lambda
+# Publish for Lambda (framework-dependent for dotnet8 runtime - smaller package)
 Write-Host "Publishing .NET application..." -ForegroundColor Cyan
 Push-Location $projectDir
 
 try {
-    dotnet publish -c Release -r linux-arm64 --self-contained true -o publish-lambda
+    dotnet publish -c Release -r linux-x64 --self-contained false -o publish-lambda
 
     if (-not (Test-Path "publish-lambda")) {
         Write-Host "ERROR: Publish failed" -ForegroundColor Red
         exit 1
     }
 
-    # For provided.al2023 runtime, executable must be named bootstrap
-    if (Test-Path "publish-lambda\AIWorkoutNow.Api") {
-        Write-Host "Creating bootstrap executable for provided.al2023 runtime..." -ForegroundColor Yellow
-        Copy-Item "publish-lambda\AIWorkoutNow.Api" "publish-lambda\bootstrap" -Force
-    }
-
-    # Create zip package
+    # Create zip package (dotnet8 runtime - no bootstrap needed)
     Write-Host "Creating deployment package..." -ForegroundColor Cyan
     Compress-Archive -Path "publish-lambda\*" -DestinationPath $zipFile -Force
 

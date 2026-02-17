@@ -243,7 +243,7 @@ public class StripeController : ControllerBase
         }
     }
 
-    [HttpPost("stripe-webhook")]
+    [HttpPost("stripe/webhook")]
     public async Task<IActionResult> StripeWebhook()
     {
         try

@@ -88,10 +88,11 @@ if aws lambda get-function --function-name $FUNCTION_NAME --region $REGION &>/de
         --region $REGION \
         --output json > /dev/null
     
-    # Update environment variables and handler
+    # Update runtime, handler, and environment (framework-dependent dotnet8)
     aws lambda update-function-configuration \
         --function-name $FUNCTION_NAME \
         --region $REGION \
+        --runtime dotnet8 \
         --handler "AIWorkoutNow.Api::AIWorkoutNow.Api.LambdaEntryPoint::FunctionHandlerAsync" \
         --environment "Variables={TABLE_PREFIX=AIWorkoutNow}" \
         --timeout 30 \
