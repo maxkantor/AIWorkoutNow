@@ -1,7 +1,7 @@
 import { ReactNode, createContext, useContext, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import Footer from './Footer';
+import Footer from './layout/Footer';
 import LanguageSelector from './LanguageSelector';
 import './Layout.css';
 

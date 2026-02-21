@@ -1,0 +1,264 @@
+[
+  {
+    "slug": "/workouts/bodyweight",
+    "primaryKeyword": "bodyweight workout generator",
+    "title": "Bodyweight Workout Generator — Free AI Plans, No Signup",
+    "description": "Generate a bodyweight workout in seconds. Free AI bodyweight workout generator. No equipment needed. No signup.",
+    "h1": "Free Bodyweight Workout Generator",
+    "intro": "Get a personalized bodyweight workout in seconds. Our AI bodyweight workout generator creates effective plans with no equipment—just your body. No signup. Try 3 free bodyweight workouts, then unlock more with a one-time payment. Perfect for home, travel, or anywhere.",
+    "bullets": ["Choose your level and duration.", "Get a full bodyweight plan with progressions.", "No equipment required.", "Regenerate for new routines anytime."],
+    "faqItems": [
+      { "question": "Is the bodyweight generator free?", "answer": "Yes. 3 free bodyweight workouts with no signup." },
+      { "question": "Do I need any equipment?", "answer": "No. Plans use only your bodyweight." }
+    ],
+    "relatedSlugs": ["/workout-generator/home", "/workout-generator/hiit", "/workout-generator/beginners", "/pricing", "/faq"]
+  },
+  {
+    "slug": "/workouts/upper-body",
+    "primaryKeyword": "upper body workout generator",
+    "title": "Upper Body Workout Generator — Free AI Plans, No Signup",
+    "description": "Generate an upper body workout in seconds. Free AI upper body workout generator for chest, back, arms. No signup.",
+    "h1": "Free Upper Body Workout Generator",
+    "intro": "Get a personalized upper body workout in seconds. Our AI upper body workout generator targets chest, back, shoulders, and arms. No signup. Try 3 free workouts, then unlock more. Works with bodyweight, dumbbells, or gym equipment.",
+    "bullets": ["Select your level and equipment.", "Get an upper body plan with sets and reps.", "Target chest, back, arms, shoulders.", "Regenerate for variety."],
+    "faqItems": [
+      { "question": "Is the upper body generator free?", "answer": "Yes. 3 free upper body workouts with no signup." }
+    ],
+    "relatedSlugs": ["/workout-generator/strength", "/workout-generator/home", "/workouts/lower-body", "/pricing", "/faq"]
+  },
+  {
+    "slug": "/workouts/lower-body",
+    "primaryKeyword": "lower body workout generator",
+    "title": "Lower Body Workout Generator — Free AI Plans, No Signup",
+    "description": "Generate a lower body workout in seconds. Free AI lower body workout generator for legs and glutes. No signup.",
+    "h1": "Free Lower Body Workout Generator",
+    "intro": "Get a personalized lower body workout in seconds. Our AI lower body workout generator builds plans for legs, glutes, and hips. No signup. Try 3 free workouts. Use bodyweight, dumbbells, or gym.",
+    "bullets": ["Choose level and equipment.", "Get a lower body plan.", "Target legs, glutes, and hips.", "Regenerate for new routines."],
+    "faqItems": [
+      { "question": "Is the lower body generator free?", "answer": "Yes. 3 free lower body workouts with no signup." }
+    ],
+    "relatedSlugs": ["/workout-generator/strength", "/workouts/upper-body", "/workout-generator/women", "/pricing", "/faq"]
+  },
+  {
+    "slug": "/workouts/cardio",
+    "primaryKeyword": "cardio workout generator",
+    "title": "Cardio Workout Generator — Free AI Cardio Plans, No Signup",
+    "description": "Generate a cardio workout in seconds. Free AI cardio workout generator. No signup. Home or gym.",
+    "h1": "Free Cardio Workout Generator",
+    "intro": "Get a personalized cardio workout in seconds. Our AI cardio workout generator creates heart-pumping plans for fat loss and endurance. No signup. Try 3 free cardio workouts. Use bodyweight, treadmill, bike, or other equipment.",
+    "bullets": ["Select duration and intensity.", "Get a cardio plan with intervals or steady state.", "Adapt for home or gym.", "Regenerate for variety."],
+    "faqItems": [
+      { "question": "Is the cardio generator free?", "answer": "Yes. 3 free cardio workouts with no signup." }
+    ],
+    "relatedSlugs": ["/workout-generator/hiit", "/workout-generator/weight-loss", "/workouts/bodyweight", "/pricing", "/faq"]
+  },
+  {
+    "slug": "/workouts/quick",
+    "primaryKeyword": "quick workout generator",
+    "title": "Quick Workout Generator — 15–20 Min AI Workouts, No Signup",
+    "description": "Generate a quick workout in 15–20 minutes. Free AI quick workout generator. No signup.",
+    "h1": "Free Quick Workout Generator",
+    "intro": "Get a short, effective workout in seconds. Our AI quick workout generator builds 15- or 20-minute plans for busy schedules. No signup. Try 3 free quick workouts. Full body or focused—you choose.",
+    "bullets": ["Choose 15 or 20 minutes.", "Get a time-efficient plan.", "Minimal or no equipment.", "Regenerate for new quick workouts."],
+    "faqItems": [
+      { "question": "Are quick workouts effective?", "answer": "Yes. Short, focused workouts can build fitness when done consistently." }
+    ],
+    "relatedSlugs": ["/workout-generator/home", "/workout-generator/hiit", "/workout-generator/beginners", "/pricing", "/faq"]
+  },
+  {
+    "slug": "/workouts/dumbbell",
+    "primaryKeyword": "dumbbell workout generator",
+    "title": "Dumbbell Workout Generator — Free AI Dumbbell Plans, No Signup",
+    "description": "Generate a dumbbell workout in seconds. Free AI dumbbell workout generator. No signup. Home or gym.",
+    "h1": "Free Dumbbell Workout Generator",
+    "intro": "Get a personalized dumbbell workout in seconds. Our AI dumbbell workout generator creates plans for one or two dumbbells. No signup. Try 3 free dumbbell workouts. Strength, HIIT, or full body.",
+    "bullets": ["Select level and duration.", "Get a dumbbell plan with exercises and reps.", "Works with limited equipment.", "Regenerate for variety."],
+    "faqItems": [
+      { "question": "Is the dumbbell generator free?", "answer": "Yes. 3 free dumbbell workouts with no signup." }
+    ],
+    "relatedSlugs": ["/workout-generator/strength", "/workout-generator/home", "/workouts/upper-body", "/pricing", "/faq"]
+  },
+  {
+    "slug": "/workouts/full-body",
+    "primaryKeyword": "full body workout generator",
+    "title": "Full Body Workout Generator — Free AI Plans, No Signup",
+    "description": "Generate a full body workout in seconds. Free AI full body workout generator. No signup.",
+    "h1": "Free Full Body Workout Generator",
+    "intro": "Get a full body workout in seconds. Our AI full body workout generator creates balanced plans that hit all major muscle groups. No signup. Try 3 free full body workouts. Choose your equipment and duration.",
+    "bullets": ["Choose level, duration, and equipment.", "Get a balanced full body plan.", "Warm-up, main work, cooldown included.", "Regenerate for new routines."],
+    "faqItems": [
+      { "question": "Is the full body generator free?", "answer": "Yes. 3 free full body workouts with no signup." }
+    ],
+    "relatedSlugs": ["/workout-generator/strength", "/workout-generator/home", "/workouts/quick", "/pricing", "/faq"]
+  },
+  {
+    "slug": "/workouts/morning",
+    "primaryKeyword": "morning workout generator",
+    "title": "Morning Workout Generator — Free AI Morning Routines, No Signup",
+    "description": "Generate a morning workout in seconds. Free AI morning workout generator. No signup. Start your day right.",
+    "h1": "Free Morning Workout Generator",
+    "intro": "Get a morning workout in seconds. Our AI morning workout generator creates energizing plans for the start of your day. No signup. Try 3 free morning workouts. Short, effective, and equipment-flexible.",
+    "bullets": ["Choose duration (e.g. 15–30 min).", "Get a morning-appropriate plan.", "Energizing and efficient.", "Regenerate for variety."],
+    "faqItems": [
+      { "question": "Is the morning workout generator free?", "answer": "Yes. 3 free morning workouts with no signup." }
+    ],
+    "relatedSlugs": ["/workouts/quick", "/workout-generator/home", "/workout-generator/hiit", "/pricing", "/faq"]
+  },
+  {
+    "slug": "/workouts/seniors",
+    "primaryKeyword": "workout generator for seniors",
+    "title": "Workout Generator for Seniors — Free AI Plans, No Signup",
+    "description": "Generate a senior-friendly workout in seconds. Free AI workout generator for seniors. Safe, effective. No signup.",
+    "h1": "Free Workout Generator for Seniors",
+    "intro": "Get a safe, effective workout in seconds. Our AI workout generator for seniors creates low-impact, strength and mobility plans. No signup. Try 3 free senior-friendly workouts. You can note any limitations in the main generator.",
+    "bullets": ["Select duration and any limitations.", "Get a safe, senior-appropriate plan.", "Strength and mobility focus.", "Regenerate for variety."],
+    "faqItems": [
+      { "question": "Is the senior workout generator free?", "answer": "Yes. 3 free senior-friendly workouts with no signup." },
+      { "question": "Are these workouts safe for seniors?", "answer": "Plans can be tailored. Always check with your doctor before starting a new program." }
+    ],
+    "relatedSlugs": ["/workout-generator/beginners", "/workout-generator/home", "/workouts/bodyweight", "/pricing", "/faq"]
+  },
+  {
+    "slug": "/workouts/yoga",
+    "primaryKeyword": "yoga workout generator",
+    "title": "Yoga & Stretch Generator — Free AI Yoga Plans, No Signup",
+    "description": "Generate a yoga or stretch routine in seconds. Free AI yoga workout generator. No signup.",
+    "h1": "Free Yoga & Stretch Generator",
+    "intro": "Get a yoga or stretching routine in seconds. Our AI can generate yoga-style and flexibility plans. No signup. Try 3 free sessions. Choose duration and intensity. Perfect for recovery or standalone practice.",
+    "bullets": ["Choose duration and focus.", "Get a yoga or stretch sequence.", "Minimal or no equipment.", "Regenerate for new routines."],
+    "faqItems": [
+      { "question": "Is the yoga generator free?", "answer": "Yes. 3 free yoga/stretch routines with no signup." }
+    ],
+    "relatedSlugs": ["/workout-generator/beginners", "/workout-generator/home", "/workouts/bodyweight", "/pricing", "/faq"]
+  },
+  {
+    "slug": "/workouts/abs",
+    "primaryKeyword": "ab workout generator",
+    "title": "Ab Workout Generator — Free AI Core Plans, No Signup",
+    "description": "Generate an ab and core workout in seconds. Free AI ab workout generator. No signup.",
+    "h1": "Free Ab Workout Generator",
+    "intro": "Get a core and ab workout in seconds. Our AI ab workout generator creates focused plans for your abs and core. No signup. Try 3 free ab workouts. Bodyweight or with minimal equipment.",
+    "bullets": ["Choose duration and level.", "Get a core-focused plan.", "Target abs and stability.", "Regenerate for variety."],
+    "faqItems": [
+      { "question": "Is the ab workout generator free?", "answer": "Yes. 3 free ab workouts with no signup." }
+    ],
+    "relatedSlugs": ["/workouts/bodyweight", "/workout-generator/home", "/workouts/full-body", "/pricing", "/faq"]
+  },
+  {
+    "slug": "/workouts/back",
+    "primaryKeyword": "back workout generator",
+    "title": "Back Workout Generator — Free AI Back Plans, No Signup",
+    "description": "Generate a back workout in seconds. Free AI back workout generator for strength and posture. No signup.",
+    "h1": "Free Back Workout Generator",
+    "intro": "Get a back workout in seconds. Our AI back workout generator creates plans for a stronger back and better posture. No signup. Try 3 free back workouts. Bodyweight, dumbbells, or gym.",
+    "bullets": ["Choose level and equipment.", "Get a back-focused plan.", "Target upper and lower back.", "Regenerate for variety."],
+    "faqItems": [
+      { "question": "Is the back workout generator free?", "answer": "Yes. 3 free back workouts with no signup." }
+    ],
+    "relatedSlugs": ["/workouts/upper-body", "/workout-generator/strength", "/workout-generator/home", "/pricing", "/faq"]
+  },
+  {
+    "slug": "/workouts/glutes",
+    "primaryKeyword": "glute workout generator",
+    "title": "Glute Workout Generator — Free AI Glute Plans, No Signup",
+    "description": "Generate a glute workout in seconds. Free AI glute workout generator. No signup.",
+    "h1": "Free Glute Workout Generator",
+    "intro": "Get a glute-focused workout in seconds. Our AI glute workout generator creates plans for stronger glutes. No signup. Try 3 free glute workouts. Use bodyweight, bands, or weights.",
+    "bullets": ["Choose level and equipment.", "Get a glute-focused plan.", "Effective and progressive.", "Regenerate for variety."],
+    "faqItems": [
+      { "question": "Is the glute workout generator free?", "answer": "Yes. 3 free glute workouts with no signup." }
+    ],
+    "relatedSlugs": ["/workouts/lower-body", "/workout-generator/women", "/workout-generator/strength", "/pricing", "/faq"]
+  },
+  {
+    "slug": "/workouts/arms",
+    "primaryKeyword": "arm workout generator",
+    "title": "Arm Workout Generator — Free AI Arm Plans, No Signup",
+    "description": "Generate an arm workout in seconds. Free AI arm workout generator for biceps and triceps. No signup.",
+    "h1": "Free Arm Workout Generator",
+    "intro": "Get an arm workout in seconds. Our AI arm workout generator creates plans for biceps, triceps, and shoulders. No signup. Try 3 free arm workouts. Dumbbells, bodyweight, or gym.",
+    "bullets": ["Choose level and equipment.", "Get an arm-focused plan.", "Biceps, triceps, and more.", "Regenerate for variety."],
+    "faqItems": [
+      { "question": "Is the arm workout generator free?", "answer": "Yes. 3 free arm workouts with no signup." }
+    ],
+    "relatedSlugs": ["/workouts/upper-body", "/workout-generator/strength", "/workouts/dumbbell", "/pricing", "/faq"]
+  },
+  {
+    "slug": "/workouts/chest",
+    "primaryKeyword": "chest workout generator",
+    "title": "Chest Workout Generator — Free AI Chest Plans, No Signup",
+    "description": "Generate a chest workout in seconds. Free AI chest workout generator. No signup.",
+    "h1": "Free Chest Workout Generator",
+    "intro": "Get a chest workout in seconds. Our AI chest workout generator creates plans for a stronger chest. No signup. Try 3 free chest workouts. Push-ups, dumbbells, or gym equipment.",
+    "bullets": ["Choose level and equipment.", "Get a chest-focused plan.", "Push-ups to presses.", "Regenerate for variety."],
+    "faqItems": [
+      { "question": "Is the chest workout generator free?", "answer": "Yes. 3 free chest workouts with no signup." }
+    ],
+    "relatedSlugs": ["/workouts/upper-body", "/workout-generator/strength", "/workouts/dumbbell", "/pricing", "/faq"]
+  },
+  {
+    "slug": "/workouts/legs",
+    "primaryKeyword": "leg workout generator",
+    "title": "Leg Workout Generator — Free AI Leg Plans, No Signup",
+    "description": "Generate a leg workout in seconds. Free AI leg workout generator. No signup.",
+    "h1": "Free Leg Workout Generator",
+    "intro": "Get a leg workout in seconds. Our AI leg workout generator creates plans for quads, hamstrings, and calves. No signup. Try 3 free leg workouts. Bodyweight, dumbbells, or gym.",
+    "bullets": ["Choose level and equipment.", "Get a leg-focused plan.", "Build strength and endurance.", "Regenerate for variety."],
+    "faqItems": [
+      { "question": "Is the leg workout generator free?", "answer": "Yes. 3 free leg workouts with no signup." }
+    ],
+    "relatedSlugs": ["/workouts/lower-body", "/workout-generator/strength", "/workouts/glutes", "/pricing", "/faq"]
+  },
+  {
+    "slug": "/workouts/endurance",
+    "primaryKeyword": "endurance workout generator",
+    "title": "Endurance Workout Generator — Free AI Endurance Plans, No Signup",
+    "description": "Generate an endurance workout in seconds. Free AI endurance workout generator. No signup.",
+    "h1": "Free Endurance Workout Generator",
+    "intro": "Get an endurance workout in seconds. Our AI endurance workout generator creates plans for stamina and aerobic fitness. No signup. Try 3 free endurance workouts. Cardio and circuit options.",
+    "bullets": ["Choose duration and intensity.", "Get an endurance-focused plan.", "Build stamina over time.", "Regenerate for variety."],
+    "faqItems": [
+      { "question": "Is the endurance generator free?", "answer": "Yes. 3 free endurance workouts with no signup." }
+    ],
+    "relatedSlugs": ["/workout-generator/weight-loss", "/workout-generator/hiit", "/workouts/cardio", "/pricing", "/faq"]
+  },
+  {
+    "slug": "/workouts/resistance-bands",
+    "primaryKeyword": "resistance band workout generator",
+    "title": "Resistance Band Workout Generator — Free AI Plans, No Signup",
+    "description": "Generate a resistance band workout in seconds. Free AI resistance band workout generator. No signup.",
+    "h1": "Free Resistance Band Workout Generator",
+    "intro": "Get a resistance band workout in seconds. Our AI resistance band workout generator creates plans for bands. No signup. Try 3 free band workouts. Full body or targeted—you choose.",
+    "bullets": ["Choose level and duration.", "Get a band-based plan.", "Minimal space and equipment.", "Regenerate for variety."],
+    "faqItems": [
+      { "question": "Is the resistance band generator free?", "answer": "Yes. 3 free resistance band workouts with no signup." }
+    ],
+    "relatedSlugs": ["/workout-generator/home", "/workouts/dumbbell", "/workout-generator/strength", "/pricing", "/faq"]
+  },
+  {
+    "slug": "/workouts/no-equipment",
+    "primaryKeyword": "no equipment workout generator",
+    "title": "No Equipment Workout Generator — Free AI Plans, No Signup",
+    "description": "Generate a no-equipment workout in seconds. Free AI workout generator with no equipment needed. No signup.",
+    "h1": "Free No Equipment Workout Generator",
+    "intro": "Get a workout with zero equipment in seconds. Our AI no-equipment workout generator uses only your body. No signup. Try 3 free no-equipment workouts. Perfect for home, travel, or anywhere.",
+    "bullets": ["Select level and duration.", "Get a bodyweight-only plan.", "No equipment required.", "Regenerate for variety."],
+    "faqItems": [
+      { "question": "Is the no-equipment generator free?", "answer": "Yes. 3 free no-equipment workouts with no signup." }
+    ],
+    "relatedSlugs": ["/workouts/bodyweight", "/workout-generator/home", "/workout-generator/beginners", "/pricing", "/faq"]
+  },
+  {
+    "slug": "/workouts/kettlebell",
+    "primaryKeyword": "kettlebell workout generator",
+    "title": "Kettlebell Workout Generator — Free AI Kettlebell Plans, No Signup",
+    "description": "Generate a kettlebell workout in seconds. Free AI kettlebell workout generator. No signup.",
+    "h1": "Free Kettlebell Workout Generator",
+    "intro": "Get a kettlebell workout in seconds. Our AI kettlebell workout generator creates plans for one or two kettlebells. No signup. Try 3 free kettlebell workouts. Strength, HIIT, or full body.",
+    "bullets": ["Choose level and duration.", "Get a kettlebell plan.", "Swings, presses, and more.", "Regenerate for variety."],
+    "faqItems": [
+      { "question": "Is the kettlebell generator free?", "answer": "Yes. 3 free kettlebell workouts with no signup." }
+    ],
+    "relatedSlugs": ["/workout-generator/strength", "/workout-generator/hiit", "/workouts/dumbbell", "/pricing", "/faq"]
+  }
+]

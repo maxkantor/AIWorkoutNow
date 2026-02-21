@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import i18n, { SUPPORTED_LANGS } from './i18n';
 import { isAdminRoute } from './i18n/isAdminRoute';
+import { programmaticSlugs } from './seo/programmaticPagesData';
 
 const Home = lazy(() => import('./pages/Home'));
 const About = lazy(() => import('./pages/About'));
@@ -10,7 +11,10 @@ const Disclaimer = lazy(() => import('./pages/Disclaimer'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Faq = lazy(() => import('./pages/Faq'));
 const AIWorkoutGenerator = lazy(() => import('./pages/AIWorkoutGenerator'));
-const WorkoutPlans = lazy(() => import('./pages/WorkoutPlans'));
+const WorkoutPlansHub = lazy(() => import('./pages/WorkoutPlansHub'));
+const WorkoutPlanGeneratorPage = lazy(() => import('./pages/WorkoutPlanGeneratorPage'));
+const WorkoutTypePage = lazy(() => import('./pages/WorkoutTypePage'));
+const Pricing = lazy(() => import('./pages/Pricing'));
 
 const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -24,6 +28,9 @@ const AdminAnalytics = lazy(() => import('./pages/AdminAnalytics'));
 const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'));
 const PaymentCancel = lazy(() => import('./pages/PaymentCancel'));
 const Platform = lazy(() => import('./pages/Platform'));
+const Blog = lazy(() => import('./pages/Blog'));
+const BlogPost = lazy(() => import('./pages/BlogPost'));
+const ProgrammaticPage = lazy(() => import('./pages/ProgrammaticPage'));
 import Layout from './components/Layout';
 import OptionalAnalytics from './components/OptionalAnalytics';
 
@@ -66,6 +73,14 @@ function getPreferredPublicLang(): string {
   return getStoredLang() ?? getNavigatorLang() ?? 'en';
 }
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
 function I18nRouteSync() {
   const location = useLocation();
 
@@ -91,19 +106,25 @@ function I18nRouteSync() {
 function App() {
   return (
     <Layout>
+      <ScrollToTop />
       <I18nRouteSync />
       <OptionalAnalytics />
       <Suspense fallback={null}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/ai-workout-generator" element={<AIWorkoutGenerator />} />
-          <Route path="/workout-plans" element={<WorkoutPlans />} />
+          <Route path="/workout-plan-generator" element={<WorkoutPlanGeneratorPage />} />
+          <Route path="/workout-generator/:type" element={<WorkoutTypePage />} />
+          <Route path="/workout-plans" element={<WorkoutPlansHub />} />
+          <Route path="/pricing" element={<Pricing />} />
           <Route path="/faq" element={<Faq />} />
           <Route path="/about" element={<About />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/disclaimer" element={<Disclaimer />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/platform" element={<Platform />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
 
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/login" element={<AdminLogin />} />
@@ -118,6 +139,9 @@ function App() {
 
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-cancel" element={<PaymentCancel />} />
+          {programmaticSlugs.map((slug) => (
+            <Route key={slug} path={slug} element={<ProgrammaticPage />} />
+          ))}
         </Routes>
       </Suspense>
     </Layout>

@@ -1,0 +1,76 @@
+.workout-type-hero {
+  text-align: center;
+  padding: 1.5rem 0 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.workout-type-hero__title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-primary, #1e293b);
+  margin-bottom: 0.75rem;
+  line-height: 1.2;
+}
+
+.workout-type-hero__subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary, #64748b);
+  max-width: 36rem;
+  margin: 0 auto 1.25rem;
+  line-height: 1.5;
+}
+
+.workout-type-hero__benefits {
+  list-style: none;
+  padding: 0;
+  margin: 0 auto 1.5rem;
+  max-width: 28rem;
+  text-align: left;
+}
+
+.workout-type-hero__benefits li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary, #64748b);
+  font-size: 0.95rem;
+}
+
+.workout-type-hero__benefits li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--success-color, #22c55e);
+  font-weight: 700;
+}
+
+.workout-type-hero__cta {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(to bottom, #334155, #1e293b);
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.workout-type-hero__cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.workout-type-hero__cta:active {
+  transform: translateY(0);
+}
+
+@media (min-width: 768px) {
+  .workout-type-hero__title {
+    font-size: 2.25rem;
+  }
+  .workout-type-hero__subtitle {
+    font-size: 1.1rem;
+  }
+}

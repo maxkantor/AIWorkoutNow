@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 function appendScript(src: string, attrs: Record<string, string> = {}) {
   const s = document.createElement('script');
@@ -9,11 +10,15 @@ function appendScript(src: string, attrs: Record<string, string> = {}) {
   return s;
 }
 
+/** Env placeholders: VITE_GA_ID or VITE_GA4_ID, VITE_CLARITY_ID, VITE_GSC_TOKEN */
 export default function OptionalAnalytics() {
+  const location = useLocation();
+
   useEffect(() => {
-    const ga4 = (import.meta as any).env?.VITE_GA4_ID as string | undefined;
+    const ga4 = ((import.meta as any).env?.VITE_GA4_ID || (import.meta as any).env?.VITE_GA_ID) as string | undefined;
     const gtm = (import.meta as any).env?.VITE_GTM_ID as string | undefined;
     const clarity = (import.meta as any).env?.VITE_CLARITY_ID as string | undefined;
+    const gscToken = (import.meta as any).env?.VITE_GSC_TOKEN as string | undefined;
 
     // Google Analytics 4
     if (ga4) {
@@ -52,8 +57,35 @@ export default function OptionalAnalytics() {
       `;
       document.head.appendChild(inline);
     }
+
+    // Search Console verification
+    if (gscToken) {
+      const meta = document.createElement('meta');
+      meta.name = 'google-site-verification';
+      meta.content = gscToken;
+      document.head.appendChild(meta);
+    }
   }, []);
 
+  // SPA route-change pageview
+  useEffect(() => {
+    const ga4 = ((import.meta as any).env?.VITE_GA4_ID || (import.meta as any).env?.VITE_GA_ID) as string | undefined;
+    if (ga4 && typeof (window as any).gtag === 'function') {
+      (window as any).gtag('event', 'page_view', {
+        page_path: location.pathname + location.search,
+        page_title: document.title,
+      });
+    }
+  }, [location.pathname, location.search]);
+
   return null;
+}
+
+/** Fire custom analytics events (workout_generated, cta_clicked, faq_opened, blog_scroll_50, blog_scroll_100) */
+export function trackEvent(eventName: string, params?: Record<string, unknown>) {
+  const ga4 = ((import.meta as any).env?.VITE_GA4_ID || (import.meta as any).env?.VITE_GA_ID) as string | undefined;
+  if (ga4 && typeof (window as any).gtag === 'function') {
+    (window as any).gtag('event', eventName, params);
+  }
 }
 

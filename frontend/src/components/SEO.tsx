@@ -13,29 +13,41 @@ const DEFAULT_OG_IMAGE = `${SITE_URL}/images/og-image.png`;
 export interface SEOProps {
   title?: string;
   description?: string;
+  canonicalPath?: string;
   canonicalUrl?: string;
   robots?: string;
   ogImage?: string;
   ogType?: 'website' | 'article';
   twitterCard?: 'summary' | 'summary_large_image';
+  noIndex?: boolean;
   jsonLd?: JsonLd | JsonLd[];
+}
+
+function normalizeCanonicalPath(path: string): string {
+  const p = path.trim().toLowerCase().replace(/\/+/g, '/');
+  return p === '' || p === '/' ? '/' : p.replace(/\/$/, '');
 }
 
 export default function SEO({
   title = DEFAULT_TITLE,
   description = DEFAULT_DESCRIPTION,
+  canonicalPath,
   canonicalUrl,
-  robots = 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1',
+  robots,
   ogImage = DEFAULT_OG_IMAGE,
   ogType = 'website',
   twitterCard = 'summary_large_image',
+  noIndex = false,
   jsonLd,
 }: SEOProps) {
   const location = useLocation();
   const { i18n } = useTranslation();
-  const canonical =
-    canonicalUrl ??
-    `${SITE_URL}${location.pathname === '/' ? '/' : location.pathname.replace(/\/+$/, '')}`;
+  const path = canonicalPath ?? (location.pathname === '/' ? '/' : location.pathname);
+  const normalizedPath = normalizeCanonicalPath(path);
+  const canonical = canonicalUrl ?? `${SITE_URL}${normalizedPath === '/' ? '' : normalizedPath}`;
+  const robotsContent =
+    robots ??
+    (noIndex ? 'noindex, nofollow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1');
 
   const schemas: JsonLd[] = Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : [];
 
@@ -43,7 +55,7 @@ export default function SEO({
     <Helmet htmlAttributes={{ lang: i18n.resolvedLanguage || i18n.language || 'en' }}>
       <title>{title}</title>
       <meta name="description" content={description} />
-      <meta name="robots" content={robots} />
+      <meta name="robots" content={robotsContent} />
       <link rel="canonical" href={canonical} />
 
       {/* Open Graph */}

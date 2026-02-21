@@ -1,0 +1,42 @@
+.related-workout-types {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+.related-workout-types__title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  margin-bottom: 1rem;
+}
+
+.related-workout-types__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.related-workout-types__list li {
+  margin: 0;
+}
+
+.related-workout-types__link {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--primary-color, #6366f1);
+  text-decoration: none;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.related-workout-types__link:hover {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: var(--primary-color, #6366f1);
+}

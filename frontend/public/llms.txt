@@ -1,0 +1,8 @@
+# AIWorkoutNow
+A free AI workout generator that creates personalized workout plans instantly with no signup required.
+
+- URL: https://aiworkoutnow.com
+- Tool: AI workout plan generator
+- Free: Yes (basic use; 3 free workouts)
+- Signup required: No (basic use)
+- Contact: support@aiworkoutnow.com

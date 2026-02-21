@@ -1,26 +1,27 @@
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { useTranslation } from 'react-i18next';
 import { getArray } from '../i18n/getArray';
+import Breadcrumbs from '../components/Breadcrumbs';
 import './About.css';
 
 function About() {
-  const navigate = useNavigate();
   const { t } = useTranslation();
-  
+  const breadcrumbs = [
+    { name: 'Home', path: '/' },
+    { name: t('pages.about.title'), path: '/about' },
+  ];
+
   return (
     <>
       <SEO
         title={t('pages.about.seo.title')}
         description={t('pages.about.seo.description')}
-        canonicalUrl="https://aiworkoutnow.com/about"
+        canonicalPath="/about"
       />
-      
       <div className="about-page">
         <div className="container">
-          <button onClick={() => navigate('/')} className="back-button">
-            {t('pages.about.backToHome')}
-          </button>
+          <Breadcrumbs items={breadcrumbs} className="mb-4" />
           <div className="content-card">
             <h1>{t('pages.about.title')}</h1>
             
@@ -49,7 +50,7 @@ function About() {
               <h2>{t('pages.about.contactTitle')}</h2>
               <p>
                 {t('pages.about.contactBody')}{' '}
-                <a href="/contact">{t('pages.about.contactLinkText')}</a>
+                <Link to="/contact">{t('pages.about.contactLinkText')}</Link>
               </p>
             </section>
           </div>

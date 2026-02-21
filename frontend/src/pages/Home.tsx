@@ -10,7 +10,30 @@ import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAcc
 import { useHeroContext } from '../components/Layout';
 import { getArray } from '../i18n/getArray';
 import { safeT } from '../i18n/safeT';
+import { buildFAQPageSchema } from '../seo/schema';
+import FAQAccordion from '../components/FAQAccordion';
+import WorkoutTypesSection from '../components/home/WorkoutTypesSection';
 import './Home.css';
+
+type TFunction = (key: string, options?: any) => any;
+
+function homeFaqItems(t: TFunction): { question: string; answer: string }[] {
+  const chatgptIntro = safeT(t, 'pages.home.faq.items.chatgpt.intro');
+  const chatgptBullets = getArray<string>(safeT(t, 'pages.home.faq.items.chatgpt.bullets', { returnObjects: true }), []);
+  const chatgptOutro = safeT(t, 'pages.home.faq.items.chatgpt.outro');
+  const chatgptAnswer = [chatgptIntro, ...chatgptBullets, chatgptOutro].filter(Boolean).join(' ');
+  return [
+    { question: safeT(t, 'pages.home.faq.items.reallyFree.q'), answer: safeT(t, 'pages.home.faq.items.reallyFree.a') },
+    { question: safeT(t, 'pages.home.faq.items.howWorks.q'), answer: safeT(t, 'pages.home.faq.items.howWorks.a') },
+    { question: safeT(t, 'pages.home.faq.items.noAccount.q'), answer: safeT(t, 'pages.home.faq.items.noAccount.a') },
+    { question: safeT(t, 'pages.home.faq.items.types.q'), answer: safeT(t, 'pages.home.faq.items.types.a') },
+    { question: safeT(t, 'pages.home.faq.items.betterThanTrainer.q'), answer: safeT(t, 'pages.home.faq.items.betterThanTrainer.a') },
+    { question: safeT(t, 'pages.home.faq.items.chatgpt.q'), answer: chatgptAnswer },
+    { question: safeT(t, 'pages.home.faq.items.signup.q'), answer: safeT(t, 'pages.home.faq.items.signup.a') },
+    { question: safeT(t, 'pages.home.faq.items.restore.q'), answer: safeT(t, 'pages.home.faq.items.restore.a') },
+    { question: safeT(t, 'pages.home.faq.items.counts.q'), answer: safeT(t, 'pages.home.faq.items.counts.a') },
+  ];
+}
 
 function Home() {
   const { t, i18n } = useTranslation();
@@ -29,6 +52,7 @@ function Home() {
 
   // SEO: keep title ~50–60 chars and description ~140–160 chars
   const seoDescription = t('pages.home.seo.description');
+  const faqItems = homeFaqItems(t);
 
   useEffect(() => {
     checkAccessStatus();
@@ -247,50 +271,10 @@ function Home() {
               description: t('pages.home.schema.faq.offerDesc'),
             },
           },
-          {
-            '@context': 'https://schema.org',
-            '@type': 'FAQPage',
-            mainEntity: [
-              {
-                '@type': 'Question',
-                name: safeT(t, 'pages.home.schema.faq.q1'),
-                acceptedAnswer: {
-                  '@type': 'Answer',
-                  text: safeT(t, 'pages.home.schema.faq.a1'),
-                },
-              },
-              {
-                '@type': 'Question',
-                name: safeT(t, 'pages.home.schema.faq.q2'),
-                acceptedAnswer: {
-                  '@type': 'Answer',
-                  text: safeT(t, 'pages.home.schema.faq.a2'),
-                },
-              },
-              {
-                '@type': 'Question',
-                name: safeT(t, 'pages.home.schema.faq.q3'),
-                acceptedAnswer: {
-                  '@type': 'Answer',
-                  text: safeT(t, 'pages.home.schema.faq.a3'),
-                },
-              },
-              {
-                '@type': 'Question',
-                name: safeT(t, 'pages.home.schema.faq.q4'),
-                acceptedAnswer: {
-                  '@type': 'Answer',
-                  text: safeT(t, 'pages.home.schema.faq.a4'),
-                },
-              },
-            ],
-          },
+          buildFAQPageSchema(faqItems),
         ]}
       />
 
-      {/* One H1 for SEO without changing the visual hero headline */}
-      <h1 className="sr-only">{safeT(t, 'pages.home.h1Sr')}</h1>
-      
       <main className="min-h-screen py-6 relative homeMainBg" style={{
         backgroundImage: "url('/images/main-bg.png')",
         backgroundSize: "cover",
@@ -375,23 +359,23 @@ function Home() {
                 </div>
               )}
 
-              {/* Trust Badges - Cleaner, More Prominent */}
-              <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-                <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
-                  <span className="text-2xl block mb-2">🔒</span>
-                  <span className="text-sm font-bold text-slate-800">{t('pages.home.trustBadges.securePayment')}</span>
-                </div>
-                <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
+              {/* Trust bar (SEO, non-numeric) */}
+              <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8" aria-label="Trust">
+                <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md">
                   <span className="text-2xl block mb-2">🚫</span>
-                  <span className="text-sm font-bold text-slate-800">{t('pages.home.trustBadges.noSubscription')}</span>
+                  <span className="text-sm font-bold text-slate-800">{safeT(t, 'pages.home.trustBar.noSignup')}</span>
                 </div>
-                <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
+                <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md">
                   <span className="text-2xl block mb-2">⚡</span>
-                  <span className="text-sm font-bold text-slate-800">{t('pages.home.trustBadges.instantAccess')}</span>
+                  <span className="text-sm font-bold text-slate-800">{safeT(t, 'pages.home.trustBar.instantPlan')}</span>
                 </div>
-                <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
-                  <span className="text-2xl block mb-2">💯</span>
-                  <span className="text-sm font-bold text-slate-800">{t('pages.home.trustBadges.moneyBack')}</span>
+                <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md">
+                  <span className="text-2xl block mb-2">📱</span>
+                  <span className="text-sm font-bold text-slate-800">{safeT(t, 'pages.home.trustBar.anyDevice')}</span>
+                </div>
+                <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 text-center border-2 border-slate-200 shadow-md">
+                  <span className="text-2xl block mb-2">🇺🇸</span>
+                  <span className="text-sm font-bold text-slate-800">{safeT(t, 'pages.home.trustBar.builtUSA')}</span>
                 </div>
               </section>
             </section>
@@ -408,61 +392,42 @@ function Home() {
             </aside>
           </div>
 
-          {/* SEO Content (visible, below generator and above footer) */}
+          {/* SEO content: first 100+ words with keywords, H2s */}
           <section className="mt-10 bg-white/70 rounded-2xl p-6 border border-slate-200 shadow-sm">
-            <h2 className="text-2xl font-extrabold text-slate-900 mb-3">{t('pages.home.seoBlock.title')}</h2>
-            <p className="text-slate-700 leading-relaxed mb-3">
+            <p className="text-slate-700 leading-relaxed mb-4">
+              {safeT(t, 'pages.home.firstParagraph')}
+            </p>
+            <h2 className="text-2xl font-extrabold text-slate-900 mb-3">{safeT(t, 'pages.home.h2HowItWorks')}</h2>
+            <p className="text-slate-700 leading-relaxed mb-4">
               {t('pages.home.seoBlock.p1')}
             </p>
+            <h2 className="text-2xl font-extrabold text-slate-900 mb-3">{safeT(t, 'pages.home.h2WhyAI')}</h2>
             <p className="text-slate-700 leading-relaxed mb-4">
               {t('pages.home.seoBlock.p2')}
             </p>
+            <h2 className="text-2xl font-extrabold text-slate-900 mb-3">{safeT(t, 'pages.home.h2WhoFor')}</h2>
             <h3 className="text-lg font-bold text-slate-900 mb-3">{t('pages.home.seoBlock.listTitle')}</h3>
             <ul className="list-disc pl-5 text-slate-700 space-y-1">
               {getArray<string>(t('pages.home.seoBlock.bullets', { returnObjects: true }), []).map((b) => (
                 <li key={b}>{b}</li>
               ))}
             </ul>
-
             <h3 className="text-lg font-bold text-slate-900 mt-6 mb-2">{t('pages.home.seoBlock.noSignupTitle')}</h3>
             <p className="text-slate-700 leading-relaxed">
               {t('pages.home.seoBlock.noSignupBody')}
             </p>
           </section>
 
-          {/* FAQ (small, appended — does not alter main layout) */}
-          <section className="mt-6 bg-white/70 rounded-2xl p-6 border border-slate-200 shadow-sm" aria-labelledby="faq-heading">
-                <h2 id="faq-heading" className="text-2xl font-extrabold text-slate-900 mb-3">{safeT(t, 'pages.home.faq.title')}</h2>
-            <div className="space-y-2">
-              <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
-                    <summary className="font-semibold text-slate-900 cursor-pointer">{safeT(t, 'pages.home.faq.items.chatgpt.q')}</summary>
-                <div className="text-slate-700 mt-2">
-                      <p className="mb-3">{safeT(t, 'pages.home.faq.items.chatgpt.intro')}</p>
-                  <ul className="list-disc pl-5 space-y-1 mb-3">
-                        {getArray<string>(safeT(t, 'pages.home.faq.items.chatgpt.bullets', { returnObjects: true }), []).map((b) => (
-                      <li key={b}>{b}</li>
-                    ))}
-                  </ul>
-                      <p className="text-slate-500 text-sm">{safeT(t, 'pages.home.faq.items.chatgpt.outro')}</p>
-                </div>
-              </details>
-              <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
-                    <summary className="font-semibold text-slate-900 cursor-pointer">{safeT(t, 'pages.home.faq.items.signup.q')}</summary>
-                    <p className="text-slate-700 mt-2">{safeT(t, 'pages.home.faq.items.signup.a')}</p>
-              </details>
-              <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
-                    <summary className="font-semibold text-slate-900 cursor-pointer">{safeT(t, 'pages.home.faq.items.subscription.q')}</summary>
-                    <p className="text-slate-700 mt-2">{safeT(t, 'pages.home.faq.items.subscription.a')}</p>
-              </details>
-              <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
-                    <summary className="font-semibold text-slate-900 cursor-pointer">{safeT(t, 'pages.home.faq.items.restore.q')}</summary>
-                    <p className="text-slate-700 mt-2">{safeT(t, 'pages.home.faq.items.restore.a')}</p>
-              </details>
-              <details className="bg-white/80 rounded-xl p-4 border border-slate-200">
-                    <summary className="font-semibold text-slate-900 cursor-pointer">{safeT(t, 'pages.home.faq.items.counts.q')}</summary>
-                    <p className="text-slate-700 mt-2">{safeT(t, 'pages.home.faq.items.counts.a')}</p>
-              </details>
-            </div>
+          {/* Product selection: workout generators only (no pricing/FAQ/about/blog here) */}
+          <WorkoutTypesSection />
+
+          {/* FAQ accordion + FAQPage schema */}
+          <section className="mt-6 bg-white/70 rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <FAQAccordion
+              title={safeT(t, 'pages.home.faq.title')}
+              items={faqItems}
+              onOpen={() => {}}
+            />
           </section>
         </div>
       </div>

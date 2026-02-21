@@ -1,0 +1,80 @@
+.equipment-recommendations {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.equipment-recommendations__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  margin-bottom: 1rem;
+}
+
+.equipment-recommendations__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .equipment-recommendations__list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.equipment-recommendations__card {
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background: var(--bg-primary, #fff);
+}
+
+.equipment-recommendations__card-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.equipment-recommendations__badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #64748b;
+}
+
+.equipment-recommendations__name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
+  margin: 0;
+}
+
+.equipment-recommendations__description {
+  font-size: 0.875rem;
+  color: #475569;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.equipment-recommendations__link {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+  margin-top: 0.25rem;
+}
+
+.equipment-recommendations__link:hover {
+  text-decoration: underline;
+}
+
+.equipment-recommendations__disclosure {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: 1rem;
+  margin-bottom: 0;
+}

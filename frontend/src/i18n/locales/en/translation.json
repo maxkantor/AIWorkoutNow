@@ -167,26 +167,49 @@
   },
   "footer": {
     "tagline": "Your AI-powered fitness companion. Get personalized workouts instantly.",
-    "legal": "Legal",
+    "brandDescription": "AI-powered workout generator. Get personalized plans in seconds.",
+    "brandTagline": "No signup required. One-time payment model.",
+    "product": "Product",
+    "company": "Company",
     "support": "Support",
+    "legal": "Legal",
     "links": {
+      "aiWorkoutGenerator": "AI Workout Generator",
+      "workoutPlanGenerator": "Workout Plan Generator",
+      "pricing": "Pricing",
+      "blog": "Blog",
+      "platform": "Platform",
+      "contact": "Contact Us",
+      "faq": "FAQ",
+      "restorePurchases": "Restore Purchases",
       "privacy": "Privacy Policy",
       "disclaimer": "Disclaimer",
       "about": "About Us",
-      "contact": "Contact Us",
-      "faq": "FAQ",
-      "platform": "Platform"
+      "terms": "Terms of Service"
     },
     "copyright": "© {{year}} AIWorkoutNow. All rights reserved.",
+    "engineeredBy": "Engineered by MK AI & Performance Systems",
     "amazonDisclosure": "As an Amazon Associate, we earn from qualifying purchases."
   },
   "pages": {
     "home": {
       "seo": {
-        "title": "AI Workout Generator (No Signup) | One-Time Payment",
-        "description": "Generate a personalized workout plan instantly—no signup. Try 3 free workouts, then unlock more with a one-time payment. Gym or home, equipment-aware, goals-based."
+        "title": "Free AI Workout Generator — No Signup | AIWorkoutNow",
+        "description": "Get a personalized AI workout plan in seconds. 100% free to try. No account needed. Free AI workout generator and AI workout plan no signup required."
       },
-      "h1Sr": "AI Workout Generator — Get Your Perfect Workout in Seconds",
+      "heroH1": "Free AI Workout Generator — No Signup Required",
+      "heroSubtitle": "",
+      "h1Sr": "Free AI Workout Generator — No Signup Required",
+      "h2HowItWorks": "How It Works",
+      "h2WhyAI": "Why Use AI for Workouts",
+      "h2WhoFor": "Who Is This For",
+      "trustBar": {
+        "noSignup": "No signup",
+        "instantPlan": "Instant plan",
+        "anyDevice": "Works on any device",
+        "builtUSA": "Built in the USA"
+      },
+      "firstParagraph": "Use our free AI workout generator to get a personalized AI workout plan in seconds. No signup required—just choose your level, time, and equipment. Our AI workout plan no signup tool is 100% free to try: get three free workouts, then unlock more with a one-time payment if you like it.",
       "whyTitle": "Why Choose AIWorkoutNow?",
       "whyCards": [
         {
@@ -238,8 +261,32 @@
         "noSignupTitle": "No Signup. One-Time Payment.",
         "noSignupBody": "Try the workout generator free, then choose a one-time payment pack when you’re ready. No recurring subscription."
       },
+      "internalLinksTitle": "Explore workout types and tools",
+      "workoutTypesSectionTitle": "Choose Your Workout Generator",
+      "workoutTypes": {
+        "descriptors": {
+          "hiit": "High-intensity intervals",
+          "home": "No gym required",
+          "beginners": "Start here"
+        }
+      },
+      "internalLinks": {
+        "aiWorkoutGenerator": "AI Workout Generator",
+        "workoutPlanGenerator": "Workout Plan Generator",
+        "hiit": "HIIT Workout Generator",
+        "home": "Home Workout Generator",
+        "strength": "Strength Workout Generator",
+        "weightLoss": "Weight Loss Workout Generator",
+        "beginners": "Workouts for Beginners",
+        "women": "Workouts for Women",
+        "men": "Workouts for Men",
+        "pricing": "Pricing",
+        "faq": "FAQ",
+        "about": "About",
+        "blog": "Blog"
+      },
       "faq": {
-        "title": "FAQ",
+        "title": "Frequently Asked Questions",
         "items": {
           "chatgpt": {
             "q": "Why not just use ChatGPT?",
@@ -268,7 +315,12 @@
           "counts": {
             "q": "What counts as a workout generation?",
             "a": "Each time you create a new workout plan, it uses 1 workout credit (unless you’re using free trial credits)."
-          }
+          },
+          "reallyFree": { "q": "Is AIWorkoutNow really free?", "a": "Yes. You get 3 free workouts with no signup. After that you can buy more with a one-time payment." },
+          "howWorks": { "q": "How does the AI workout generator work?", "a": "You pick your fitness level, duration, equipment, and goals. Our AI creates a personalized plan in seconds." },
+          "noAccount": { "q": "Can I use this without creating an account?", "a": "Yes. You can generate workouts immediately with no account or login." },
+          "types": { "q": "What types of workouts can I generate?", "a": "Full body, upper/lower body, cardio, strength, HIIT, yoga. Home or gym, any equipment level." },
+          "betterThanTrainer": { "q": "Is this better than hiring a personal trainer?", "a": "For quick at-home plans and variety, our free AI workout generator is hard to beat. For in-person coaching, a trainer is still valuable." }
         }
       },
       "errors": {
@@ -329,6 +381,14 @@
           "a": "No. Workouts are informational. If you have injuries or medical concerns, consult a professional before starting a new program."
         }
       ]
+    },
+    "pricing": {
+      "seo": {
+        "title": "Pricing | AI Workout Generator — No Signup | AIWorkoutNow",
+        "description": "Simple one-time pricing for AI workout plans. 3 free workouts, then unlock 10, 30, or 100 workouts. No subscription, no signup required."
+      },
+      "title": "Pricing",
+      "intro": "Try 3 free workouts with no signup. Unlock more with a one-time payment—no subscription."
     },
     "workoutPlans": {
       "seo": {

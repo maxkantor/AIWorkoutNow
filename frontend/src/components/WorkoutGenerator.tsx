@@ -4,6 +4,15 @@ import WorkoutDisplay from './WorkoutDisplay';
 import WorkoutProgressEmoji from './WorkoutProgressEmoji';
 import './WorkoutGenerator.css';
 
+export interface WorkoutGeneratorInitialDefaults {
+  fitnessLevel?: string;
+  workoutType?: string;
+  duration?: string;
+  equipment?: string;
+  injuries?: string;
+  goals?: string;
+}
+
 interface WorkoutGeneratorProps {
   onGenerate: (preferences: any) => void;
   loading: boolean;
@@ -11,16 +20,23 @@ interface WorkoutGeneratorProps {
   workout: any;
   lastPreferences?: any;
   disabled?: boolean;
+  /** Route-based defaults applied only on first render; user changes are preserved */
+  initialDefaults?: WorkoutGeneratorInitialDefaults;
 }
 
-function WorkoutGenerator({ onGenerate, loading, error, workout, lastPreferences, disabled = false }: WorkoutGeneratorProps) {
+const DEFAULT_FITNESS = 'beginner';
+const DEFAULT_TYPE = 'full-body';
+const DEFAULT_DURATION = '30';
+const DEFAULT_EQUIPMENT = 'minimal';
+
+function WorkoutGenerator({ onGenerate, loading, error, workout, lastPreferences, disabled = false, initialDefaults }: WorkoutGeneratorProps) {
   const { t } = useTranslation();
-  const [fitnessLevel, setFitnessLevel] = useState('beginner');
-  const [workoutType, setWorkoutType] = useState('full-body');
-  const [duration, setDuration] = useState('30');
-  const [equipment, setEquipment] = useState('minimal');
-  const [injuries, setInjuries] = useState('');
-  const [goals, setGoals] = useState('');
+  const [fitnessLevel, setFitnessLevel] = useState(initialDefaults?.fitnessLevel ?? DEFAULT_FITNESS);
+  const [workoutType, setWorkoutType] = useState(initialDefaults?.workoutType ?? DEFAULT_TYPE);
+  const [duration, setDuration] = useState(initialDefaults?.duration ?? DEFAULT_DURATION);
+  const [equipment, setEquipment] = useState(initialDefaults?.equipment ?? DEFAULT_EQUIPMENT);
+  const [injuries, setInjuries] = useState(initialDefaults?.injuries ?? '');
+  const [goals, setGoals] = useState(initialDefaults?.goals ?? '');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

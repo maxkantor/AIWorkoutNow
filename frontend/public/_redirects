@@ -1,1 +1,20 @@
+# Serve prerendered HTML when present (Amplify/Netlify-style)
+/about    /about/index.html    200
+/ai-workout-generator    /ai-workout-generator/index.html    200
+/workout-plan-generator  /workout-plan-generator/index.html  200
+/workout-plans    /workout-plans/index.html    200
+/pricing    /pricing/index.html    200
+/faq    /faq/index.html    200
+/contact    /contact/index.html    200
+/privacy    /privacy/index.html    200
+/disclaimer    /disclaimer/index.html    200
+/blog    /blog/index.html    200
+/workout-generator/hiit    /workout-generator/hiit/index.html    200
+/workout-generator/home    /workout-generator/home/index.html    200
+/workout-generator/strength    /workout-generator/strength/index.html    200
+/workout-generator/weight-loss    /workout-generator/weight-loss/index.html    200
+/workout-generator/beginners    /workout-generator/beginners/index.html    200
+/workout-generator/women    /workout-generator/women/index.html    200
+/workout-generator/men    /workout-generator/men/index.html    200
+# SPA fallback
 /*    /index.html   200
