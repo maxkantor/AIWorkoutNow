@@ -38,15 +38,17 @@ export default function LandingPageTemplate({ content, breadcrumbItems }: Landin
             </ul>
 
             <div className="mb-8">
-              <Link
-                to="/"
-                className="inline-block px-6 py-3 bg-slate-800 text-white font-semibold rounded-lg hover:bg-slate-700"
+              <button
+                type="button"
+                onClick={() => document.getElementById('related-workouts')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                className="inline-block px-6 py-3 bg-slate-800 text-white font-semibold rounded-lg hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-600"
+                aria-label="Choose your goal below"
               >
-                Launch free AI workout generator →
-              </Link>
+                Choose your goal
+              </button>
             </div>
 
-            <h2 className="text-xl font-bold text-slate-900 mb-3">Related workouts</h2>
+            <h2 id="related-workouts" className="text-xl font-bold text-slate-900 mb-3">Related workouts</h2>
             <ul className="flex flex-wrap gap-3 text-slate-700 mb-8">
               {content.relatedSlugs.map(({ path, label }) => (
                 <li key={path}>

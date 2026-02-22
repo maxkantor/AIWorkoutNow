@@ -26,7 +26,7 @@ export const LANDING_PAGES: Record<string, LandingPageContent> = {
       'Regenerate anytime for variety—no subscription.',
     ],
     relatedSlugs: [
-      { path: '/ai-workout-generator', label: 'AI Workout Generator' },
+      { path: '/ai-workout-generator', label: 'AI Workout Builder' },
       { path: '/workout-generator/hiit', label: 'HIIT Workouts' },
       { path: '/workout-generator/strength', label: 'Strength Workouts' },
       { path: '/workout-generator/weight-loss', label: 'Weight Loss Workouts' },
