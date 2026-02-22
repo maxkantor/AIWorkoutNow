@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import i18n, { SUPPORTED_LANGS } from './i18n';
 import { isAdminRoute } from './i18n/isAdminRoute';
 import { programmaticSlugs } from './seo/programmaticPagesData';
@@ -103,6 +103,15 @@ function I18nRouteSync() {
   return null;
 }
 
+function TrailingSlashRedirect({ children }: { children: React.ReactNode }) {
+  const { pathname } = useLocation();
+  if (pathname !== '/' && pathname.endsWith('/')) {
+    const target = pathname.replace(/\/+$/, '') || '/';
+    return <Navigate to={target} replace />;
+  }
+  return <>{children}</>;
+}
+
 function App() {
   return (
     <Layout>
@@ -110,6 +119,7 @@ function App() {
       <I18nRouteSync />
       <OptionalAnalytics />
       <Suspense fallback={null}>
+        <TrailingSlashRedirect>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/ai-workout-generator" element={<AIWorkoutGenerator />} />
@@ -143,6 +153,7 @@ function App() {
             <Route key={slug} path={slug} element={<ProgrammaticPage />} />
           ))}
         </Routes>
+        </TrailingSlashRedirect>
       </Suspense>
     </Layout>
   );

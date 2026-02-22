@@ -1,0 +1,24 @@
+{
+  "siteUrl": "https://aiworkoutnow.com",
+  "routes": [
+    { "path": "/", "changefreq": "daily", "priority": 1.0 },
+    { "path": "/about", "changefreq": "monthly", "priority": 0.8 },
+    { "path": "/ai-workout-generator", "changefreq": "weekly", "priority": 0.9 },
+    { "path": "/workout-plan-generator", "changefreq": "weekly", "priority": 0.9 },
+    { "path": "/workout-plans", "changefreq": "monthly", "priority": 0.7 },
+    { "path": "/pricing", "changefreq": "monthly", "priority": 0.8 },
+    { "path": "/faq", "changefreq": "monthly", "priority": 0.8 },
+    { "path": "/contact", "changefreq": "monthly", "priority": 0.7 },
+    { "path": "/blog", "changefreq": "weekly", "priority": 0.8 },
+    { "path": "/platform", "changefreq": "monthly", "priority": 0.6 },
+    { "path": "/privacy", "changefreq": "yearly", "priority": 0.4 },
+    { "path": "/disclaimer", "changefreq": "yearly", "priority": 0.4 },
+    { "path": "/workout-generator/hiit", "changefreq": "monthly", "priority": 0.9 },
+    { "path": "/workout-generator/home", "changefreq": "monthly", "priority": 0.9 },
+    { "path": "/workout-generator/strength", "changefreq": "monthly", "priority": 0.9 },
+    { "path": "/workout-generator/weight-loss", "changefreq": "monthly", "priority": 0.9 },
+    { "path": "/workout-generator/beginners", "changefreq": "monthly", "priority": 0.9 },
+    { "path": "/workout-generator/women", "changefreq": "monthly", "priority": 0.9 },
+    { "path": "/workout-generator/men", "changefreq": "monthly", "priority": 0.9 }
+  ]
+}

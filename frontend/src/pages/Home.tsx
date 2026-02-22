@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import WorkoutGenerator from '../components/WorkoutGenerator';
 import PricingPlans from '../components/PricingPlans';
 import RestoreCredits from '../components/RestoreCredits';
-import PromoWorkoutVideo from '../components/PromoWorkoutVideo/PromoWorkoutVideo';
+import PromoMedia from '../components/PromoMedia/PromoMedia';
 import SEO from '../components/SEO';
 import { getDeviceId, setTokenBalance as updateTokenStorage } from '../utils/storage';
 import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus, WorkoutPreferences } from '../services/api';
@@ -296,7 +296,7 @@ function Home() {
                 <h2 className="homePanelTitle" title="Why Choose AIWorkoutNow?">
                   {t('pages.home.whyTitle')}
                 </h2>
-                <PromoWorkoutVideo />
+                <PromoMedia />
                 <div className="homeWhyStack">
                   {getArray<{ title: string; body: string }>(
                     t('pages.home.whyCards', { returnObjects: true }),

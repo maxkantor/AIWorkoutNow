@@ -27,9 +27,10 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/build-blog-index.mjs && tsc && vite build && node scripts/generate-sitemap.mjs",
+    "build": "node scripts/build-blog-index.mjs && node scripts/generate-sitemap.mjs && tsc && vite build",
     "preview": "vite preview",
     "sitemap": "node scripts/generate-sitemap.mjs",
+    "validate-routes": "node scripts/validate-routes.mjs",
     "prerender": "node scripts/prerender.mjs",
     "build:prerender": "npm run build && npm run prerender",
     "seo:build": "npm run build",

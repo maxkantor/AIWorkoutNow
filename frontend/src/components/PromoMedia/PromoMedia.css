@@ -1,0 +1,98 @@
+.promoMediaRoot {
+  width: 100%;
+  margin: 10px auto 0;
+}
+
+.promoMediaFrame {
+  border-radius: 18px;
+  overflow: hidden;
+  padding: 10px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(245, 247, 255, 0.92));
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.10);
+}
+
+.promoMediaViewport {
+  --media-object-position: 50% 32%;
+  width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+  position: relative;
+  background:
+    radial-gradient(120% 140% at 10% 20%, rgba(59, 130, 246, 0.10), rgba(59, 130, 246, 0.00) 55%),
+    radial-gradient(140% 120% at 90% 10%, rgba(124, 58, 237, 0.08), rgba(124, 58, 237, 0.00) 55%),
+    linear-gradient(180deg, rgba(241, 245, 249, 0.95), rgba(255, 255, 255, 0.95));
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.10);
+  height: 380px;
+}
+
+.promoMediaViewport::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(15, 23, 42, 0.03) 0px,
+    rgba(15, 23, 42, 0.03) 1px,
+    rgba(15, 23, 42, 0.00) 6px,
+    rgba(15, 23, 42, 0.00) 10px
+  );
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.promoMedia {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--media-object-position, 50% 25%);
+  display: block;
+}
+
+.promoMediaVideo {
+  background: rgba(241, 245, 249, 0.95);
+}
+
+.promoMediaImg {
+  background: rgba(241, 245, 249, 0.95);
+}
+
+.promoMediaPlayOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.25);
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.promoMediaPlayOverlay:hover {
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.promoMediaPlayIcon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  padding-left: 6px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 768px) {
+  .promoMediaViewport {
+    height: 340px;
+  }
+}
