@@ -51,7 +51,7 @@
         "lower-body": "Lower Body",
         "cardio": "Cardio",
         "strength": "Strength",
-        "hiit": "HIIT",
+        "hiit": "Quick fat-burn",
         "yoga": "Yoga"
       },
       "duration": {
@@ -265,19 +265,19 @@
       "workoutTypesSectionTitle": "Choose Your Goal",
       "workoutTypes": {
         "descriptors": {
-          "hiit": "High-intensity intervals",
+          "hiit": "Quick fat-burn (20–30 min)",
           "home": "No gym required",
           "beginners": "Start here"
         }
       },
       "internalLinks": {
-        "aiWorkoutGenerator": "AI Workout Generator",
+        "aiWorkoutGenerator": "AI Workout Builder",
         "workoutPlanGenerator": "Workout Plan Generator",
-        "hiit": "HIIT Workout Generator",
-        "home": "Home Workout Generator",
-        "strength": "Strength Workout Generator",
-        "weightLoss": "Weight Loss Workout Generator",
-        "beginners": "Workouts for Beginners",
+        "hiit": "Quick Fat-Burn Workouts (20–30 min)",
+        "home": "Home Workouts (No Equipment)",
+        "strength": "Strength Building Workouts",
+        "weightLoss": "Lose Weight",
+        "beginners": "Beginner Workouts",
         "women": "Workouts for Women",
         "men": "Workouts for Men",
         "pricing": "Pricing",
@@ -319,7 +319,7 @@
           "reallyFree": { "q": "Is AIWorkoutNow really free?", "a": "Yes. You get 3 free workouts with no signup. After that you can buy more with a one-time payment." },
           "howWorks": { "q": "How does the AI workout generator work?", "a": "You pick your fitness level, duration, equipment, and goals. Our AI creates a personalized plan in seconds." },
           "noAccount": { "q": "Can I use this without creating an account?", "a": "Yes. You can generate workouts immediately with no account or login." },
-          "types": { "q": "What types of workouts can I generate?", "a": "Full body, upper/lower body, cardio, strength, HIIT, yoga. Home or gym, any equipment level." },
+          "types": { "q": "What types of workouts can I generate?", "a": "Full body, upper/lower body, cardio, strength, quick fat-burn, yoga. Home or gym, any equipment level." },
           "betterThanTrainer": { "q": "Is this better than hiring a personal trainer?", "a": "For quick at-home plans and variety, our free AI workout generator is hard to beat. For in-person coaching, a trainer is still valuable." }
         }
       },
@@ -393,7 +393,7 @@
     "workoutPlans": {
       "seo": {
         "title": "Workout Plans | AIWorkoutNow — AI Workout Generator",
-        "description": "Explore workout plan goals (fat loss, strength, muscle gain, HIIT, and more). Generate an instant AI workout plan with no signup."
+        "description": "Explore workout plan goals (fat loss, strength, muscle gain, quick fat-burn, and more). Generate an instant AI workout plan with no signup."
       },
       "title": "Workout Plans",
       "intro": "Pick a goal, then generate an instant AI workout plan. These are “plan intents” to help you get started quickly—AIWorkoutNow personalizes each workout to your level, time, and equipment.",
@@ -406,7 +406,7 @@
         "strength": "Strength",
         "muscle-gain": "Muscle gain",
         "endurance": "Endurance",
-        "hiit": "HIIT",
+        "hiit": "Quick fat-burn",
         "bodyweight": "Bodyweight-only"
       },
       "linkToGenerator": "AI Workout Generator"

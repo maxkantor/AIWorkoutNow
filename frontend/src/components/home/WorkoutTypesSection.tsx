@@ -12,7 +12,7 @@ const GOAL_LABELS: Record<string, { title: string; description: string; actionHi
     actionHint: 'Get plan',
   },
   strength: {
-    title: 'Strength Training',
+    title: 'Strength Building Workouts',
     description: 'Structured sets & progressive overload',
     actionHint: 'Start building',
   },
@@ -27,8 +27,8 @@ const GOAL_LABELS: Record<string, { title: string; description: string; actionHi
     actionHint: 'Get plan',
   },
   hiit: {
-    title: 'Quick Fat-Burn Workouts',
-    description: 'High-intensity sessions (20–30 min)',
+    title: 'Quick Fat-Burn Workouts (20–30 min)',
+    description: 'High-intensity sessions',
     actionHint: 'Get plan',
   },
   men: {

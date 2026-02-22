@@ -8,7 +8,6 @@ import SampleWorkout from '../components/SampleWorkout';
 import WorkoutGenerator, { type WorkoutGeneratorHandle, type WorkoutGeneratorPreferences } from '../components/WorkoutGenerator';
 import WorkoutProgressEmoji from '../components/WorkoutProgressEmoji';
 import WorkoutTypeFAQ from '../components/WorkoutTypeFAQ';
-import RelatedWorkoutTypes from '../components/RelatedWorkoutTypes';
 import EquipmentRecommendations from '../components/EquipmentRecommendations';
 import GeneratorStickyBar from '../components/GeneratorStickyBar';
 import { buildBreadcrumbListSchema, buildFAQPageSchema } from '../seo/schema';
@@ -177,13 +176,6 @@ export default function WorkoutTypePage() {
     { name: page.shortLabel, path: page.routePath },
   ];
 
-  const relatedLinks = page.relatedSlugs
-    .map((slug) => {
-      const p = getPlanPage(slug);
-      return p ? { path: p.routePath, label: p.shortLabel } : null;
-    })
-    .filter((x): x is { path: string; label: string } => x != null);
-
   const slugPhrase = page.slug.replace(/-/g, ' ');
   const generatorSectionTitle = slugPhrase
     ? `Generate your ${slugPhrase} workout`
@@ -275,7 +267,6 @@ export default function WorkoutTypePage() {
             </section>
 
             <WorkoutTypeFAQ items={page.faq} />
-            <RelatedWorkoutTypes links={relatedLinks} />
           </div>
         </div>
         <GeneratorStickyBar

@@ -7,12 +7,12 @@ import { buildBreadcrumbListSchema } from '../seo/schema';
 import './About.css';
 
 const EQUIPMENT_FILTERS = ['All', 'No equipment'] as const;
-const GOAL_FILTERS = ['All', 'Strength', 'HIIT', 'Weight Loss', 'General'] as const;
+const GOAL_FILTERS = ['All', 'Strength Building', 'Quick Fat-Burn', 'Lose Weight', 'General'] as const;
 
 function slugToGoal(slug: string): string {
-  if (slug === 'strength' || slug === 'men') return 'Strength';
-  if (slug === 'hiit') return 'HIIT';
-  if (slug === 'weight-loss') return 'Weight Loss';
+  if (slug === 'strength' || slug === 'men') return 'Strength Building';
+  if (slug === 'hiit') return 'Quick Fat-Burn';
+  if (slug === 'weight-loss') return 'Lose Weight';
   return 'General';
 }
 
@@ -49,7 +49,7 @@ export default function WorkoutPlansHub() {
     <>
       <SEO
         title="Workout Plans — AI Workout Generator by Type | AIWorkoutNow"
-        description="Browse workout plan types: women, men, beginners, HIIT, home, strength, weight loss. Each page has a free AI workout generator and sample plans."
+        description="Browse workout plan types: women, men, beginner workouts, quick fat-burn, home, strength building, lose weight. Each page has a free AI workout generator and sample plans."
         canonicalPath="/workout-plans"
         jsonLd={[buildBreadcrumbListSchema(breadcrumbItems)]}
       />

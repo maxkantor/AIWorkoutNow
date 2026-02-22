@@ -203,11 +203,11 @@ export const WORKOUT_PLAN_LIBRARY: Record<string, PlanPageDefinition> = {
   beginners: {
     slug: 'beginners',
     routePath: '/workout-generator/beginners',
-    shortLabel: 'Workouts for Beginners',
+    shortLabel: 'Beginner Workouts',
     title: 'Workout Generator for Beginners — Free AI Plans, No Signup | AIWorkoutNow',
     metaDescription:
       'Generate a beginner-friendly workout in seconds. Free AI workout generator for beginners. No signup. Safe, clear, and effective.',
-    h1: 'Free AI Workout Generator for Beginners — No Signup',
+    h1: 'Beginner Workouts — No Signup',
     introParagraphs: [
       'New to fitness? Our AI creates safe, clear workouts that build habit without overwhelm. You choose your level, time, and equipment—we give you a step-by-step plan.',
       'No signup required. Try three free beginner workouts. Each plan includes warm-up, main exercises with simple progressions, and cooldown. Perfect for building consistency.',
@@ -264,11 +264,11 @@ export const WORKOUT_PLAN_LIBRARY: Record<string, PlanPageDefinition> = {
   hiit: {
     slug: 'hiit',
     routePath: '/workout-generator/hiit',
-    shortLabel: 'HIIT Workout Generator',
-    title: 'Free AI HIIT Workout Generator — No Signup | AIWorkoutNow',
+    shortLabel: 'Quick Fat-Burn Workouts (20–30 min)',
+    title: 'Quick Fat-Burn Workouts (20–30 min) — Free AI Plans, No Signup | AIWorkoutNow',
     metaDescription:
-      'Generate a HIIT workout in seconds. Free AI HIIT workout generator for home or gym. No signup required.',
-    h1: 'Free AI HIIT Workout Generator — No Signup',
+      'Generate a quick fat-burn workout in seconds. High-intensity sessions (20–30 min). No signup. Home or gym.',
+    h1: 'Quick Fat-Burn Workouts (20–30 min) — No Signup',
     introParagraphs: [
       'High-intensity interval training burns calories and builds conditioning in short sessions. Our AI creates HIIT plans tailored to your level and equipment—often 15–25 minutes including warm-up and cooldown.',
       'No signup required. Try three free HIIT workouts. You can do them at home with minimal or no equipment, or in a gym.',
@@ -333,11 +333,11 @@ export const WORKOUT_PLAN_LIBRARY: Record<string, PlanPageDefinition> = {
   home: {
     slug: 'home',
     routePath: '/workout-generator/home',
-    shortLabel: 'Home Workout Generator',
-    title: 'Home Workout Generator — Free AI Home Workouts, No Signup | AIWorkoutNow',
+    shortLabel: 'Home Workouts (No Equipment)',
+    title: 'Home Workouts (No Equipment) — Free AI Plans, No Signup | AIWorkoutNow',
     metaDescription:
       'Generate a home workout in seconds. Free AI home workout generator. No signup. Works with bodyweight or minimal equipment.',
-    h1: 'Free AI Home Workout Generator — No Signup',
+    h1: 'Home Workouts (No Equipment) — No Signup',
     introParagraphs: [
       'Effective workouts with minimal or no equipment. Our AI builds plans for your space—bodyweight, dumbbells, or resistance bands. No gym required.',
       'No signup required. Try three free home workouts. Each plan includes warm-up, main exercises, and cooldown. You choose duration and equipment.',
@@ -401,11 +401,11 @@ export const WORKOUT_PLAN_LIBRARY: Record<string, PlanPageDefinition> = {
   strength: {
     slug: 'strength',
     routePath: '/workout-generator/strength',
-    shortLabel: 'Strength Training Generator',
-    title: 'Strength Workout Generator — Free AI Strength Plans, No Signup | AIWorkoutNow',
+    shortLabel: 'Strength Building Workouts',
+    title: 'Strength Building Workouts — Free AI Plans, No Signup | AIWorkoutNow',
     metaDescription:
       'Generate a strength training workout in seconds. Free AI strength workout generator for muscle and power. No signup.',
-    h1: 'Free AI Strength Workout Generator — No Signup',
+    h1: 'Strength Building Workouts — No Signup',
     introParagraphs: [
       'Build muscle and strength with structured sets and reps. Our AI creates strength plans for bodyweight, dumbbells, or full gym—tailored to your level and goals.',
       'No signup required. Try three free strength workouts. Plans include warm-up, main exercises with sets and reps, and cooldown. Progressive overload is built into the structure.',
@@ -468,11 +468,11 @@ export const WORKOUT_PLAN_LIBRARY: Record<string, PlanPageDefinition> = {
   'weight-loss': {
     slug: 'weight-loss',
     routePath: '/workout-generator/weight-loss',
-    shortLabel: 'Weight Loss Workouts',
-    title: 'Weight Loss Workout Generator — Free AI Plans, No Signup | AIWorkoutNow',
+    shortLabel: 'Lose Weight',
+    title: 'Lose Weight — Free AI Workout Plans, No Signup | AIWorkoutNow',
     metaDescription:
       'Generate a weight loss workout in seconds. Free AI weight loss workout generator. No signup. Cardio and strength combined.',
-    h1: 'Free AI Weight Loss Workout Generator — No Signup',
+    h1: 'Lose Weight — No Signup',
     introParagraphs: [
       'Workouts designed to burn fat and support metabolism. Our AI combines cardio and strength so you get effective, time-efficient sessions. No signup—try three free weight loss workouts.',
       'Plans adapt to your level and equipment. You can do them at home with minimal gear or in a gym. Consistency and a healthy diet will improve results over time.',
