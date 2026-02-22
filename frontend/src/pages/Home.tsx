@@ -8,33 +8,15 @@ import SEO from '../components/SEO';
 import { getDeviceId, setTokenBalance as updateTokenStorage } from '../utils/storage';
 import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus, WorkoutPreferences } from '../services/api';
 import { useHeroContext } from '../components/Layout';
+import { Link } from 'react-router-dom';
 import { getArray } from '../i18n/getArray';
 import { safeT } from '../i18n/safeT';
 import { buildFAQPageSchema } from '../seo/schema';
 import FAQAccordion from '../components/FAQAccordion';
+import { FAQ, FAQ_HOME_COUNT } from '../data/faq';
 import WorkoutTypesSection from '../components/home/WorkoutTypesSection';
 import GenerationLoadingModal from '../components/GenerationLoadingModal';
 import './Home.css';
-
-type TFunction = (key: string, options?: any) => any;
-
-function homeFaqItems(t: TFunction): { question: string; answer: string }[] {
-  const chatgptIntro = safeT(t, 'pages.home.faq.items.chatgpt.intro');
-  const chatgptBullets = getArray<string>(safeT(t, 'pages.home.faq.items.chatgpt.bullets', { returnObjects: true }), []);
-  const chatgptOutro = safeT(t, 'pages.home.faq.items.chatgpt.outro');
-  const chatgptAnswer = [chatgptIntro, ...chatgptBullets, chatgptOutro].filter(Boolean).join(' ');
-  return [
-    { question: safeT(t, 'pages.home.faq.items.reallyFree.q'), answer: safeT(t, 'pages.home.faq.items.reallyFree.a') },
-    { question: safeT(t, 'pages.home.faq.items.howWorks.q'), answer: safeT(t, 'pages.home.faq.items.howWorks.a') },
-    { question: safeT(t, 'pages.home.faq.items.noAccount.q'), answer: safeT(t, 'pages.home.faq.items.noAccount.a') },
-    { question: safeT(t, 'pages.home.faq.items.types.q'), answer: safeT(t, 'pages.home.faq.items.types.a') },
-    { question: safeT(t, 'pages.home.faq.items.betterThanTrainer.q'), answer: safeT(t, 'pages.home.faq.items.betterThanTrainer.a') },
-    { question: safeT(t, 'pages.home.faq.items.chatgpt.q'), answer: chatgptAnswer },
-    { question: safeT(t, 'pages.home.faq.items.signup.q'), answer: safeT(t, 'pages.home.faq.items.signup.a') },
-    { question: safeT(t, 'pages.home.faq.items.restore.q'), answer: safeT(t, 'pages.home.faq.items.restore.a') },
-    { question: safeT(t, 'pages.home.faq.items.counts.q'), answer: safeT(t, 'pages.home.faq.items.counts.a') },
-  ];
-}
 
 function Home() {
   const { t, i18n } = useTranslation();
@@ -53,7 +35,7 @@ function Home() {
 
   // SEO: keep title ~50–60 chars and description ~140–160 chars
   const seoDescription = t('pages.home.seo.description');
-  const faqItems = homeFaqItems(t);
+  const homeFaqItems = FAQ.slice(0, FAQ_HOME_COUNT).map(({ question, answer }) => ({ question, answer }));
 
   useEffect(() => {
     checkAccessStatus();
@@ -272,7 +254,7 @@ function Home() {
               description: t('pages.home.schema.faq.offerDesc'),
             },
           },
-          buildFAQPageSchema(faqItems),
+          buildFAQPageSchema(homeFaqItems),
         ]}
       />
 
@@ -423,13 +405,18 @@ function Home() {
           {/* Product selection: workout generators only (no pricing/FAQ/about/blog here) */}
           <WorkoutTypesSection />
 
-          {/* FAQ accordion + FAQPage schema */}
+          {/* FAQ accordion + FAQPage schema (first 6 from shared FAQ) */}
           <section className="mt-6 bg-white/70 rounded-2xl p-6 border border-slate-200 shadow-sm">
             <FAQAccordion
               title={safeT(t, 'pages.home.faq.title')}
-              items={faqItems}
+              items={homeFaqItems}
               onOpen={() => {}}
             />
+            <p className="mt-4 text-center">
+              <Link to="/faq" className="text-blue-600 hover:underline font-medium">
+                View all FAQ →
+              </Link>
+            </p>
           </section>
         </div>
       </div>

@@ -1,13 +1,15 @@
 import SEO from '../components/SEO';
 import { useTranslation } from 'react-i18next';
-import { getArray } from '../i18n/getArray';
 import Breadcrumbs from '../components/Breadcrumbs';
-import { buildBreadcrumbListSchema } from '../seo/schema';
+import { buildBreadcrumbListSchema, buildFAQPageSchema } from '../seo/schema';
+import FAQAccordion from '../components/FAQAccordion';
+import { FAQ } from '../data/faq';
 import './About.css';
+
+const faqItems = FAQ.map(({ question, answer }) => ({ question, answer }));
 
 function Faq() {
   const { t } = useTranslation();
-  const faq = getArray<{ q: string; a: string }>(t('pages.faq.items', { returnObjects: true }), []);
   const breadcrumbs = [
     { name: 'Home', path: '/' },
     { name: t('pages.faq.title'), path: '/faq' },
@@ -21,15 +23,7 @@ function Faq() {
         canonicalPath="/faq"
         jsonLd={[
           buildBreadcrumbListSchema(breadcrumbs),
-          {
-          '@context': 'https://schema.org',
-          '@type': 'FAQPage',
-          mainEntity: faq.map((f) => ({
-            '@type': 'Question',
-            name: f.q,
-            acceptedAnswer: { '@type': 'Answer', text: f.a },
-          })),
-        },
+          buildFAQPageSchema(faqItems),
         ]}
       />
       <div className="about-page">
@@ -37,13 +31,7 @@ function Faq() {
           <Breadcrumbs items={breadcrumbs} className="mb-4" />
           <div className="content-card">
             <h1>{t('pages.faq.title')}</h1>
-
-            {faq.map((item) => (
-              <section key={item.q}>
-                <h2>{item.q}</h2>
-                <p>{item.a}</p>
-              </section>
-            ))}
+            <FAQAccordion items={faqItems} id="faq-page-heading" />
           </div>
         </div>
       </div>
