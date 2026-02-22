@@ -40,6 +40,8 @@
 
     <!-- Performance: preload above-the-fold hero background -->
     <link rel="preload" as="image" href="/images/hero-bg.png" fetchpriority="high" />
+    <!-- Preload promo video so hipmachine.mp4 loads reliably -->
+    <link rel="preload" as="video" href="/images/hipmachine.mp4" type="video/mp4" fetchpriority="low" />
   </head>
   <body>
     <div id="root"></div>

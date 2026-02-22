@@ -1,4 +1,5 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
+import './PromoMedia.css';
 
 const VIDEO_SRC = '/images/hipmachine.mp4';
 const POSTER_SRC = '/images/side-bg.png';
@@ -12,10 +13,14 @@ export default function PromoMedia() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [displayMode, setDisplayMode] = useState<DisplayMode>('video');
   const [isPlaying, setIsPlaying] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
 
-  const handleVideoError = useCallback(() => {
+  const handleVideoError = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
     if (IS_DEV) {
-      console.warn('[PromoMedia] Video failed to load, falling back to poster image:', VIDEO_SRC);
+      const el = e.currentTarget;
+      const err = el.error;
+      const msg = err ? `${err.code} ${err.message}` : 'unknown';
+      console.warn('[PromoMedia] Video failed to load, falling back to poster:', VIDEO_SRC, msg);
     }
     setDisplayMode('poster');
   }, []);
@@ -27,9 +32,23 @@ export default function PromoMedia() {
     setDisplayMode('fallback');
   }, []);
 
+  const handleCanPlay = useCallback(() => {
+    setVideoReady(true);
+  }, []);
+
   const handlePlayClick = useCallback(() => {
     videoRef.current?.play().then(() => setIsPlaying(true)).catch(() => {});
   }, []);
+
+  // Try muted autoplay when video is ready (allowed on most browsers); if blocked, play overlay stays
+  useEffect(() => {
+    if (displayMode !== 'video' || !videoReady || !videoRef.current) return;
+    const v = videoRef.current;
+    const p = v.play();
+    if (p && typeof p.then === 'function') {
+      p.then(() => setIsPlaying(true)).catch(() => {});
+    }
+  }, [displayMode, videoReady]);
 
   const showPlayOverlay = displayMode === 'video' && !isPlaying;
 
@@ -42,17 +61,19 @@ export default function PromoMedia() {
               <video
                 ref={videoRef}
                 className="promoMedia promoMediaVideo"
-                src={VIDEO_SRC}
                 poster={POSTER_SRC}
                 muted
                 playsInline
                 loop
-                preload="metadata"
+                preload="auto"
                 onError={handleVideoError}
+                onCanPlay={handleCanPlay}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
                 aria-label="Workout promo video"
-              />
+              >
+                <source src={VIDEO_SRC} type="video/mp4" />
+              </video>
               {showPlayOverlay && (
                 <button
                   type="button"
