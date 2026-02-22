@@ -30,6 +30,7 @@ const STATIC_ROUTES = [
   { path: '/privacy', changefreq: 'yearly', priority: 0.5 },
   { path: '/disclaimer', changefreq: 'yearly', priority: 0.5 },
   { path: '/blog', changefreq: 'weekly', priority: 0.8 },
+  { path: '/platform', changefreq: 'monthly', priority: 0.6 },
   // Workout plan library (keep in sync with src/seo/workoutPlanLibrary.ts WORKOUT_PLAN_SLUGS)
   { path: '/workout-generator/hiit', changefreq: 'monthly', priority: 0.7 },
   { path: '/workout-generator/home', changefreq: 'monthly', priority: 0.7 },
