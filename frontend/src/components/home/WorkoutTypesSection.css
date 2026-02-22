@@ -56,7 +56,7 @@
   color: var(--text-primary, #0f172a);
   text-decoration: none;
   transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
-  min-height: 3.5rem;
+  min-height: 3.5rem; /* Ensures touch target ≥44px and room for title + hint */
   box-sizing: border-box;
 }
 
