@@ -637,7 +637,7 @@ public class DynamoDBService : IDynamoDBService
         return dto;
     }
 
-    public async Task<BalanceDto> ResetBalanceAsync(string deviceId, int newCount, string? reason = null)
+    public async Task<BalanceDto> ResetBalanceAsync(string deviceId, int newCount, string? reason = null, bool skipActivityLog = false)
     {
         // Reset tokens to exact count, clear unlimited, set totalWorkouts to newCount
         var tokens = await GetUserTokensAsync(deviceId) ?? new UserTokens { DeviceId = deviceId };
@@ -679,18 +679,21 @@ public class DynamoDBService : IDynamoDBService
             Console.WriteLine($"[DynamoDBService] Error resetting free workouts for {deviceId}: {ex.Message}");
         }
 
-        // Log activity
-        await SaveCustomerActivityAsync(new CustomerActivity
+        if (!skipActivityLog)
         {
-            DeviceId = deviceId,
-            ActivityType = "tokens_reset",
-            Description = $"Tokens reset to {newCount} by admin",
-            Details = new Dictionary<string, object>
+            // Log activity (single-device reset)
+            await SaveCustomerActivityAsync(new CustomerActivity
             {
-                { "newCount", newCount },
-                { "reason", reason ?? "Admin reset" }
-            }
-        });
+                DeviceId = deviceId,
+                ActivityType = "tokens_reset",
+                Description = $"Tokens reset to {newCount} by admin",
+                Details = new Dictionary<string, object>
+                {
+                    { "newCount", newCount },
+                    { "reason", reason ?? "Admin reset" }
+                }
+            });
+        }
 
         // Return updated balance
         return await GetBalanceAsync(deviceId);

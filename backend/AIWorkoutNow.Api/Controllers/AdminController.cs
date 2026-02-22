@@ -360,13 +360,30 @@ public class AdminController : ControllerBase
                 var mapping = await _dynamoService.GetEmailByVisitorIdAsync(deviceId);
                 if (mapping != null && !string.IsNullOrWhiteSpace(mapping.Email) && mapping.VisitorIds.Any())
                 {
-                    Console.WriteLine($"[AdminController] ResetTokens: device {deviceId} is linked to {mapping.Email}; resetting {mapping.VisitorIds.Count} device(s) globally");
+                    var distinctIds = mapping.VisitorIds.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+                    var count = distinctIds.Count;
+                    Console.WriteLine($"[AdminController] ResetTokens: device {deviceId} is linked to {mapping.Email}; resetting {count} device(s) globally");
                     BalanceDto? primary = null;
-                    foreach (var vid in mapping.VisitorIds.Distinct(StringComparer.OrdinalIgnoreCase))
+                    foreach (var vid in distinctIds)
                     {
-                        var b = await _dynamoService.ResetBalanceAsync(vid, request.NewTokenCount, request.Reason ?? $"Admin reset (email: {mapping.Email})");
+                        var b = await _dynamoService.ResetBalanceAsync(vid, request.NewTokenCount, request.Reason ?? $"Admin reset (email: {mapping.Email})", skipActivityLog: true);
                         if (string.Equals(vid, deviceId, StringComparison.OrdinalIgnoreCase)) primary = b;
                     }
+                    // Log one activity for the batch (so admin sees a single "Tokens reset to 21" entry instead of one per device)
+                    await _dynamoService.SaveCustomerActivityAsync(new CustomerActivity
+                    {
+                        DeviceId = deviceId,
+                        ActivityType = "tokens_reset",
+                        Description = count > 1
+                            ? $"Tokens reset to {request.NewTokenCount} by admin ({count} devices for email)"
+                            : $"Tokens reset to {request.NewTokenCount} by admin",
+                        Details = new Dictionary<string, object>
+                        {
+                            { "newCount", request.NewTokenCount },
+                            { "reason", request.Reason ?? "Admin reset (email)" },
+                            { "deviceCount", count }
+                        }
+                    });
                     return Ok(primary ?? await _dynamoService.GetBalanceAsync(deviceId));
                 }
             }

@@ -49,7 +49,7 @@ public interface IDynamoDBService
     Task ApplyPendingPurchasesAsync(string deviceId, string? stripeSecretKey = null);
     Task EnrichPurchasesFromStripeAsync(string deviceId, string stripeSecretKey);
     Task<BalanceDto> GetBalanceAsync(string deviceId);
-    Task<BalanceDto> ResetBalanceAsync(string deviceId, int newCount, string? reason = null);
+    Task<BalanceDto> ResetBalanceAsync(string deviceId, int newCount, string? reason = null, bool skipActivityLog = false);
     
     // Email Verification & Cross-Device Methods
     Task SaveEmailVerificationCodeAsync(EmailVerificationCode code);
