@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import './GenerationLoadingModal.css';
 
-const ROTATING_SUBTEXTS = [
-  'Analyzing your fitness level…',
-  'Designing your routine…',
-  'Balancing intensity and recovery…',
-  'Finalizing your plan…',
+const ROTATING_SUBTEXTS: { text: string; emoji: string }[] = [
+  { text: 'Analyzing your fitness level…', emoji: '💪' },
+  { text: 'Designing your routine…', emoji: '🏋️' },
+  { text: 'Balancing intensity and recovery…', emoji: '🤸' },
+  { text: 'Finalizing your plan…', emoji: '🔥' },
 ];
 
 const ROTATION_INTERVAL_MS = 1500;
@@ -17,7 +17,7 @@ interface GenerationLoadingModalProps {
 
 /**
  * Professional loading modal shown while a workout is being generated.
- * Centered card, rotating subtext, progress bar, no emojis.
+ * Centered card, rotating subtext with sport emojis, progress bar.
  * Locks body scroll and blocks clicks when visible.
  */
 export default function GenerationLoadingModal({ visible }: GenerationLoadingModalProps) {
@@ -54,7 +54,10 @@ export default function GenerationLoadingModal({ visible }: GenerationLoadingMod
       <div className="generation-loading-modal__backdrop" aria-hidden="true" />
       <div className="generation-loading-modal__card">
         <h2 className="generation-loading-modal__title">Creating your personalized workout</h2>
-        <p className="generation-loading-modal__subtext">{ROTATING_SUBTEXTS[subtextIndex]}</p>
+        <p className="generation-loading-modal__subtext">
+          <span className="generation-loading-modal__subtext-emoji" aria-hidden="true">{ROTATING_SUBTEXTS[subtextIndex].emoji}</span>
+          {ROTATING_SUBTEXTS[subtextIndex].text}
+        </p>
         <div className="generation-loading-modal__progress-wrap">
           <div className="generation-loading-modal__progress-bar" />
         </div>

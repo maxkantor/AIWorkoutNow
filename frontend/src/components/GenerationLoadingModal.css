@@ -43,6 +43,15 @@
   margin: 0 0 1.5rem;
   min-height: 1.4em;
   line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.generation-loading-modal__subtext-emoji {
+  font-size: 1.25rem;
+  line-height: 1;
 }
 
 .generation-loading-modal__progress-wrap {

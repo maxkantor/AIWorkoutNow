@@ -13,6 +13,7 @@ import { safeT } from '../i18n/safeT';
 import { buildFAQPageSchema } from '../seo/schema';
 import FAQAccordion from '../components/FAQAccordion';
 import WorkoutTypesSection from '../components/home/WorkoutTypesSection';
+import GenerationLoadingModal from '../components/GenerationLoadingModal';
 import './Home.css';
 
 type TFunction = (key: string, options?: any) => any;
@@ -283,7 +284,8 @@ function Home() {
       }}>
         {/* Semi-transparent overlay to ensure content readability */}
         <div className="absolute inset-0 bg-white/30 pointer-events-none z-0"></div>
-        <div className="relative z-10">
+        <GenerationLoadingModal visible={loading} />
+        <div className="relative z-10" aria-busy={loading}>
         <div className="homeThreeColWrap">
           {/* 3-Column Area (stable CSS grid) */}
           <div className="homeThreeColGrid">
@@ -322,7 +324,7 @@ function Home() {
             error={error}
             workout={workout}
             lastPreferences={lastPreferences ?? undefined}
-            disabled={!canGenerate && !checkingAccess}
+            disabled={!canGenerate || checkingAccess}
           />
               </div>
 
