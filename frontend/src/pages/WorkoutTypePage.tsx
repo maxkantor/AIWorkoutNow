@@ -6,6 +6,7 @@ import Breadcrumbs from '../components/Breadcrumbs';
 import WorkoutTypeHero from '../components/WorkoutTypeHero';
 import SampleWorkout from '../components/SampleWorkout';
 import WorkoutGenerator, { type WorkoutGeneratorHandle, type WorkoutGeneratorPreferences } from '../components/WorkoutGenerator';
+import WorkoutProgressEmoji from '../components/WorkoutProgressEmoji';
 import WorkoutTypeFAQ from '../components/WorkoutTypeFAQ';
 import RelatedWorkoutTypes from '../components/RelatedWorkoutTypes';
 import EquipmentRecommendations from '../components/EquipmentRecommendations';
@@ -192,7 +193,19 @@ export default function WorkoutTypePage() {
           buildFAQPageSchema(page.faq),
         ]}
       />
-      <div className={`about-page ${isFormVisible ? 'generator-sticky-bar-visible' : ''}`}>
+      <div className={`about-page ${isFormVisible ? 'generator-sticky-bar-visible' : ''}`} aria-busy={loading}>
+        {loading && (
+          <div
+            className="about-page-loading-overlay"
+            role="status"
+            aria-live="polite"
+            aria-label={t('generator.button.loading')}
+          >
+            <span className="about-page-loading-overlay__text">
+              {t('generator.button.loading')} <WorkoutProgressEmoji isLoading={loading} />
+            </span>
+          </div>
+        )}
         <div className="container">
           <Breadcrumbs items={breadcrumbItems} className="mb-4" />
           <div className="content-card">

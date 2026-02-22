@@ -1,4 +1,5 @@
 import './WorkoutTypeHero.css';
+import WorkoutProgressEmoji from './WorkoutProgressEmoji';
 
 interface WorkoutTypeHeroProps {
   title: string;
@@ -51,8 +52,14 @@ export default function WorkoutTypeHero({
         disabled={isDisabled}
         aria-busy={loading}
       >
-        <span className="workout-type-hero__cta-desktop">{labelDesktop}</span>
-        <span className="workout-type-hero__cta-mobile">{labelMobile}</span>
+        <span className="workout-type-hero__cta-desktop">
+          {labelDesktop}
+          {loading && <WorkoutProgressEmoji isLoading={loading} className="workout-type-hero__cta-emoji" />}
+        </span>
+        <span className="workout-type-hero__cta-mobile">
+          {labelMobile}
+          {loading && <WorkoutProgressEmoji isLoading={loading} className="workout-type-hero__cta-emoji" />}
+        </span>
       </button>
     </header>
   );

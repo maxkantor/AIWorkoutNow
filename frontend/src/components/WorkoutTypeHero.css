@@ -46,15 +46,19 @@
 
 .workout-type-hero__cta {
   display: inline-block;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #fff;
-  background: linear-gradient(to bottom, #334155, #1e293b);
+  padding: 0.95rem 1.5rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: white;
+  background-color: var(--primary-color);
   border: none;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-md, 0.75rem);
   cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: all 0.2s;
+}
+
+.workout-type-hero__cta-emoji {
+  margin-left: 0.35em;
 }
 
 .workout-type-hero__cta-mobile {
@@ -74,13 +78,20 @@
   }
 }
 
-.workout-type-hero__cta:hover {
+.workout-type-hero__cta:hover:not(:disabled) {
+  background-color: var(--primary-dark);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-lg);
 }
 
-.workout-type-hero__cta:active {
+.workout-type-hero__cta:active:not(:disabled) {
   transform: translateY(0);
+}
+
+.workout-type-hero__cta:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 @media (min-width: 768px) {

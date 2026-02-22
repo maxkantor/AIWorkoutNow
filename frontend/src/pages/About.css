@@ -3,6 +3,27 @@
   position: relative;
 }
 
+/* Block all interaction while workout is generating */
+.about-page-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.85);
+  pointer-events: auto;
+}
+
+.about-page-loading-overlay__text {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 .back-button {
   position: absolute;
   top: 1rem;

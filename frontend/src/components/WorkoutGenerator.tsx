@@ -71,6 +71,7 @@ const WorkoutGenerator = forwardRef<WorkoutGeneratorHandle, WorkoutGeneratorProp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (disabled || loading) return;
     onGenerate(getPreferences());
   };
 
