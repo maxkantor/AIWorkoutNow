@@ -5,14 +5,17 @@ import SEO from '../components/SEO';
 import Breadcrumbs from '../components/Breadcrumbs';
 import WorkoutTypeHero from '../components/WorkoutTypeHero';
 import SampleWorkout from '../components/SampleWorkout';
-import WorkoutGenerator from '../components/WorkoutGenerator';
+import WorkoutGenerator, { FITNESS_LEVEL_INPUT_ID, type WorkoutGeneratorHandle, type WorkoutGeneratorPreferences } from '../components/WorkoutGenerator';
 import WorkoutTypeFAQ from '../components/WorkoutTypeFAQ';
 import RelatedWorkoutTypes from '../components/RelatedWorkoutTypes';
 import EquipmentRecommendations from '../components/EquipmentRecommendations';
+import GeneratorStickyBar from '../components/GeneratorStickyBar';
 import { buildBreadcrumbListSchema, buildFAQPageSchema } from '../seo/schema';
 import { getPlanPage, getDefaultGeneratorConfigFromLibrary, WORKOUT_PLAN_SLUGS } from '../seo/workoutPlanLibrary';
 import { getDeviceId, setTokenBalance as updateTokenStorage } from '../utils/storage';
 import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus } from '../services/api';
+import { useGeneratorCtaBehavior } from '../hooks/useGeneratorCtaBehavior';
+import { trackEvent } from '../components/OptionalAnalytics';
 import './About.css';
 
 const GENERATOR_SECTION_ID = 'workout-generator';
@@ -20,7 +23,10 @@ const GENERATOR_SECTION_ID = 'workout-generator';
 export default function WorkoutTypePage() {
   const { type } = useParams<{ type: string }>();
   const { t, i18n } = useTranslation();
-  const generatorRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const generatorFormRef = useRef<WorkoutGeneratorHandle>(null);
+  const liveRegionRef = useRef<HTMLDivElement | null>(null);
+  const [latestPreferences, setLatestPreferences] = useState<WorkoutGeneratorPreferences | null>(null);
 
   const [workout, setWorkout] = useState<any>(null);
   const [lastPreferences, setLastPreferences] = useState<any>(null);
@@ -68,6 +74,16 @@ export default function WorkoutTypePage() {
   }, [type]);
 
   const handleGenerateWorkout = async (preferences: any) => {
+    if (type && page) {
+      trackEvent('generator_submitted', {
+        page: page.routePath,
+        generatorType: type,
+        level: preferences.fitnessLevel,
+        duration: preferences.duration,
+        equipment: preferences.equipment,
+        workoutType: preferences.workoutType,
+      });
+    }
     setLoading(true);
     setError(null);
     try {
@@ -119,10 +135,27 @@ export default function WorkoutTypePage() {
       freeWorkoutsRemaining > 0 ||
       (accessStatus?.tokensRemaining ?? 0) > 0);
 
-  const scrollToGenerator = () => {
-    const el = document.getElementById(GENERATOR_SECTION_ID);
-    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const trackHeroCta = (pagePath: string, generatorType: string) => {
+    trackEvent('hero_cta_clicked', { page: pagePath, generatorType });
   };
+  const trackHeroCtaScrolled = (pagePath: string, generatorType: string) => {
+    trackEvent('hero_cta_scrolled', { page: pagePath, generatorType });
+  };
+  const trackHeroCtaGenerated = (pagePath: string, generatorType: string) => {
+    trackEvent('hero_cta_generated', { page: pagePath, generatorType });
+  };
+
+  const { handleHeroCtaClick, isFormVisible } = useGeneratorCtaBehavior({
+    generatorFormRef,
+    sectionRef,
+    firstFocusableId: FITNESS_LEVEL_INPUT_ID,
+    generatorType: type ?? '',
+    pagePath: page?.routePath ?? '',
+    trackHeroCta,
+    trackHeroCtaScrolled,
+    trackHeroCtaGenerated,
+    liveRegionRef,
+  });
 
   if (!type || !WORKOUT_PLAN_SLUGS.includes(type as any) || !page) {
     return <Navigate to="/workout-plan-generator" replace />;
@@ -140,7 +173,10 @@ export default function WorkoutTypePage() {
     })
     .filter((x): x is { path: string; label: string } => x != null);
 
-  const ctaLabel = `Generate ${page.shortLabel} Workout`;
+  const slugPhrase = page.slug.replace(/-/g, ' ');
+  const generatorSectionTitle = slugPhrase
+    ? `Generate your ${slugPhrase} workout`
+    : 'Generate your workout';
 
   return (
     <>
@@ -153,7 +189,7 @@ export default function WorkoutTypePage() {
           buildFAQPageSchema(page.faq),
         ]}
       />
-      <div className="about-page">
+      <div className={`about-page ${isFormVisible ? 'generator-sticky-bar-visible' : ''}`}>
         <div className="container">
           <Breadcrumbs items={breadcrumbItems} className="mb-4" />
           <div className="content-card">
@@ -161,8 +197,9 @@ export default function WorkoutTypePage() {
               title={page.h1}
               subtitle={page.introParagraphs[0] ?? ''}
               benefits={page.keyBenefits}
-              ctaLabel={ctaLabel}
-              onCtaClick={scrollToGenerator}
+              ctaLabelDesktop="Start free generator"
+              ctaLabelMobile="Start generator"
+              onCtaClick={handleHeroCtaClick}
             />
             <div className="workout-type-intro">
               {page.introParagraphs.map((para, i) => (
@@ -187,11 +224,19 @@ export default function WorkoutTypePage() {
 
             <EquipmentRecommendations products={page.affiliateProducts} title="Equipment recommendations" />
 
-            <section id={GENERATOR_SECTION_ID} ref={generatorRef} aria-labelledby="generator-heading">
+            <section id={GENERATOR_SECTION_ID} ref={sectionRef} aria-labelledby="generator-heading">
+              <div
+                ref={liveRegionRef}
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+                className="visually-hidden"
+              />
               <h2 id="generator-heading" className="workout-type-section-title">
-                Generate your {page.shortLabel.toLowerCase()} workout
+                {generatorSectionTitle}
               </h2>
               <WorkoutGenerator
+                ref={generatorFormRef}
                 onGenerate={handleGenerateWorkout}
                 loading={loading}
                 error={error}
@@ -199,6 +244,7 @@ export default function WorkoutTypePage() {
                 lastPreferences={lastPreferences}
                 disabled={!canGenerate || checkingAccess}
                 initialDefaults={initialDefaults}
+                onPreferencesChange={setLatestPreferences}
               />
             </section>
 
@@ -206,6 +252,13 @@ export default function WorkoutTypePage() {
             <RelatedWorkoutTypes links={relatedLinks} />
           </div>
         </div>
+        <GeneratorStickyBar
+          visible={isFormVisible}
+          preferences={latestPreferences}
+          onSubmit={() => generatorFormRef.current?.submit()}
+          loading={loading}
+          disabled={!canGenerate || checkingAccess}
+        />
       </div>
     </>
   );

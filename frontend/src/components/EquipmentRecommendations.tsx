@@ -8,6 +8,19 @@ interface EquipmentRecommendationsProps {
 
 const DISCLOSURE = 'As an Amazon Associate, we earn from qualifying purchases.';
 
+const AMAZON_SEARCH_BASE = 'https://www.amazon.com/s?k=';
+
+/** Always returns a valid external Amazon URL (search). Never returns "#" or empty. */
+function getAmazonHref(product: AffiliateProduct): string {
+  const placeholder = (product.amazonUrlPlaceholder || '').trim();
+  if (placeholder.startsWith('https://') || placeholder.startsWith('http://')) {
+    return placeholder;
+  }
+  const query = encodeURIComponent(product.name || 'fitness equipment');
+  const url = `${AMAZON_SEARCH_BASE}${query}`;
+  return url;
+}
+
 export default function EquipmentRecommendations({
   products,
   title = 'Equipment recommendations',
@@ -31,10 +44,11 @@ export default function EquipmentRecommendations({
               <h3 className="equipment-recommendations__name">{product.name}</h3>
               <p className="equipment-recommendations__description">{product.description}</p>
               <a
-                href={product.amazonUrlPlaceholder.startsWith('http') ? product.amazonUrlPlaceholder : '#'}
+                href={getAmazonHref(product)}
                 target="_blank"
                 rel="nofollow sponsored noopener noreferrer"
                 className="equipment-recommendations__link"
+                title="Opens Amazon search in a new tab"
               >
                 View on Amazon
               </a>

@@ -1,0 +1,67 @@
+.generator-sticky-bar {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .generator-sticky-bar {
+    display: block;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: var(--bg-primary, #fff);
+    border-top: 1px solid var(--border-color, #e2e8f0);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+    padding: 0.75rem 1rem;
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  .generator-sticky-bar__inner {
+    max-width: 400px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .generator-sticky-bar__summary {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-secondary, #64748b);
+    line-height: 1.3;
+  }
+
+  .generator-sticky-bar__btn {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(to bottom, #334155, #1e293b);
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .generator-sticky-bar__btn:hover:not(:disabled) {
+    opacity: 0.95;
+  }
+
+  .generator-sticky-bar__btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+/* Reserve space so content isn't covered by sticky bar */
+.generator-sticky-bar-visible {
+  padding-bottom: 100px;
+}
+
+@media (max-width: 767px) {
+  .generator-sticky-bar-visible {
+    padding-bottom: 100px;
+  }
+}

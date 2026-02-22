@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import WorkoutDisplay from './WorkoutDisplay';
 import WorkoutProgressEmoji from './WorkoutProgressEmoji';
 import './WorkoutGenerator.css';
+
+export const FITNESS_LEVEL_INPUT_ID = 'fitnessLevel';
 
 export interface WorkoutGeneratorInitialDefaults {
   fitnessLevel?: string;
@@ -11,6 +13,20 @@ export interface WorkoutGeneratorInitialDefaults {
   equipment?: string;
   injuries?: string;
   goals?: string;
+}
+
+export interface WorkoutGeneratorPreferences {
+  fitnessLevel: string;
+  workoutType: string;
+  duration: number;
+  equipment: string;
+  injuries: string[];
+  goals: string[];
+}
+
+export interface WorkoutGeneratorHandle {
+  getPreferences: () => WorkoutGeneratorPreferences;
+  submit: () => void;
 }
 
 interface WorkoutGeneratorProps {
@@ -22,6 +38,8 @@ interface WorkoutGeneratorProps {
   disabled?: boolean;
   /** Route-based defaults applied only on first render; user changes are preserved */
   initialDefaults?: WorkoutGeneratorInitialDefaults;
+  /** Optional: called when form values change (for sticky bar summary) */
+  onPreferencesChange?: (preferences: WorkoutGeneratorPreferences) => void;
 }
 
 const DEFAULT_FITNESS = 'beginner';
@@ -29,8 +47,12 @@ const DEFAULT_TYPE = 'full-body';
 const DEFAULT_DURATION = '30';
 const DEFAULT_EQUIPMENT = 'minimal';
 
-function WorkoutGenerator({ onGenerate, loading, error, workout, lastPreferences, disabled = false, initialDefaults }: WorkoutGeneratorProps) {
+const WorkoutGenerator = forwardRef<WorkoutGeneratorHandle, WorkoutGeneratorProps>(function WorkoutGenerator(
+  { onGenerate, loading, error, workout, lastPreferences, disabled = false, initialDefaults, onPreferencesChange },
+  ref
+) {
   const { t } = useTranslation();
+  const formRef = useRef<HTMLFormElement>(null);
   const [fitnessLevel, setFitnessLevel] = useState(initialDefaults?.fitnessLevel ?? DEFAULT_FITNESS);
   const [workoutType, setWorkoutType] = useState(initialDefaults?.workoutType ?? DEFAULT_TYPE);
   const [duration, setDuration] = useState(initialDefaults?.duration ?? DEFAULT_DURATION);
@@ -38,21 +60,36 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, lastPreferences
   const [injuries, setInjuries] = useState(initialDefaults?.injuries ?? '');
   const [goals, setGoals] = useState(initialDefaults?.goals ?? '');
 
+  const getPreferences = (): WorkoutGeneratorPreferences => ({
+    fitnessLevel,
+    workoutType,
+    duration: parseInt(duration, 10),
+    equipment,
+    injuries: injuries.split(',').filter((i) => i.trim()),
+    goals: goals.split(',').filter((g) => g.trim()),
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onGenerate({
-      fitnessLevel,
-      workoutType,
-      duration: parseInt(duration),
-      equipment,
-      injuries: injuries.split(',').filter(i => i.trim()),
-      goals: goals.split(',').filter(g => g.trim()),
-    });
+    onGenerate(getPreferences());
   };
+
+  useEffect(() => {
+    onPreferencesChange?.(getPreferences());
+  }, [fitnessLevel, workoutType, duration, equipment, injuries, goals]);
+
+  useImperativeHandle(ref, () => ({
+    getPreferences,
+    submit: () => {
+      if (formRef.current && !disabled && !loading) {
+        onGenerate(getPreferences());
+      }
+    },
+  }), [fitnessLevel, workoutType, duration, equipment, injuries, goals, disabled, loading, onGenerate]);
 
   return (
     <div className="workout-generator">
-      <form onSubmit={handleSubmit} className="workout-form">
+      <form ref={formRef} onSubmit={handleSubmit} className="workout-form">
         <div className="form-grid">
           <div className="form-group">
             <label htmlFor="fitnessLevel">{t('generator.fitnessLevel')}</label>
@@ -183,7 +220,7 @@ function WorkoutGenerator({ onGenerate, loading, error, workout, lastPreferences
       )}
     </div>
   );
-}
+});
 
 export default WorkoutGenerator;
 

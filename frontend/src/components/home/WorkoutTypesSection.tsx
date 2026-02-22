@@ -3,18 +3,26 @@ import { useTranslation } from 'react-i18next';
 import { getAllPlanPages } from '../../seo/workoutPlanLibrary';
 import './WorkoutTypesSection.css';
 
+const SUBLABEL = 'Customize → Generate';
+
+function slugToGeneratorName(slug: string): string {
+  return slug
+    .split('-')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+}
+
 /**
  * Product links only — do not add company/support pages.
- * Uses workoutPlanLibrary as single source of truth for workout-generator/* routes.
- * First two cards (main generator + workout plan generator) use i18n for labels.
+ * Tiles are navigation-only; labels avoid "Generate" to reduce confusion.
  */
 function WorkoutTypesSection() {
   const { t } = useTranslation();
   const libraryPages = getAllPlanPages();
 
   const primaryLinks = [
-    { path: '/', label: t('pages.home.internalLinks.aiWorkoutGenerator'), tag: 'Popular' as const },
-    { path: '/workout-plan-generator', label: t('pages.home.internalLinks.workoutPlanGenerator'), tag: undefined as string | undefined },
+    { path: '/', label: 'Open AI Workout Generator', tag: 'Popular' as const },
+    { path: '/workout-plan-generator', label: 'Open Workout Plan Generator', tag: undefined as string | undefined },
   ];
 
   return (
@@ -29,6 +37,7 @@ function WorkoutTypesSection() {
             to={item.path}
             className="workout-types-section__card"
             role="listitem"
+            aria-label={`${item.label}. ${SUBLABEL}`}
           >
             {item.tag && (
               <span className="workout-types-section__tag" aria-hidden="true">
@@ -36,6 +45,9 @@ function WorkoutTypesSection() {
               </span>
             )}
             <span className="workout-types-section__title-text">{item.label}</span>
+            <span className="workout-types-section__sublabel" aria-hidden="true">
+              {SUBLABEL}
+            </span>
           </Link>
         ))}
         {libraryPages.map((page) => (
@@ -44,13 +56,19 @@ function WorkoutTypesSection() {
             to={page.routePath}
             className="workout-types-section__card"
             role="listitem"
+            aria-label={`Open ${slugToGeneratorName(page.slug)} Generator. ${SUBLABEL}`}
           >
             {page.tag && (
               <span className="workout-types-section__tag" aria-hidden="true">
                 {page.tag}
               </span>
             )}
-            <span className="workout-types-section__title-text">{page.shortLabel}</span>
+            <span className="workout-types-section__title-text">
+              Open {slugToGeneratorName(page.slug)} Generator
+            </span>
+            <span className="workout-types-section__sublabel" aria-hidden="true">
+              {SUBLABEL}
+            </span>
           </Link>
         ))}
       </div>

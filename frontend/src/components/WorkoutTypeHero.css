@@ -57,6 +57,23 @@
   transition: transform 0.15s, box-shadow 0.15s;
 }
 
+.workout-type-hero__cta-mobile {
+  display: inline;
+}
+
+.workout-type-hero__cta-desktop {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .workout-type-hero__cta-mobile {
+    display: none;
+  }
+  .workout-type-hero__cta-desktop {
+    display: inline;
+  }
+}
+
 .workout-type-hero__cta:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);

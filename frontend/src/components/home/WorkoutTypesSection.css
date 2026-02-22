@@ -85,6 +85,13 @@
   line-height: 1.3;
 }
 
+.workout-types-section__sublabel {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+  line-height: 1.3;
+}
+
 .workout-types-section__descriptor {
   font-size: 0.8rem;
   color: #64748b;

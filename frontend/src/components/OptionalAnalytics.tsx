@@ -81,11 +81,14 @@ export default function OptionalAnalytics() {
   return null;
 }
 
-/** Fire custom analytics events (workout_generated, cta_clicked, faq_opened, blog_scroll_50, blog_scroll_100) */
+/** Fire custom analytics events (hero_cta_clicked, generator_submitted, workout_generated, cta_clicked, faq_opened, blog_scroll_50, blog_scroll_100) */
 export function trackEvent(eventName: string, params?: Record<string, unknown>) {
   const ga4 = ((import.meta as any).env?.VITE_GA4_ID || (import.meta as any).env?.VITE_GA_ID) as string | undefined;
   if (ga4 && typeof (window as any).gtag === 'function') {
     (window as any).gtag('event', eventName, params);
+  }
+  if (typeof console !== 'undefined' && console.log) {
+    console.log('[Analytics]', eventName, params ?? {});
   }
 }
 
