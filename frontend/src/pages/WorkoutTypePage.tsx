@@ -88,7 +88,7 @@ export default function WorkoutTypePage() {
     setLoading(true);
     setError(null);
     if (liveRegionRef.current) {
-      liveRegionRef.current.textContent = 'Generating your workout…';
+      liveRegionRef.current.textContent = 'Generating workout…';
     }
     try {
       const deviceId = getDeviceId();
@@ -120,7 +120,14 @@ export default function WorkoutTypePage() {
         liveRegionRef.current.textContent = 'Workout generated';
       }
       setTimeout(() => {
-        document.getElementById('workout-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const resultsEl = document.getElementById('workout-results');
+        if (resultsEl) {
+          const rect = resultsEl.getBoundingClientRect();
+          const belowTheFold = rect.top > window.innerHeight;
+          if (belowTheFold) {
+            resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
       }, 100);
 
       if (result.tokensRemaining !== undefined) {
@@ -213,8 +220,8 @@ export default function WorkoutTypePage() {
               title={page.h1}
               subtitle={page.introParagraphs[0] ?? ''}
               benefits={page.keyBenefits}
-              ctaLabelDesktop="Start free generator"
-              ctaLabelMobile="Start generator"
+              ctaLabelDesktop="Generate Workout"
+              ctaLabelMobile="Generate Workout"
               onCtaClick={handleHeroCtaClick}
               loading={loading}
               disabled={!canGenerate || checkingAccess}

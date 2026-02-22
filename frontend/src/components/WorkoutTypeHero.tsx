@@ -5,9 +5,9 @@ interface WorkoutTypeHeroProps {
   title: string;
   subtitle: string;
   benefits: string[];
-  /** Desktop: e.g. "Start free generator" */
+  /** Desktop label, e.g. "Generate Workout" */
   ctaLabelDesktop: string;
-  /** Mobile: e.g. "Start generator" */
+  /** Mobile label, e.g. "Generate Workout" */
   ctaLabelMobile: string;
   onCtaClick: () => void;
   /** When true, show loading label and disable button (prevents double submit). */
