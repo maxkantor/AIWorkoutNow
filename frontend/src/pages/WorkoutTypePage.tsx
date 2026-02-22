@@ -5,7 +5,7 @@ import SEO from '../components/SEO';
 import Breadcrumbs from '../components/Breadcrumbs';
 import WorkoutTypeHero from '../components/WorkoutTypeHero';
 import SampleWorkout from '../components/SampleWorkout';
-import WorkoutGenerator, { FITNESS_LEVEL_INPUT_ID, type WorkoutGeneratorHandle, type WorkoutGeneratorPreferences } from '../components/WorkoutGenerator';
+import WorkoutGenerator, { type WorkoutGeneratorHandle, type WorkoutGeneratorPreferences } from '../components/WorkoutGenerator';
 import WorkoutTypeFAQ from '../components/WorkoutTypeFAQ';
 import RelatedWorkoutTypes from '../components/RelatedWorkoutTypes';
 import EquipmentRecommendations from '../components/EquipmentRecommendations';
@@ -86,6 +86,9 @@ export default function WorkoutTypePage() {
     }
     setLoading(true);
     setError(null);
+    if (liveRegionRef.current) {
+      liveRegionRef.current.textContent = 'Generating your workout…';
+    }
     try {
       const deviceId = getDeviceId();
       const latest = await checkAccessStatus(true);
@@ -112,6 +115,12 @@ export default function WorkoutTypePage() {
       );
       setLastPreferences(preferences);
       setWorkout(result);
+      if (liveRegionRef.current) {
+        liveRegionRef.current.textContent = 'Workout generated';
+      }
+      setTimeout(() => {
+        document.getElementById('workout-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
 
       if (result.tokensRemaining !== undefined) {
         if (isFreeUser) {
@@ -138,9 +147,6 @@ export default function WorkoutTypePage() {
   const trackHeroCta = (pagePath: string, generatorType: string) => {
     trackEvent('hero_cta_clicked', { page: pagePath, generatorType });
   };
-  const trackHeroCtaScrolled = (pagePath: string, generatorType: string) => {
-    trackEvent('hero_cta_scrolled', { page: pagePath, generatorType });
-  };
   const trackHeroCtaGenerated = (pagePath: string, generatorType: string) => {
     trackEvent('hero_cta_generated', { page: pagePath, generatorType });
   };
@@ -148,13 +154,10 @@ export default function WorkoutTypePage() {
   const { handleHeroCtaClick, isFormVisible } = useGeneratorCtaBehavior({
     generatorFormRef,
     sectionRef,
-    firstFocusableId: FITNESS_LEVEL_INPUT_ID,
     generatorType: type ?? '',
     pagePath: page?.routePath ?? '',
     trackHeroCta,
-    trackHeroCtaScrolled,
     trackHeroCtaGenerated,
-    liveRegionRef,
   });
 
   if (!type || !WORKOUT_PLAN_SLUGS.includes(type as any) || !page) {
@@ -200,6 +203,9 @@ export default function WorkoutTypePage() {
               ctaLabelDesktop="Start free generator"
               ctaLabelMobile="Start generator"
               onCtaClick={handleHeroCtaClick}
+              loading={loading}
+              disabled={!canGenerate || checkingAccess}
+              loadingLabel={t('generator.button.loading')}
             />
             <div className="workout-type-intro">
               {page.introParagraphs.map((para, i) => (

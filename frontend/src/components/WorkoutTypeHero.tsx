@@ -9,6 +9,12 @@ interface WorkoutTypeHeroProps {
   /** Mobile: e.g. "Start generator" */
   ctaLabelMobile: string;
   onCtaClick: () => void;
+  /** When true, show loading label and disable button (prevents double submit). */
+  loading?: boolean;
+  /** When true, disable the CTA (e.g. while checking access). */
+  disabled?: boolean;
+  /** Shown when loading (e.g. "Generating…"). */
+  loadingLabel?: string;
 }
 
 export default function WorkoutTypeHero({
@@ -18,8 +24,14 @@ export default function WorkoutTypeHero({
   ctaLabelDesktop,
   ctaLabelMobile,
   onCtaClick,
+  loading = false,
+  disabled = false,
+  loadingLabel = 'Generating…',
 }: WorkoutTypeHeroProps) {
-  const ariaLabel = ctaLabelDesktop;
+  const isDisabled = disabled || loading;
+  const ariaLabel = loading ? loadingLabel : ctaLabelDesktop;
+  const labelDesktop = loading ? loadingLabel : ctaLabelDesktop;
+  const labelMobile = loading ? loadingLabel : ctaLabelMobile;
   return (
     <header className="workout-type-hero">
       <h1 className="workout-type-hero__title">{title}</h1>
@@ -36,9 +48,11 @@ export default function WorkoutTypeHero({
         className="workout-type-hero__cta"
         onClick={onCtaClick}
         aria-label={ariaLabel}
+        disabled={isDisabled}
+        aria-busy={loading}
       >
-        <span className="workout-type-hero__cta-desktop">{ctaLabelDesktop}</span>
-        <span className="workout-type-hero__cta-mobile">{ctaLabelMobile}</span>
+        <span className="workout-type-hero__cta-desktop">{labelDesktop}</span>
+        <span className="workout-type-hero__cta-mobile">{labelMobile}</span>
       </button>
     </header>
   );

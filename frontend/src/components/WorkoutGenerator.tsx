@@ -204,9 +204,10 @@ const WorkoutGenerator = forwardRef<WorkoutGeneratorHandle, WorkoutGeneratorProp
       </form>
 
       {workout && (
-        <WorkoutDisplay
-          workout={workout}
-          preferences={
+        <div id="workout-results">
+          <WorkoutDisplay
+            workout={workout}
+            preferences={
             lastPreferences ?? {
               fitnessLevel,
               workoutType,
@@ -217,6 +218,7 @@ const WorkoutGenerator = forwardRef<WorkoutGeneratorHandle, WorkoutGeneratorProp
             }
           }
         />
+        </div>
       )}
     </div>
   );
