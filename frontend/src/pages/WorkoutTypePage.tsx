@@ -198,6 +198,9 @@ export default function WorkoutTypePage() {
     };
   });
 
+  type FAQItem = { question: string; answer: string };
+  const faqToShow = getArray<FAQItem>(t('pages.workoutPlan.faq.' + type, { returnObjects: true }), page.faq);
+
   return (
     <>
       <SEO
@@ -206,7 +209,7 @@ export default function WorkoutTypePage() {
         canonicalPath={page.routePath}
         jsonLd={[
           buildBreadcrumbListSchema(breadcrumbItems),
-          buildFAQPageSchema(page.faq),
+          buildFAQPageSchema(faqToShow),
         ]}
       />
       <div className={`about-page ${isFormVisible ? 'generator-sticky-bar-visible' : ''}`} aria-busy={loading}>
@@ -272,7 +275,7 @@ export default function WorkoutTypePage() {
               />
             </section>
 
-            <WorkoutTypeFAQ items={page.faq} title={safeT(t, 'pages.workoutPlan.sectionFaq')} />
+            <WorkoutTypeFAQ items={faqToShow} title={safeT(t, 'pages.workoutPlan.sectionFaq')} />
           </div>
         </div>
         <GeneratorStickyBar
