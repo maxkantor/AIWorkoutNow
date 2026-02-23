@@ -11,7 +11,7 @@ import WorkoutTypeFAQ from '../components/WorkoutTypeFAQ';
 import EquipmentRecommendations from '../components/EquipmentRecommendations';
 import GeneratorStickyBar from '../components/GeneratorStickyBar';
 import { buildBreadcrumbListSchema, buildFAQPageSchema } from '../seo/schema';
-import { getPlanPage, getDefaultGeneratorConfigFromLibrary, WORKOUT_PLAN_SLUGS } from '../seo/workoutPlanLibrary';
+import { getPlanPage, getDefaultGeneratorConfigFromLibrary, WORKOUT_PLAN_SLUGS, type AffiliateProduct } from '../seo/workoutPlanLibrary';
 import { getArray } from '../i18n/getArray';
 import { safeT } from '../i18n/safeT';
 import { getDeviceId, setTokenBalance as updateTokenStorage } from '../utils/storage';
@@ -187,12 +187,16 @@ export default function WorkoutTypePage() {
   const introParagraphsList = getArray<string>(t('pages.workoutPlan.plans.' + type + '.introParagraphs', { returnObjects: true }), page.introParagraphs);
   const keyBenefitsList = getArray<string>(t('pages.workoutPlan.plans.' + type + '.keyBenefits', { returnObjects: true }), page.keyBenefits);
   const tipsList = getArray<string>(t('pages.workoutPlan.tips.' + type, { returnObjects: true }), page.tips);
-  const translatedEquipment = getArray(t('pages.workoutPlan.equipment.' + type, { returnObjects: true }), []);
-  const productsToShow = page.affiliateProducts.map((p: { name: string; description: string; [k: string]: any }, i: number) => ({
-    ...p,
-    name: (translatedEquipment[i] && translatedEquipment[i].name) ? translatedEquipment[i].name : p.name,
-    description: (translatedEquipment[i] && translatedEquipment[i].description) ? translatedEquipment[i].description : p.description,
-  }));
+  type EquipmentItem = { name?: string; description?: string };
+  const translatedEquipment = getArray<EquipmentItem>(t('pages.workoutPlan.equipment.' + type, { returnObjects: true }), []);
+  const productsToShow: AffiliateProduct[] = page.affiliateProducts.map((p, i) => {
+    const tr = translatedEquipment[i];
+    return {
+      ...p,
+      name: (tr && tr.name) ? tr.name : p.name,
+      description: (tr && tr.description) ? tr.description : p.description,
+    };
+  });
 
   return (
     <>
