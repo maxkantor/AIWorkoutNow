@@ -4,63 +4,33 @@ import { getAllPlanPages } from '../../seo/workoutPlanLibrary';
 import type { PlanPageDefinition } from '../../seo/workoutPlanLibrary';
 import './WorkoutTypesSection.css';
 
-/** Goal-based label and action hint per library slug. Used for "Choose Your Goal" grid. */
-const GOAL_LABELS: Record<string, { title: string; description: string; actionHint: string }> = {
-  'weight-loss': {
-    title: 'Lose Weight',
-    description: 'Burn fat with cardio + strength workouts',
-    actionHint: 'Get plan',
-  },
-  strength: {
-    title: 'Strength Building Workouts',
-    description: 'Structured sets & progressive overload',
-    actionHint: 'Start building',
-  },
-  home: {
-    title: 'Home Workouts (No Equipment)',
-    description: 'Train anywhere',
-    actionHint: 'Get plan',
-  },
-  beginners: {
-    title: 'Beginner Workouts',
-    description: 'Safe, simple routines for new users',
-    actionHint: 'Get plan',
-  },
-  hiit: {
-    title: 'Quick Fat-Burn Workouts (20–30 min)',
-    description: 'High-intensity sessions',
-    actionHint: 'Get plan',
-  },
-  men: {
-    title: 'Workouts for Men',
-    description: 'Strength & conditioning programs',
-    actionHint: 'Get plan',
-  },
-  women: {
-    title: 'Workouts for Women',
-    description: 'Tone, strength, fat loss',
-    actionHint: 'Get plan',
-  },
-};
+const NS = 'pages.home.goalTiles';
 
 /** Single main entry tile: AI Workout Builder → hub. */
-const MAIN_GOAL_TILE = {
-  path: '/workout-plan-generator',
-  title: 'AI Workout Builder',
-  description: 'Create a fully personalized workout plan',
-  actionHint: 'Get plan',
-  tag: 'Popular' as const,
-};
+const MAIN_GOAL_PATH = '/workout-plan-generator';
+
+/** Stamina & Endurance goal card — links to /workout-plans/endurance. */
+const STAMINA_GOAL_PATH = '/workout-plans/endurance';
 
 /**
  * Goal-based product grid. Every tile navigates to a generator page.
- * Section title: "Choose Your Goal". No "Open" wording; outcome-focused labels.
+ * Section title and all tile copy come from i18n so language stays consistent.
  */
 function WorkoutTypesSection() {
   const { t } = useTranslation();
   const libraryPages = getAllPlanPages();
 
-  const mainAriaLabel = `${MAIN_GOAL_TILE.title}. ${MAIN_GOAL_TILE.description}. ${MAIN_GOAL_TILE.actionHint}`;
+  const mainTitle = t(`${NS}.main.title`);
+  const mainDesc = t(`${NS}.main.description`);
+  const mainHint = t(`${NS}.main.actionHint`);
+  const mainTag = t(`${NS}.main.tag`);
+  const mainAriaLabel = `${mainTitle}. ${mainDesc}. ${mainHint}`;
+
+  const staminaTitle = t(`${NS}.stamina.title`);
+  const staminaDesc = t(`${NS}.stamina.description`);
+  const staminaHint = t(`${NS}.stamina.actionHint`);
+  const staminaTag = t(`${NS}.stamina.tag`);
+  const staminaAriaLabel = `${staminaTitle}. ${staminaDesc}. ${staminaHint}`;
 
   return (
     <section className="workout-types-section" aria-labelledby="workout-types-heading">
@@ -69,21 +39,40 @@ function WorkoutTypesSection() {
       </h2>
       <div className="workout-types-section__grid" role="list">
         <Link
-          key={MAIN_GOAL_TILE.path}
-          to={MAIN_GOAL_TILE.path}
+          key={MAIN_GOAL_PATH}
+          to={MAIN_GOAL_PATH}
           className="workout-types-section__card"
           role="listitem"
           aria-label={mainAriaLabel}
         >
-          {MAIN_GOAL_TILE.tag && (
+          {mainTag && (
             <span className="workout-types-section__tag" aria-hidden="true">
-              {MAIN_GOAL_TILE.tag}
+              {mainTag}
             </span>
           )}
-          <span className="workout-types-section__title-text">{MAIN_GOAL_TILE.title}</span>
-          <span className="workout-types-section__descriptor">{MAIN_GOAL_TILE.description}</span>
+          <span className="workout-types-section__title-text">{mainTitle}</span>
+          <span className="workout-types-section__descriptor">{mainDesc}</span>
           <span className="workout-types-section__sublabel" aria-hidden="true">
-            {MAIN_GOAL_TILE.actionHint}
+            {mainHint}
+          </span>
+        </Link>
+        <Link
+          key={STAMINA_GOAL_PATH}
+          to={STAMINA_GOAL_PATH}
+          className="workout-types-section__card"
+          role="listitem"
+          aria-label={staminaAriaLabel}
+          title={`${staminaTitle} — ${staminaHint}`}
+        >
+          {staminaTag && (
+            <span className="workout-types-section__tag" aria-hidden="true">
+              {staminaTag}
+            </span>
+          )}
+          <span className="workout-types-section__title-text">{staminaTitle}</span>
+          <span className="workout-types-section__descriptor">{staminaDesc}</span>
+          <span className="workout-types-section__sublabel" aria-hidden="true">
+            {staminaHint}
           </span>
         </Link>
         {libraryPages.map((page) => (
@@ -95,14 +84,15 @@ function WorkoutTypesSection() {
 }
 
 function GoalTile({ page }: { page: PlanPageDefinition }) {
-  const config = GOAL_LABELS[page.slug] ?? {
-    title: page.shortLabel,
-    description: '',
-    actionHint: 'Get plan',
-  };
-  const ariaLabel = config.description
-    ? `${config.title}. ${config.description}. ${config.actionHint}`
-    : `${config.title}. ${config.actionHint}`;
+  const { t } = useTranslation();
+  const slug = page.slug;
+  const title = t(`${NS}.${slug}.title`, { defaultValue: page.shortLabel });
+  const description = t(`${NS}.${slug}.description`, { defaultValue: '' });
+  const actionHint = t(`${NS}.${slug}.actionHint`, { defaultValue: 'Get plan' });
+  const tag = t(`${NS}.${slug}.tag`, { defaultValue: page.tag ?? '' });
+  const ariaLabel = description
+    ? `${title}. ${description}. ${actionHint}`
+    : `${title}. ${actionHint}`;
 
   return (
     <Link
@@ -111,17 +101,17 @@ function GoalTile({ page }: { page: PlanPageDefinition }) {
       role="listitem"
       aria-label={ariaLabel}
     >
-      {page.tag && (
+      {tag && (
         <span className="workout-types-section__tag" aria-hidden="true">
-          {page.tag}
+          {tag}
         </span>
       )}
-      <span className="workout-types-section__title-text">{config.title}</span>
-      {config.description && (
-        <span className="workout-types-section__descriptor">{config.description}</span>
+      <span className="workout-types-section__title-text">{title}</span>
+      {description && (
+        <span className="workout-types-section__descriptor">{description}</span>
       )}
       <span className="workout-types-section__sublabel" aria-hidden="true">
-        {config.actionHint}
+        {actionHint}
       </span>
     </Link>
   );

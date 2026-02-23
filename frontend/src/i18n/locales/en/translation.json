@@ -7,7 +7,8 @@
     "zh": "ZH 🇨🇳"
   },
   "common": {
-    "language": "Language"
+    "language": "Language",
+    "home": "Home"
   },
   "hero": {
     "title": "Get Your Perfect Workout in Seconds",
@@ -96,11 +97,35 @@
       "100": "Get 100 Workouts",
       "default": "Get Started"
     },
+    "microCopy": {
+      "10": "Quick start. No commitment.",
+      "30": "Best for regular training.",
+      "100": "Train hard, pay less per workout."
+    },
     "benefits": {
-      "10": ["Instant access", "No signup", "Great for testing", "Restore workouts anytime"],
-      "30": ["Best for regular use", "No signup", "Better value per workout", "Restore workouts anytime"],
-      "100": ["Best savings", "No signup", "Long-term access", "Restore workouts anytime"],
-      "default": ["Instant access", "No signup", "Restore workouts anytime"]
+      "10": [
+        "Instant access",
+        "No signup",
+        "Great for testing",
+        "Restore workouts anytime"
+      ],
+      "30": [
+        "Best for regular use",
+        "No signup",
+        "Better value per workout",
+        "Restore workouts anytime"
+      ],
+      "100": [
+        "Best savings",
+        "No signup",
+        "Long-term access",
+        "Restore workouts anytime"
+      ],
+      "default": [
+        "Instant access",
+        "No signup",
+        "Restore workouts anytime"
+      ]
     }
   },
   "restore": {
@@ -263,6 +288,62 @@
       },
       "internalLinksTitle": "Explore workout types and tools",
       "workoutTypesSectionTitle": "Choose Your Goal",
+      "goalTiles": {
+        "main": {
+          "title": "AI Workout Builder",
+          "description": "Create a fully personalized workout plan",
+          "actionHint": "Get plan",
+          "tag": "Popular"
+        },
+        "stamina": {
+          "title": "Stamina & Endurance Workouts",
+          "description": "Improve cardiovascular fitness, energy, and workout capacity",
+          "actionHint": "Get plan",
+          "tag": "ENDURANCE"
+        },
+        "weight-loss": {
+          "title": "Lose Weight",
+          "description": "Burn fat with cardio + strength workouts",
+          "actionHint": "Get plan"
+        },
+        "strength": {
+          "title": "Strength Building Workouts",
+          "description": "Structured sets & progressive overload",
+          "actionHint": "Start building"
+        },
+        "home": {
+          "title": "Home Workouts (No Equipment)",
+          "description": "Train anywhere",
+          "actionHint": "Get plan",
+          "tag": "NO EQUIPMENT"
+        },
+        "beginners": {
+          "title": "Beginner Workouts",
+          "description": "Safe, simple routines for new users",
+          "actionHint": "Get plan"
+        },
+        "hiit": {
+          "title": "Quick Fat-Burn Workouts (20–30 min)",
+          "description": "High-intensity sessions",
+          "actionHint": "Get plan"
+        },
+        "men": {
+          "title": "Workouts for Men",
+          "description": "Strength & conditioning programs",
+          "actionHint": "Get plan"
+        },
+        "women": {
+          "title": "Workouts for Women",
+          "description": "Tone, strength, fat loss",
+          "actionHint": "Get plan"
+        },
+        "endurance": {
+          "title": "Stamina & Endurance Workouts",
+          "description": "Improve cardiovascular fitness, energy, and workout capacity",
+          "actionHint": "Get plan",
+          "tag": "ENDURANCE"
+        }
+      },
       "workoutTypes": {
         "descriptors": {
           "hiit": "Quick fat-burn (20–30 min)",
@@ -316,11 +397,26 @@
             "q": "What counts as a workout generation?",
             "a": "Each time you create a new workout plan, it uses 1 workout credit (unless you’re using free trial credits)."
           },
-          "reallyFree": { "q": "Is AIWorkoutNow really free?", "a": "Yes. You get 3 free workouts with no signup. After that you can buy more with a one-time payment." },
-          "howWorks": { "q": "How does the AI workout generator work?", "a": "You pick your fitness level, duration, equipment, and goals. Our AI creates a personalized plan in seconds." },
-          "noAccount": { "q": "Can I use this without creating an account?", "a": "Yes. You can generate workouts immediately with no account or login." },
-          "types": { "q": "What types of workouts can I generate?", "a": "Full body, upper/lower body, cardio, strength, quick fat-burn, yoga. Home or gym, any equipment level." },
-          "betterThanTrainer": { "q": "Is this better than hiring a personal trainer?", "a": "For quick at-home plans and variety, our free AI workout generator is hard to beat. For in-person coaching, a trainer is still valuable." }
+          "reallyFree": {
+            "q": "Is AIWorkoutNow really free?",
+            "a": "Yes. You get 3 free workouts with no signup. After that you can buy more with a one-time payment."
+          },
+          "howWorks": {
+            "q": "How does the AI workout generator work?",
+            "a": "You pick your fitness level, duration, equipment, and goals. Our AI creates a personalized plan in seconds."
+          },
+          "noAccount": {
+            "q": "Can I use this without creating an account?",
+            "a": "Yes. You can generate workouts immediately with no account or login."
+          },
+          "types": {
+            "q": "What types of workouts can I generate?",
+            "a": "Full body, upper/lower body, cardio, strength, quick fat-burn, yoga. Home or gym, any equipment level."
+          },
+          "betterThanTrainer": {
+            "q": "Is this better than hiring a personal trainer?",
+            "a": "For quick at-home plans and variety, our free AI workout generator is hard to beat. For in-person coaching, a trainer is still valuable."
+          }
         }
       },
       "errors": {
@@ -339,7 +435,8 @@
           "a4": "Use “Restore Workouts” and enter the email used at checkout. We’ll send a verification code.",
           "offerDesc": "3 free workouts, then one-time payment workout packs"
         }
-      }
+      },
+      "viewAllFaq": "View all FAQ →"
     },
     "faq": {
       "seo": {
@@ -347,40 +444,44 @@
         "description": "Answers about AIWorkoutNow: how the AI workout generator works, no-signup access, credits, home vs gym workouts, and safety."
       },
       "title": "FAQ",
-      "items": [
-        {
-          "q": "How does an AI workout generator work?",
-          "a": "You choose your fitness level, time, workout type, equipment, and any limitations. AIWorkoutNow generates an AI-powered workout plan in seconds based on your inputs."
+      "items": {
+        "reallyFree": {
+          "q": "Is AIWorkoutNow really free?",
+          "a": "Yes. You get 3 free workouts with no signup. After that you can buy more with a one-time payment."
         },
-        {
+        "howWorks": {
+          "q": "How does the AI workout generator work?",
+          "a": "You pick your fitness level, duration, equipment, and goals. Our AI creates a personalized plan in seconds."
+        },
+        "noAccount": {
+          "q": "Can I use this without creating an account?",
+          "a": "Yes. You can generate workouts immediately with no account or login."
+        },
+        "types": {
+          "q": "What types of workouts can I generate?",
+          "a": "Full body, upper/lower body, cardio, strength, quick fat-burn, yoga. Home or gym, any equipment level."
+        },
+        "betterThanTrainer": {
+          "q": "Is this better than hiring a personal trainer?",
+          "a": "For quick at-home plans and variety, our free AI workout generator is hard to beat. For in-person coaching, a trainer is still valuable."
+        },
+        "chatgpt": {
+          "q": "Why not just use ChatGPT?",
+          "a": "ChatGPT is great for many things — AIWorkoutNow is built specifically to generate workouts fast and consistently. No prompts needed: pick level, goal, time, equipment. Consistent workout structure (warm-up → main → cooldown). Equipment-aware plans (home vs gym). One-click variations (regenerate instantly). Credits are simple (no subscription). We love ChatGPT — this is just a focused workout generator for speed and simplicity."
+        },
+        "signup": {
           "q": "Do I need to sign up?",
-          "a": "No. You can generate workouts without creating an account."
+          "a": "No. You can generate workouts immediately—no account or login required."
         },
-        {
-          "q": "Is it good for beginners?",
-          "a": "Yes. Choose “Beginner” and your available equipment. The workout is tailored to your level so it’s approachable and safe."
+        "restore": {
+          "q": "How do I restore workouts on another device?",
+          "a": "Use \"Restore Workouts\" and enter the email used at checkout. We'll send a verification code."
         },
-        {
-          "q": "Can I use it for home workouts or gym workouts?",
-          "a": "Both. Select your equipment (or “No equipment”) and AIWorkoutNow adapts the plan for home or gym."
-        },
-        {
-          "q": "How do credits work?",
-          "a": "You can try a few workouts for free. After that, you can purchase workout credits with a one-time payment (no subscription)."
-        },
-        {
-          "q": "Can I restore workouts on another device?",
-          "a": "Yes. Use “Restore Workouts” and verify the email you used at checkout."
-        },
-        {
-          "q": "How fast is generation?",
-          "a": "Most workouts generate in seconds. If it’s busy, it can take a little longer."
-        },
-        {
-          "q": "Is this medical advice?",
-          "a": "No. Workouts are informational. If you have injuries or medical concerns, consult a professional before starting a new program."
+        "counts": {
+          "q": "What counts as a workout generation?",
+          "a": "Each time you create a new workout plan, it uses 1 workout credit (unless you're using free trial credits)."
         }
-      ]
+      }
     },
     "pricing": {
       "seo": {
@@ -389,6 +490,59 @@
       },
       "title": "Pricing",
       "intro": "Try 3 free workouts with no signup. Unlock more with a one-time payment—no subscription."
+    },
+    "workoutPlan": {
+      "sectionSampleWorkout": "Sample workout",
+      "sectionTips": "Tips for best results",
+      "sectionEquipment": "Equipment recommendations",
+      "sectionFaq": "Frequently asked questions",
+      "sectionGenerator": "Generate your {{type}} workout",
+      "slugPhrase": {
+        "women": "women",
+        "men": "men",
+        "beginners": "beginners",
+        "hiit": "HIIT",
+        "home": "home",
+        "strength": "strength",
+        "weight-loss": "weight loss",
+        "endurance": "endurance"
+      },
+      "sampleWorkout": {
+        "warmUp": "Warm-up",
+        "mainCircuit": "Main circuit",
+        "cooldown": "Cooldown",
+        "estimatedDuration": "Estimated duration: {{minutes}} minutes"
+      },
+      "tips": {
+        "women": ["Choose your real fitness level so the plan matches your ability.", "Start with 20–30 minutes if you are new to strength work.", "Use \"Minimal\" equipment for bodyweight-only options.", "Add \"toning\" or \"strength\" in goals for focused plans.", "Allow at least one rest day between full-body sessions."],
+        "men": ["Select \"Strength\" or \"HIIT\" in the generator for focused plans.", "Use 45–60 minutes if you have time for full sessions.", "Progressive overload: aim to add reps or weight over time.", "Rest 48–72 hours between heavy strength days for the same muscles.", "Add \"muscle gain\" in goals for hypertrophy-oriented sets and reps."],
+        "beginners": ["Start with 15–25 minutes and minimal equipment.", "Choose your real fitness level so the plan is safe.", "Allow at least one rest day between sessions.", "Use \"Beginner\" in the generator for simpler moves."],
+        "hiit": ["Warm up well before high-intensity intervals.", "Keep work intervals short (20–45 sec) when starting.", "Allow 48 hours between HIIT days for recovery.", "Use \"Quick fat-burn\" or \"HIIT\" in the generator."],
+        "home": ["Choose \"Minimal\" or \"Dumbbells\" in the generator for home options.", "You can do most plans with bodyweight only.", "Allow space for movement and a mat if needed.", "Rest 1–2 days between full-body sessions."],
+        "strength": ["Use 45–60 minutes for full strength sessions.", "Rest 48–72 hours between working the same muscle groups.", "Add \"strength\" or \"muscle gain\" in goals for focused plans.", "Choose equipment that matches what you have (minimal, dumbbells, full gym).", "Form and control matter more than speed."],
+        "weight-loss": ["Aim for 3–5 sessions per week combined with a healthy diet.", "Mix cardio and strength; the generator can create both.", "Start with 30 minutes if you are new; increase as you adapt.", "Use \"fat loss\" or \"weight loss\" in goals for targeted plans.", "Rest and recovery are part of long-term success."],
+        "endurance": ["Start with 20–30 minutes if you are new to endurance training.", "Use \"cardio\" or \"endurance\" in goals for focused plans.", "Keep a steady pace you can sustain; avoid going all-out too early.", "Allow at least one rest day between hard cardio sessions.", "Build volume gradually (e.g. 10% per week) to reduce injury risk."]
+      },
+      "plans": {
+        "women": { "h1": "Free AI Workout Generator for Women — No Signup", "introParagraphs": ["Our AI workout generator creates plans tailored to common goals like strength, toning, and fat loss. Whether you prefer home or gym, short or long sessions, you get a personalized plan in seconds.", "No signup is required. Try three free workouts, then unlock more with a one-time payment if you like the results. The generator adapts to your fitness level and available equipment."], "keyBenefits": ["Strength and toning focus", "Home or gym", "Flexible duration", "No signup required"] },
+        "men": { "h1": "Free AI Workout Generator for Men — No Signup", "introParagraphs": ["Get a personalized workout in seconds. Our AI creates plans for strength, muscle building, and conditioning—for home or gym. No signup required; try three free workouts first.", "Plans scale to your level and equipment. Choose from bodyweight, dumbbells, or full gym and get a structured session with warm-up, main work, and cooldown."], "keyBenefits": ["Strength and muscle focus", "Scalable intensity", "Home or gym", "No signup required"] },
+        "beginners": { "h1": "Beginner Workouts — No Signup", "introParagraphs": ["Start with safe, clear workouts. Our AI creates plans for beginners—short sessions, simple moves, and options for minimal or no equipment.", "No signup required. Try three free workouts. As you progress, increase duration or difficulty in the generator."], "keyBenefits": ["Safe and simple", "Short sessions", "Minimal equipment", "No signup required"] },
+        "hiit": { "h1": "Quick Fat-Burn Workouts (HIIT) — No Signup", "introParagraphs": ["High-intensity interval workouts in 20–30 minutes. Our AI creates HIIT-style plans for fat burn and conditioning—for home or gym.", "No signup required. Try three free workouts. Adjust duration and intensity in the generator to match your level."], "keyBenefits": ["20–30 min sessions", "Fat-burn focus", "Home or gym", "No signup required"] },
+        "home": { "h1": "Home Workouts (No Equipment) — No Signup", "introParagraphs": ["Train anywhere with bodyweight or minimal gear. Our AI creates home workout plans—no gym required.", "No signup required. Try three free workouts. Choose your equipment (minimal, dumbbells, or bands) in the generator."], "keyBenefits": ["No gym required", "Bodyweight or minimal gear", "Flexible duration", "No signup required"] },
+        "strength": { "h1": "Strength Building Workouts — No Signup", "introParagraphs": ["Build muscle and strength with structured sets and reps. Our AI creates strength plans for bodyweight, dumbbells, or full gym—tailored to your level and goals.", "No signup required. Try three free strength workouts. Plans include warm-up, main exercises with sets and reps, and cooldown. Progressive overload is built into the structure."], "keyBenefits": ["Structured sets and reps", "Progressive overload focus", "Bodyweight or weights", "Clear rest periods"] },
+        "weight-loss": { "h1": "Lose Weight — No Signup", "introParagraphs": ["Workouts designed to burn fat and support metabolism. Our AI combines cardio and strength so you get effective, time-efficient sessions. No signup—try three free weight loss workouts.", "Plans adapt to your level and equipment. You can do them at home with minimal gear or in a gym. Consistency and a healthy diet will improve results over time."], "keyBenefits": ["Fat-burning focus", "Cardio + strength mix", "Manageable duration", "Home or gym"] },
+        "endurance": { "h1": "Stamina & Endurance Workouts — No Signup", "introParagraphs": ["Build stamina and endurance with structured cardio and sustained effort. Our AI creates plans for running, cycling, circuits, or mixed cardio—tailored to your level and available time.", "No signup required. Try three free endurance workouts. Plans include warm-up, main effort blocks with duration or distance, and cooldown. Progress over weeks by increasing time or intensity."], "keyBenefits": ["Sustained effort focus", "Running, cycling, or circuits", "Clear duration and intensity", "Progressive overload"] }
+      },
+      "equipment": {
+        "women": [{"name": "Resistance Bands Set", "description": "Versatile for glutes, arms, and legs. Easy to store and travel."}, {"name": "Yoga Mat", "description": "Non-slip surface for floor work and stretching."}],
+        "men": [{"name": "Adjustable Dumbbells", "description": "Space-saving weights for strength and muscle at home."}, {"name": "Pull-Up Bar", "description": "For back and grip strength. Doorway or wall mount."}],
+        "beginners": [{"name": "Resistance Bands", "description": "Low-impact option for building strength at home."}, {"name": "Yoga Mat", "description": "Comfortable surface for floor exercises and stretching."}],
+        "hiit": [{"name": "Fitness Tracker", "description": "Track heart rate and intervals during HIIT."}, {"name": "Resistance Bands", "description": "Add resistance to bodyweight HIIT moves."}],
+        "home": [{"name": "Resistance Bands Set", "description": "Versatile for home strength and mobility."}, {"name": "Yoga Mat", "description": "For floor work and stretching."}],
+        "strength": [{"name": "Dumbbell Set", "description": "Versatile weights for strength at home or gym."}, {"name": "Resistance Bands", "description": "For activation, rows, and leg work."}],
+        "weight-loss": [{"name": "Fitness Tracker", "description": "Track heart rate and activity to support your goals."}],
+        "endurance": [{"name": "Fitness Tracker", "description": "Track heart rate and pace for endurance training."}, {"name": "Resistance Bands", "description": "For warm-up and accessory work."}]
+      }
     },
     "workoutPlans": {
       "seo": {
@@ -444,11 +598,26 @@
       "howBody": "Our AI-powered platform uses advanced algorithms to generate personalized workout plans based on your fitness level, goals, available equipment, and any injuries or limitations. Simply input your preferences, and get a complete workout plan in seconds - no signup required for your first workout.",
       "whyTitle": "Why Choose AIWorkoutNow?",
       "whyBullets": [
-        { "strong": "No Signup Required:", "text": "Try our free workout generator instantly" },
-        { "strong": "Personalized Plans:", "text": "Every workout is tailored to your needs" },
-        { "strong": "Flexible Pricing:", "text": "Pay for what you use with token packs" },
-        { "strong": "Offline Access:", "text": "Save workouts and access them anytime" },
-        { "strong": "Privacy First:", "text": "We respect your data and privacy" }
+        {
+          "strong": "No Signup Required:",
+          "text": "Try our free workout generator instantly"
+        },
+        {
+          "strong": "Personalized Plans:",
+          "text": "Every workout is tailored to your needs"
+        },
+        {
+          "strong": "Flexible Pricing:",
+          "text": "Pay for what you use with token packs"
+        },
+        {
+          "strong": "Offline Access:",
+          "text": "Save workouts and access them anytime"
+        },
+        {
+          "strong": "Privacy First:",
+          "text": "We respect your data and privacy"
+        }
       ],
       "contactTitle": "Contact Us",
       "contactBody": "Have questions or feedback? We'd love to hear from you. Visit our contact page to get in touch.",

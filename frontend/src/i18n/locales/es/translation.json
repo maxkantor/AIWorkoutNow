@@ -7,7 +7,8 @@
     "zh": "ZH 🇨🇳"
   },
   "common": {
-    "language": "Idioma"
+    "language": "Idioma",
+    "home": "Inicio"
   },
   "hero": {
     "title": "Obtén tu entrenamiento perfecto en segundos",
@@ -96,11 +97,35 @@
       "100": "Obtener 100 entrenamientos",
       "default": "Comenzar"
     },
+    "microCopy": {
+      "10": "Empieza rápido. Sin compromiso.",
+      "30": "Ideal para entrenar con regularidad.",
+      "100": "Entrena más, paga menos por entrenamiento."
+    },
     "benefits": {
-      "10": ["Acceso instantáneo", "Sin registro", "Ideal para probar", "Restaura entrenamientos en cualquier momento"],
-      "30": ["Ideal para uso regular", "Sin registro", "Mejor valor por entrenamiento", "Restaura entrenamientos en cualquier momento"],
-      "100": ["Mejores ahorros", "Sin registro", "Acceso a largo plazo", "Restaura entrenamientos en cualquier momento"],
-      "default": ["Acceso instantáneo", "Sin registro", "Restaura entrenamientos en cualquier momento"]
+      "10": [
+        "Acceso instantáneo",
+        "Sin registro",
+        "Ideal para probar",
+        "Restaura entrenamientos en cualquier momento"
+      ],
+      "30": [
+        "Ideal para uso regular",
+        "Sin registro",
+        "Mejor valor por entrenamiento",
+        "Restaura entrenamientos en cualquier momento"
+      ],
+      "100": [
+        "Mejores ahorros",
+        "Sin registro",
+        "Acceso a largo plazo",
+        "Restaura entrenamientos en cualquier momento"
+      ],
+      "default": [
+        "Acceso instantáneo",
+        "Sin registro",
+        "Restaura entrenamientos en cualquier momento"
+      ]
     }
   },
   "restore": {
@@ -167,6 +192,7 @@
   },
   "footer": {
     "tagline": "Tu compañero de fitness con IA. Obtén entrenamientos personalizados al instante.",
+    "brandTagline": "Sin registro. Pago único.",
     "legal": "Legal",
     "support": "Soporte",
     "links": {
@@ -175,10 +201,11 @@
       "about": "Sobre nosotros",
       "contact": "Contacto",
       "faq": "Preguntas frecuentes",
-      "platform": "Platform"
+      "platform": "Plataforma"
     },
     "copyright": "© {{year}} AIWorkoutNow. Todos los derechos reservados.",
-    "amazonDisclosure": "Como Asociado de Amazon, ganamos con las compras que califican."
+    "amazonDisclosure": "Como Asociado de Amazon, ganamos con las compras que califican.",
+    "engineeredBy": "Desarrollado por MK AI & Performance Systems"
   },
   "pages": {
     "home": {
@@ -186,7 +213,12 @@
         "title": "Generador de entrenamientos con IA (sin registro) | Pago único",
         "description": "Genera un plan de entrenamiento personalizado al instante—sin registro. Prueba 3 entrenamientos gratis y luego desbloquea más con un pago único. En casa o gimnasio, según tu equipo y objetivos."
       },
+      "heroH1": "Generador de entrenamientos con IA — Sin registro",
       "h1Sr": "Generador de entrenamientos con IA — Obtén tu entrenamiento perfecto en segundos",
+      "h2HowItWorks": "Cómo funciona",
+      "h2WhyAI": "Por qué usar IA para entrenamientos",
+      "h2WhoFor": "Para quién es",
+      "firstParagraph": "Usa nuestro generador de entrenamientos con IA para obtener un plan personalizado en segundos. Sin registro: elige tu nivel, tiempo y equipo. Prueba 3 entrenamientos gratis y luego desbloquea más con un pago único.",
       "whyTitle": "¿Por qué elegir AIWorkoutNow?",
       "whyCards": [
         {
@@ -212,6 +244,12 @@
         "restoreTitle": "Restaurar entrenamientos",
         "restoreBody": "Ingresa el correo que usaste al comprar para restaurar tus créditos.",
         "button": "Restaurar entrenamientos"
+      },
+      "trustBar": {
+        "noSignup": "Sin registro",
+        "instantPlan": "Plan al instante",
+        "anyDevice": "Funciona en cualquier dispositivo",
+        "builtUSA": "Hecho en EE. UU."
       },
       "trustBadges": {
         "securePayment": "Pago seguro",
@@ -287,6 +325,64 @@
           "a4": "Usa “Restaurar entrenamientos” e ingresa el correo usado en el pago. Te enviaremos un código.",
           "offerDesc": "3 entrenamientos gratis y luego paquetes con pago único"
         }
+      },
+      "viewAllFaq": "Ver todas las FAQ →",
+      "workoutTypesSectionTitle": "Elige tu objetivo",
+      "goalTiles": {
+        "main": {
+          "title": "Generador de entrenamientos con IA",
+          "description": "Crea un plan totalmente personalizado",
+          "actionHint": "Obtener plan",
+          "tag": "Popular"
+        },
+        "stamina": {
+          "title": "Entrenamientos de resistencia",
+          "description": "Mejora tu cardio, energía y capacidad de entrenamiento",
+          "actionHint": "Obtener plan",
+          "tag": "RESISTENCIA"
+        },
+        "weight-loss": {
+          "title": "Perder peso",
+          "description": "Quema grasa con cardio y fuerza",
+          "actionHint": "Obtener plan"
+        },
+        "strength": {
+          "title": "Entrenamientos de fuerza",
+          "description": "Series estructuradas y sobrecarga progresiva",
+          "actionHint": "Empezar"
+        },
+        "home": {
+          "title": "Entrenamientos en casa (sin equipo)",
+          "description": "Entrena donde quieras",
+          "actionHint": "Obtener plan",
+          "tag": "SIN EQUIPO"
+        },
+        "beginners": {
+          "title": "Entrenamientos para principiantes",
+          "description": "Rutinas seguras y sencillas",
+          "actionHint": "Obtener plan"
+        },
+        "hiit": {
+          "title": "Quema grasa rápida (20–30 min)",
+          "description": "Sesiones de alta intensidad",
+          "actionHint": "Obtener plan"
+        },
+        "men": {
+          "title": "Entrenamientos para hombres",
+          "description": "Fuerza y acondicionamiento",
+          "actionHint": "Obtener plan"
+        },
+        "women": {
+          "title": "Entrenamientos para mujeres",
+          "description": "Tono, fuerza, pérdida de grasa",
+          "actionHint": "Obtener plan"
+        },
+        "endurance": {
+          "title": "Entrenamientos de resistencia",
+          "description": "Mejora tu cardio, energía y capacidad",
+          "actionHint": "Obtener plan",
+          "tag": "RESISTENCIA"
+        }
       }
     },
     "faq": {
@@ -295,19 +391,44 @@
         "description": "Respuestas sobre AIWorkoutNow: cómo funciona el generador, acceso sin registro, créditos, casa vs gimnasio y seguridad."
       },
       "title": "Preguntas frecuentes",
-      "items": [
-        {
-          "q": "¿Cómo funciona un generador de entrenamientos con IA?",
-          "a": "Eliges tu nivel, tiempo, tipo, equipo y limitaciones. AIWorkoutNow genera un plan con IA en segundos según tus datos."
+      "items": {
+        "reallyFree": {
+          "q": "¿AIWorkoutNow es realmente gratis?",
+          "a": "Sí. Tienes 3 entrenamientos gratis sin registro. Luego puedes comprar más con un pago único."
         },
-        { "q": "¿Necesito registrarme?", "a": "No. Puedes generar entrenamientos sin crear una cuenta." },
-        { "q": "¿Sirve para principiantes?", "a": "Sí. Elige “Principiante” y tu equipo. Se adapta a tu nivel para que sea accesible y seguro." },
-        { "q": "¿Puedo usarlo para entrenar en casa o en el gimnasio?", "a": "Ambos. Selecciona tu equipo (o “Sin equipo”) y AIWorkoutNow adapta el plan." },
-        { "q": "¿Cómo funcionan los créditos?", "a": "Puedes probar algunos entrenamientos gratis. Luego puedes comprar créditos con un pago único (sin suscripción)." },
-        { "q": "¿Puedo restaurar entrenamientos en otro dispositivo?", "a": "Sí. Usa “Restaurar entrenamientos” y verifica el correo que usaste al pagar." },
-        { "q": "¿Qué tan rápido se genera?", "a": "La mayoría se generan en segundos. Si hay mucha demanda, puede tardar un poco más." },
-        { "q": "¿Esto es consejo médico?", "a": "No. Los entrenamientos son informativos. Si tienes lesiones o dudas médicas, consulta a un profesional." }
-      ]
+        "howWorks": {
+          "q": "¿Cómo funciona el generador de entrenamientos con IA?",
+          "a": "Eliges nivel, duración, equipo y objetivos. Nuestra IA crea un plan personalizado en segundos."
+        },
+        "noAccount": {
+          "q": "¿Puedo usarlo sin crear cuenta?",
+          "a": "Sí. Puedes generar entrenamientos al instante, sin cuenta ni inicio de sesión."
+        },
+        "types": {
+          "q": "¿Qué tipos de entrenamientos puedo generar?",
+          "a": "Cuerpo completo, tren superior/inferior, cardio, fuerza, quema rápida, yoga. Casa o gimnasio, cualquier equipo."
+        },
+        "betterThanTrainer": {
+          "q": "¿Es mejor que contratar un entrenador?",
+          "a": "Para planes rápidos en casa y variedad, nuestro generador gratis es difícil de superar. Para coaching en persona, un entrenador sigue siendo valioso."
+        },
+        "chatgpt": {
+          "q": "¿Por qué no usar solo ChatGPT?",
+          "a": "ChatGPT es genial para muchas cosas; AIWorkoutNow está hecho para generar entrenamientos rápido y consistente. Sin prompts: elige nivel, objetivo, tiempo, equipo. Estructura consistente (calentamiento → principal → vuelta a la calma). Planes según equipo (casa vs gimnasio). Variaciones en un clic. Créditos simples (sin suscripción). Nos encanta ChatGPT — esto es un generador enfocado en velocidad y simplicidad."
+        },
+        "signup": {
+          "q": "¿Necesito registrarme?",
+          "a": "No. Puedes generar entrenamientos al instante, sin cuenta ni inicio de sesión."
+        },
+        "restore": {
+          "q": "¿Cómo restauro entrenamientos en otro dispositivo?",
+          "a": "Usa \"Restaurar entrenamientos\" e ingresa el correo usado en la compra. Enviaremos un código de verificación."
+        },
+        "counts": {
+          "q": "¿Qué cuenta como una generación?",
+          "a": "Cada vez que creas un nuevo plan se usa 1 crédito (salvo que uses créditos de prueba gratis)."
+        }
+      }
     },
     "workoutPlans": {
       "seo": {
@@ -363,11 +484,26 @@
       "howBody": "Nuestra plataforma con IA genera planes personalizados según tu nivel, objetivos, equipo disponible y lesiones o limitaciones. Solo ingresa tus preferencias y obtén un plan completo en segundos — sin registro para tu primer entrenamiento.",
       "whyTitle": "¿Por qué elegir AIWorkoutNow?",
       "whyBullets": [
-        { "strong": "Sin registro:", "text": "Prueba el generador gratis al instante" },
-        { "strong": "Planes personalizados:", "text": "Cada entrenamiento se adapta a ti" },
-        { "strong": "Precio flexible:", "text": "Paga solo lo que uses" },
-        { "strong": "Acceso sin conexión:", "text": "Guarda entrenamientos y accede cuando quieras" },
-        { "strong": "Privacidad primero:", "text": "Respetamos tus datos" }
+        {
+          "strong": "Sin registro:",
+          "text": "Prueba el generador gratis al instante"
+        },
+        {
+          "strong": "Planes personalizados:",
+          "text": "Cada entrenamiento se adapta a ti"
+        },
+        {
+          "strong": "Precio flexible:",
+          "text": "Paga solo lo que uses"
+        },
+        {
+          "strong": "Acceso sin conexión:",
+          "text": "Guarda entrenamientos y accede cuando quieras"
+        },
+        {
+          "strong": "Privacidad primero:",
+          "text": "Respetamos tus datos"
+        }
       ],
       "contactTitle": "Contacto",
       "contactBody": "¿Tienes preguntas o comentarios? Nos encantaría escucharte. Visita nuestra página de contacto para comunicarte.",
@@ -470,7 +606,10 @@
       }
     },
     "paymentSuccess": {
-      "seo": { "title": "Pago exitoso | AIWorkoutNow", "description": "Pago exitoso." },
+      "seo": {
+        "title": "Pago exitoso | AIWorkoutNow",
+        "description": "Pago exitoso."
+      },
       "title": "¡Pago exitoso!",
       "message": "Gracias por tu compra. Tu cuenta ha sido actualizada.",
       "verifying": "Verificando el pago y otorgando créditos...",
@@ -483,12 +622,38 @@
       "backToHome": "← Volver al inicio"
     },
     "paymentCancel": {
-      "seo": { "title": "Pago cancelado | AIWorkoutNow", "description": "Pago cancelado." },
+      "seo": {
+        "title": "Pago cancelado | AIWorkoutNow",
+        "description": "Pago cancelado."
+      },
       "title": "Pago cancelado",
       "message": "Tu pago no se completó. No se realizó ningún cargo.",
       "submessage": "Puedes intentarlo de nuevo cuando quieras. ¡Tus 3 entrenamientos gratis siguen disponibles!",
       "tryAgain": "Intentar de nuevo",
       "goHome": "Ir al inicio"
+    },
+    "workoutPlan": {
+      "sectionSampleWorkout": "Ejemplo de entrenamiento",
+      "sectionTips": "Consejos para mejores resultados",
+      "sectionEquipment": "Equipo recomendado",
+      "sectionFaq": "Preguntas frecuentes",
+      "sectionGenerator": "Genera tu entrenamiento {{type}}",
+      "slugPhrase": {
+        "women": "mujeres",
+        "men": "hombres",
+        "beginners": "principiantes",
+        "hiit": "HIIT",
+        "home": "en casa",
+        "strength": "fuerza",
+        "weight-loss": "pérdida de peso",
+        "endurance": "resistencia"
+      },
+      "sampleWorkout": {
+        "warmUp": "Calentamiento",
+        "mainCircuit": "Circuito principal",
+        "cooldown": "Vuelta a la calma",
+        "estimatedDuration": "Duración estimada: {{minutes}} min"
+      }
     }
   }
 }

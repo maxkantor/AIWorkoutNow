@@ -127,6 +127,7 @@ function App() {
           <Route path="/workout-plan-generator" element={<WorkoutPlanGeneratorPage />} />
           <Route path="/workout-generator/:type" element={<WorkoutTypePage />} />
           <Route path="/workout-plans" element={<WorkoutPlansHub />} />
+          <Route path="/workout-plans/endurance" element={<WorkoutTypePage />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/faq" element={<Faq />} />
           <Route path="/about" element={<About />} />

@@ -13,7 +13,7 @@ import { getArray } from '../i18n/getArray';
 import { safeT } from '../i18n/safeT';
 import { buildFAQPageSchema } from '../seo/schema';
 import FAQAccordion from '../components/FAQAccordion';
-import { FAQ, FAQ_HOME_COUNT } from '../data/faq';
+import { FAQ_IDS, FAQ_HOME_COUNT } from '../data/faq';
 import WorkoutTypesSection from '../components/home/WorkoutTypesSection';
 import GenerationLoadingModal from '../components/GenerationLoadingModal';
 import './Home.css';
@@ -35,7 +35,10 @@ function Home() {
 
   // SEO: keep title ~50–60 chars and description ~140–160 chars
   const seoDescription = t('pages.home.seo.description');
-  const homeFaqItems = FAQ.slice(0, FAQ_HOME_COUNT).map(({ question, answer }) => ({ question, answer }));
+  const homeFaqItems = FAQ_IDS.slice(0, FAQ_HOME_COUNT).map((id) => ({
+    question: safeT(t, `pages.faq.items.${id}.q`),
+    answer: safeT(t, `pages.faq.items.${id}.a`),
+  }));
 
   useEffect(() => {
     checkAccessStatus();
@@ -414,7 +417,7 @@ function Home() {
             />
             <p className="mt-4 text-center">
               <Link to="/faq" className="text-blue-600 hover:underline font-medium">
-                View all FAQ →
+                {safeT(t, 'pages.home.viewAllFaq')}
               </Link>
             </p>
           </section>

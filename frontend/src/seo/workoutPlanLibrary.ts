@@ -64,6 +64,7 @@ export const WORKOUT_PLAN_SLUGS = [
   'home',
   'strength',
   'weight-loss',
+  'endurance',
 ] as const;
 
 export type WorkoutPlanSlug = (typeof WORKOUT_PLAN_SLUGS)[number];
@@ -523,6 +524,73 @@ export const WORKOUT_PLAN_LIBRARY: Record<string, PlanPageDefinition> = {
         description: 'Track heart rate and activity to support your goals.',
         amazonUrlPlaceholder: '__AMAZON_LINK_FITNESS_TRACKER__',
         category: 'Accessories',
+      },
+    ],
+  },
+
+  endurance: {
+    slug: 'endurance',
+    routePath: '/workout-plans/endurance',
+    shortLabel: 'Stamina & Endurance',
+    title: 'Stamina & Endurance Workouts — Free AI Plans, No Signup | AIWorkoutNow',
+    metaDescription:
+      'Generate stamina and endurance workouts in seconds. Free AI workout generator for running, cycling, and cardio fitness. No signup.',
+    h1: 'Stamina & Endurance Workouts — No Signup',
+    introParagraphs: [
+      'Build stamina and endurance with structured cardio and sustained effort. Our AI creates plans for running, cycling, circuits, or mixed cardio—tailored to your level and available time.',
+      'No signup required. Try three free endurance workouts. Plans include warm-up, main effort blocks with duration or distance, and cooldown. Progress over weeks by increasing time or intensity.',
+    ],
+    keyBenefits: [
+      'Sustained effort focus',
+      'Running, cycling, or circuits',
+      'Clear duration and intensity',
+      'Progressive overload',
+    ],
+    sampleWorkout: {
+      warmUp: ['5 min easy walk or light jog', 'Dynamic leg swings', 'Hip circles'],
+      mainCircuit: [
+        { name: 'Easy run or jog', duration: '5 min' },
+        { name: 'Tempo effort', duration: '3 min', notes: 'Moderate pace' },
+        { name: 'Recovery walk or jog', duration: '2 min' },
+        { name: 'Repeat 3 times', duration: undefined, notes: undefined },
+        { name: 'Cool-down jog', duration: '3 min' },
+      ],
+      cooldown: ['3 min walk', 'Calf and quad stretch'],
+      estimatedMinutes: 35,
+    },
+    tips: [
+      'Start with 20–30 minutes if you are new to endurance training.',
+      'Use "cardio" or "endurance" in goals for focused plans.',
+      'Keep a steady pace you can sustain; avoid going all-out too early.',
+      'Allow at least one rest day between hard cardio sessions.',
+      'Build volume gradually (e.g. 10% per week) to reduce injury risk.',
+    ],
+    faq: [
+      { question: 'Is the endurance workout generator free?', answer: 'Yes. 3 free endurance workouts with no signup. Then one-time payment to unlock more.' },
+      { question: 'Can I use it for running or cycling?', answer: 'Yes. The generator can create running, cycling, or general cardio plans with duration and intensity.' },
+      { question: 'How long should endurance workouts be?', answer: 'Our AI typically suggests 20–45 minutes depending on your level and goals. You can adjust duration in the generator.' },
+      { question: 'How often should I do endurance workouts?', answer: '2–4 times per week. Mix with strength or rest days to recover and avoid overtraining.' },
+    ],
+    relatedSlugs: ['hiit', 'weight-loss', 'beginners', 'home', 'strength'],
+    defaultGeneratorConfig: {
+      workoutType: 'cardio',
+      duration: '30',
+      equipment: 'minimal',
+      fitnessLevel: 'beginner',
+      goals: 'endurance, stamina, cardio',
+    },
+    affiliateProducts: [
+      {
+        name: 'Fitness Tracker',
+        description: 'Track heart rate and pace for endurance training.',
+        amazonUrlPlaceholder: '__AMAZON_LINK_FITNESS_TRACKER__',
+        category: 'Accessories',
+      },
+      {
+        name: 'Resistance Bands',
+        description: 'For warm-up and accessory work.',
+        amazonUrlPlaceholder: '__AMAZON_LINK_RESISTANCE_BANDS__',
+        category: 'Equipment',
       },
     ],
   },

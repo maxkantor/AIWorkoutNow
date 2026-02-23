@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { AffiliateProduct } from '../seo/workoutPlanLibrary';
 import './EquipmentRecommendations.css';
 
@@ -5,8 +6,6 @@ interface EquipmentRecommendationsProps {
   products: AffiliateProduct[];
   title?: string;
 }
-
-const DISCLOSURE = 'As an Amazon Associate, we earn from qualifying purchases.';
 
 const AMAZON_SEARCH_BASE = 'https://www.amazon.com/s?k=';
 
@@ -23,14 +22,18 @@ function getAmazonHref(product: AffiliateProduct): string {
 
 export default function EquipmentRecommendations({
   products,
-  title = 'Equipment recommendations',
+  title,
 }: EquipmentRecommendationsProps) {
+  const { t } = useTranslation();
   if (!products || products.length === 0) return null;
+  const sectionTitle = title ?? t('pages.workoutPlan.sectionEquipment', { defaultValue: 'Equipment recommendations' });
+  const viewOnAmazon = t('products.button', { defaultValue: 'View on Amazon' });
+  const disclosure = t('products.disclaimer', { defaultValue: 'As an Amazon Associate, we earn from qualifying purchases.' });
 
   return (
     <section className="equipment-recommendations" aria-labelledby="equipment-recommendations-heading">
       <h2 id="equipment-recommendations-heading" className="equipment-recommendations__title">
-        {title}
+        {sectionTitle}
       </h2>
       <ul className="equipment-recommendations__list">
         {products.map((product, i) => (
@@ -48,15 +51,15 @@ export default function EquipmentRecommendations({
                 target="_blank"
                 rel="nofollow sponsored noopener noreferrer"
                 className="equipment-recommendations__link"
-                title="Opens Amazon search in a new tab"
+                title={t('products.ariaViewOnAmazon', { title: product.name, defaultValue: 'Opens Amazon search in a new tab' })}
               >
-                View on Amazon
+                {viewOnAmazon}
               </a>
             </div>
           </li>
         ))}
       </ul>
-      <p className="equipment-recommendations__disclosure">{DISCLOSURE}</p>
+      <p className="equipment-recommendations__disclosure">{disclosure}</p>
     </section>
   );
 }

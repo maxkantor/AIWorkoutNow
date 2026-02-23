@@ -3,15 +3,18 @@ import { useTranslation } from 'react-i18next';
 import Breadcrumbs from '../components/Breadcrumbs';
 import { buildBreadcrumbListSchema, buildFAQPageSchema } from '../seo/schema';
 import FAQAccordion from '../components/FAQAccordion';
-import { FAQ } from '../data/faq';
+import { FAQ_IDS } from '../data/faq';
+import { safeT } from '../i18n/safeT';
 import './About.css';
-
-const faqItems = FAQ.map(({ question, answer }) => ({ question, answer }));
 
 function Faq() {
   const { t } = useTranslation();
+  const faqItems = FAQ_IDS.map((id) => ({
+    question: safeT(t, `pages.faq.items.${id}.q`),
+    answer: safeT(t, `pages.faq.items.${id}.a`),
+  }));
   const breadcrumbs = [
-    { name: 'Home', path: '/' },
+    { name: safeT(t, 'common.home'), path: '/' },
     { name: t('pages.faq.title'), path: '/faq' },
   ];
 

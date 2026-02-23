@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, useLocation, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SEO from '../components/SEO';
 import Breadcrumbs from '../components/Breadcrumbs';
@@ -12,6 +12,8 @@ import EquipmentRecommendations from '../components/EquipmentRecommendations';
 import GeneratorStickyBar from '../components/GeneratorStickyBar';
 import { buildBreadcrumbListSchema, buildFAQPageSchema } from '../seo/schema';
 import { getPlanPage, getDefaultGeneratorConfigFromLibrary, WORKOUT_PLAN_SLUGS } from '../seo/workoutPlanLibrary';
+import { getArray } from '../i18n/getArray';
+import { safeT } from '../i18n/safeT';
 import { getDeviceId, setTokenBalance as updateTokenStorage } from '../utils/storage';
 import { generateWorkout, getFreeWorkoutsRemaining, getUserAccessStatus, UserAccessStatus } from '../services/api';
 import { useGeneratorCtaBehavior } from '../hooks/useGeneratorCtaBehavior';
@@ -21,7 +23,9 @@ import './About.css';
 const GENERATOR_SECTION_ID = 'workout-generator';
 
 export default function WorkoutTypePage() {
-  const { type } = useParams<{ type: string }>();
+  const { type: paramType } = useParams<{ type: string }>();
+  const location = useLocation();
+  const type = location.pathname === '/workout-plans/endurance' ? 'endurance' : paramType;
   const { t, i18n } = useTranslation();
   const sectionRef = useRef<HTMLElement | null>(null);
   const generatorFormRef = useRef<WorkoutGeneratorHandle>(null);
@@ -172,14 +176,23 @@ export default function WorkoutTypePage() {
   }
 
   const breadcrumbItems = [
-    { name: 'Home', path: '/' },
-    { name: page.shortLabel, path: page.routePath },
+    { name: safeT(t, 'common.home'), path: '/' },
+    { name: safeT(t, 'pages.home.goalTiles.' + type + '.title') || page.shortLabel, path: page.routePath },
   ];
 
-  const slugPhrase = page.slug.replace(/-/g, ' ');
-  const generatorSectionTitle = slugPhrase
-    ? `Generate your ${slugPhrase} workout`
-    : 'Generate your workout';
+  const slugPhrase = t('pages.workoutPlan.slugPhrase.' + type, { defaultValue: page.slug.replace(/-/g, ' ') });
+  const generatorSectionTitle = t('pages.workoutPlan.sectionGenerator', { type: slugPhrase, defaultValue: 'Generate your ' + page.slug.replace(/-/g, ' ') + ' workout' });
+
+  const heroH1 = safeT(t, 'pages.workoutPlan.plans.' + type + '.h1') || page.h1;
+  const introParagraphsList = getArray<string>(t('pages.workoutPlan.plans.' + type + '.introParagraphs', { returnObjects: true }), page.introParagraphs);
+  const keyBenefitsList = getArray<string>(t('pages.workoutPlan.plans.' + type + '.keyBenefits', { returnObjects: true }), page.keyBenefits);
+  const tipsList = getArray<string>(t('pages.workoutPlan.tips.' + type, { returnObjects: true }), page.tips);
+  const translatedEquipment = getArray(t('pages.workoutPlan.equipment.' + type, { returnObjects: true }), []);
+  const productsToShow = page.affiliateProducts.map((p: { name: string; description: string; [k: string]: any }, i: number) => ({
+    ...p,
+    name: (translatedEquipment[i] && translatedEquipment[i].name) ? translatedEquipment[i].name : p.name,
+    description: (translatedEquipment[i] && translatedEquipment[i].description) ? translatedEquipment[i].description : p.description,
+  }));
 
   return (
     <>
@@ -198,38 +211,38 @@ export default function WorkoutTypePage() {
           <Breadcrumbs items={breadcrumbItems} className="mb-4" />
           <div className="content-card">
             <WorkoutTypeHero
-              title={page.h1}
-              subtitle={page.introParagraphs[0] ?? ''}
-              benefits={page.keyBenefits}
-              ctaLabelDesktop="Generate Workout"
-              ctaLabelMobile="Generate Workout"
+              title={heroH1}
+              subtitle={introParagraphsList[0] ?? ''}
+              benefits={keyBenefitsList}
+              ctaLabelDesktop={safeT(t, 'generator.button.default')}
+              ctaLabelMobile={safeT(t, 'generator.button.default')}
               onCtaClick={handleHeroCtaClick}
               loading={loading}
               disabled={!canGenerate || checkingAccess}
               loadingLabel={t('generator.button.loading')}
             />
             <div className="workout-type-intro">
-              {page.introParagraphs.map((para, i) => (
+              {introParagraphsList.map((para, i) => (
                 <p key={i}>{para}</p>
               ))}
             </div>
 
-            <SampleWorkout data={page.sampleWorkout} title="Sample workout" />
+            <SampleWorkout data={page.sampleWorkout} title={safeT(t, 'pages.workoutPlan.sectionSampleWorkout')} />
 
-            {page.tips.length > 0 && (
+            {tipsList.length > 0 && (
               <section className="workout-type-tips" aria-labelledby="workout-type-tips-heading">
                 <h2 id="workout-type-tips-heading" className="workout-type-section-title">
-                  Tips for best results
+                  {safeT(t, 'pages.workoutPlan.sectionTips')}
                 </h2>
                 <ul className="workout-type-tips-list">
-                  {page.tips.map((tip, i) => (
+                  {tipsList.map((tip, i) => (
                     <li key={i}>{tip}</li>
                   ))}
                 </ul>
               </section>
             )}
 
-            <EquipmentRecommendations products={page.affiliateProducts} title="Equipment recommendations" />
+            <EquipmentRecommendations products={productsToShow} title={safeT(t, 'pages.workoutPlan.sectionEquipment')} />
 
             <section id={GENERATOR_SECTION_ID} ref={sectionRef} aria-labelledby="generator-heading">
               <div
@@ -255,7 +268,7 @@ export default function WorkoutTypePage() {
               />
             </section>
 
-            <WorkoutTypeFAQ items={page.faq} />
+            <WorkoutTypeFAQ items={page.faq} title={safeT(t, 'pages.workoutPlan.sectionFaq')} />
           </div>
         </div>
         <GeneratorStickyBar

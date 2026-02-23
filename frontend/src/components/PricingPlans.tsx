@@ -212,10 +212,10 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
                 ))}
               </ul>
 
-              {/* Micro Copy - Simplified */}
-              {plan.microCopy && (
+              {/* Micro Copy - i18n when key exists, else API value */}
+              {(plan.tokenCount ? t('pricing.microCopy.' + plan.tokenCount, { defaultValue: plan.microCopy ?? '' }) : plan.microCopy) && (
                 <p className="text-sm text-slate-600 text-center mb-5 font-medium">
-                  {plan.microCopy}
+                  {plan.tokenCount ? t('pricing.microCopy.' + plan.tokenCount, { defaultValue: plan.microCopy ?? '' }) : plan.microCopy}
                 </p>
               )}
 
