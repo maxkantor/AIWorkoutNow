@@ -329,59 +329,53 @@
       "viewAllFaq": "查看全部常见问题 →",
       "workoutTypesSectionTitle": "选择你的目标",
       "goalTiles": {
+        "cta": "生成计划",
+        "badges": {
+          "popular": "热门",
+          "women": "女性",
+          "men": "男性",
+          "beginner": "新手",
+          "fatLoss": "燃脂",
+          "noEquipment": "无器械",
+          "strength": "力量",
+          "weightLoss": "减重",
+          "endurance": "耐力"
+        },
         "main": {
           "title": "AI 训练构建器",
-          "description": "创建完全个性化的训练计划",
-          "actionHint": "获取计划",
-          "tag": "热门"
-        },
-        "stamina": {
-          "title": "耐力与体能训练",
-          "description": "提升心肺、体能和训练能力",
-          "actionHint": "获取计划",
-          "tag": "耐力"
-        },
-        "weight-loss": {
-          "title": "减重",
-          "description": "有氧+力量燃脂",
-          "actionHint": "获取计划"
-        },
-        "strength": {
-          "title": "力量训练",
-          "description": "结构化组数与渐进负荷",
-          "actionHint": "开始"
-        },
-        "home": {
-          "title": "居家训练（无器械）",
-          "description": "随时随地练",
-          "actionHint": "获取计划",
-          "tag": "无器械"
-        },
-        "beginners": {
-          "title": "新手训练",
-          "description": "安全、简单的入门计划",
-          "actionHint": "获取计划"
-        },
-        "hiit": {
-          "title": "快速燃脂（20–30 分钟）",
-          "description": "高强度训练",
-          "actionHint": "获取计划"
-        },
-        "men": {
-          "title": "男性训练",
-          "description": "力量与体能",
-          "actionHint": "获取计划"
+          "description": "创建完全个性化的训练计划"
         },
         "women": {
           "title": "女性训练",
-          "description": "塑形、力量、减脂",
-          "actionHint": "获取计划"
+          "description": "塑形、力量与减脂计划"
+        },
+        "men": {
+          "title": "男性训练",
+          "description": "力量、增肌与体能计划"
+        },
+        "beginners": {
+          "title": "新手训练",
+          "description": "安全、简单的新手计划"
+        },
+        "hiit": {
+          "title": "快速燃脂（20–30 分钟）",
+          "description": "高强度训练，快速燃脂"
+        },
+        "home": {
+          "title": "居家训练（无器械）",
+          "description": "零器械，随时随地练"
+        },
+        "strength": {
+          "title": "力量训练",
+          "description": "增肌增力的结构化计划"
+        },
+        "weight-loss": {
+          "title": "减重",
+          "description": "有氧+力量燃脂"
         },
         "endurance": {
           "title": "耐力与体能训练",
-          "description": "提升心肺、体能和训练能力",
-          "actionHint": "获取计划",
-          "tag": "耐力"
+          "description": "提升心肺与体能"
         }
       }
     },

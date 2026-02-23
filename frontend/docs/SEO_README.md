@@ -70,6 +70,21 @@
 
 ---
 
+## How to verify Choose Your Goal i18n
+
+The "Choose Your Goal" section on the home page uses `pages.home.goalTiles` in i18n. Every locale must have all badge, tile title/description, and CTA keys.
+
+**Run the verification script:**
+```bash
+npm run i18n:check-goal-tiles
+```
+
+This fails (exit 1) if any locale in `src/i18n/locales/*/translation.json` is missing required keys. Add the missing keys before merging.
+
+**Required keys:** `workoutTypesSectionTitle`, `goalTiles.cta`, `goalTiles.badges.*`, and `goalTiles.{main,women,men,beginners,hiit,home,strength,weight-loss,endurance}.title` / `.description`.
+
+---
+
 ## Env placeholders (analytics)
 
 Use these in `.env` (or Amplify env vars); do **not** commit real tokens.

@@ -329,59 +329,53 @@
       "viewAllFaq": "Ver todas las FAQ →",
       "workoutTypesSectionTitle": "Elige tu objetivo",
       "goalTiles": {
+        "cta": "Generar plan",
+        "badges": {
+          "popular": "POPULAR",
+          "women": "MUJERES",
+          "men": "HOMBRES",
+          "beginner": "PRINCIPIANTE",
+          "fatLoss": "PÉRDIDA DE GRASA",
+          "noEquipment": "SIN EQUIPO",
+          "strength": "FUERZA",
+          "weightLoss": "PÉRDIDA DE PESO",
+          "endurance": "RESISTENCIA"
+        },
         "main": {
           "title": "Generador de entrenamientos con IA",
-          "description": "Crea un plan totalmente personalizado",
-          "actionHint": "Obtener plan",
-          "tag": "Popular"
-        },
-        "stamina": {
-          "title": "Entrenamientos de resistencia",
-          "description": "Mejora tu cardio, energía y capacidad de entrenamiento",
-          "actionHint": "Obtener plan",
-          "tag": "RESISTENCIA"
-        },
-        "weight-loss": {
-          "title": "Perder peso",
-          "description": "Quema grasa con cardio y fuerza",
-          "actionHint": "Obtener plan"
-        },
-        "strength": {
-          "title": "Entrenamientos de fuerza",
-          "description": "Series estructuradas y sobrecarga progresiva",
-          "actionHint": "Empezar"
-        },
-        "home": {
-          "title": "Entrenamientos en casa (sin equipo)",
-          "description": "Entrena donde quieras",
-          "actionHint": "Obtener plan",
-          "tag": "SIN EQUIPO"
-        },
-        "beginners": {
-          "title": "Entrenamientos para principiantes",
-          "description": "Rutinas seguras y sencillas",
-          "actionHint": "Obtener plan"
-        },
-        "hiit": {
-          "title": "Quema grasa rápida (20–30 min)",
-          "description": "Sesiones de alta intensidad",
-          "actionHint": "Obtener plan"
-        },
-        "men": {
-          "title": "Entrenamientos para hombres",
-          "description": "Fuerza y acondicionamiento",
-          "actionHint": "Obtener plan"
+          "description": "Crea un plan de entrenamiento totalmente personalizado"
         },
         "women": {
           "title": "Entrenamientos para mujeres",
-          "description": "Tono, fuerza, pérdida de grasa",
-          "actionHint": "Obtener plan"
+          "description": "Programas de tono, fuerza y pérdida de grasa"
+        },
+        "men": {
+          "title": "Entrenamientos para hombres",
+          "description": "Planes de fuerza, músculo y acondicionamiento"
+        },
+        "beginners": {
+          "title": "Entrenamientos para principiantes",
+          "description": "Rutinas seguras y sencillas para nuevos usuarios"
+        },
+        "hiit": {
+          "title": "Quema grasa rápida (20–30 min)",
+          "description": "Entrenamientos de alta intensidad para pérdida rápida de grasa"
+        },
+        "home": {
+          "title": "Entrenamientos en casa (sin equipo)",
+          "description": "Entrena en cualquier lugar sin equipo"
+        },
+        "strength": {
+          "title": "Entrenamientos de fuerza",
+          "description": "Programas estructurados para músculo y potencia"
+        },
+        "weight-loss": {
+          "title": "Perder peso",
+          "description": "Quema grasa con cardio y fuerza"
         },
         "endurance": {
           "title": "Entrenamientos de resistencia",
-          "description": "Mejora tu cardio, energía y capacidad",
-          "actionHint": "Obtener plan",
-          "tag": "RESISTENCIA"
+          "description": "Mejora tu cardio y capacidad de trabajo"
         }
       }
     },

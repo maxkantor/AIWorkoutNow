@@ -289,59 +289,53 @@
       "internalLinksTitle": "Explore workout types and tools",
       "workoutTypesSectionTitle": "Choose Your Goal",
       "goalTiles": {
+        "cta": "Generate Plan",
+        "badges": {
+          "popular": "POPULAR",
+          "women": "WOMEN",
+          "men": "MEN",
+          "beginner": "BEGINNER",
+          "fatLoss": "FAT LOSS",
+          "noEquipment": "NO EQUIPMENT",
+          "strength": "STRENGTH",
+          "weightLoss": "WEIGHT LOSS",
+          "endurance": "ENDURANCE"
+        },
         "main": {
           "title": "AI Workout Builder",
-          "description": "Create a fully personalized workout plan",
-          "actionHint": "Get plan",
-          "tag": "Popular"
-        },
-        "stamina": {
-          "title": "Stamina & Endurance Workouts",
-          "description": "Improve cardiovascular fitness, energy, and workout capacity",
-          "actionHint": "Get plan",
-          "tag": "ENDURANCE"
-        },
-        "weight-loss": {
-          "title": "Lose Weight",
-          "description": "Burn fat with cardio + strength workouts",
-          "actionHint": "Get plan"
-        },
-        "strength": {
-          "title": "Strength Building Workouts",
-          "description": "Structured sets & progressive overload",
-          "actionHint": "Start building"
-        },
-        "home": {
-          "title": "Home Workouts (No Equipment)",
-          "description": "Train anywhere",
-          "actionHint": "Get plan",
-          "tag": "NO EQUIPMENT"
-        },
-        "beginners": {
-          "title": "Beginner Workouts",
-          "description": "Safe, simple routines for new users",
-          "actionHint": "Get plan"
-        },
-        "hiit": {
-          "title": "Quick Fat-Burn Workouts (20–30 min)",
-          "description": "High-intensity sessions",
-          "actionHint": "Get plan"
-        },
-        "men": {
-          "title": "Workouts for Men",
-          "description": "Strength & conditioning programs",
-          "actionHint": "Get plan"
+          "description": "Create a fully personalized workout plan"
         },
         "women": {
           "title": "Workouts for Women",
-          "description": "Tone, strength, fat loss",
-          "actionHint": "Get plan"
+          "description": "Tone, strength, and fat loss programs"
+        },
+        "men": {
+          "title": "Workouts for Men",
+          "description": "Strength, muscle, and conditioning plans"
+        },
+        "beginners": {
+          "title": "Beginner Workouts",
+          "description": "Safe, simple routines for new users"
+        },
+        "hiit": {
+          "title": "Quick Fat-Burn Workouts (20–30 min)",
+          "description": "High-intensity workouts for fast fat loss"
+        },
+        "home": {
+          "title": "Home Workouts (No Equipment)",
+          "description": "Train anywhere with zero equipment"
+        },
+        "strength": {
+          "title": "Strength Building Workouts",
+          "description": "Structured programs for muscle and power"
+        },
+        "weight-loss": {
+          "title": "Lose Weight",
+          "description": "Burn fat with cardio + strength workouts"
         },
         "endurance": {
           "title": "Stamina & Endurance Workouts",
-          "description": "Improve cardiovascular fitness, energy, and workout capacity",
-          "actionHint": "Get plan",
-          "tag": "ENDURANCE"
+          "description": "Boost cardio fitness and work capacity"
         }
       },
       "workoutTypes": {
