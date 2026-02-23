@@ -34,6 +34,7 @@
     "prerender": "node scripts/prerender.mjs",
     "build:prerender": "npm run build && npm run prerender",
     "seo:build": "npm run build",
+    "seo:check": "node scripts/check-seo-status.mjs",
     "lhci:collect": "lhci collect --config=./lighthouserc.js",
     "lhci:assert": "lhci assert --config=./lighthouserc.js"
   }
