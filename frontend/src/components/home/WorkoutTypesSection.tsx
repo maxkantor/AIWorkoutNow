@@ -9,9 +9,6 @@ const NS = 'pages.home.goalTiles';
 /** Single main entry tile: AI Workout Builder → hub. */
 const MAIN_GOAL_PATH = '/workout-plan-generator';
 
-/** Stamina & Endurance goal card — links to /workout-plans/endurance. */
-const STAMINA_GOAL_PATH = '/workout-plans/endurance';
-
 /**
  * Goal-based product grid. Every tile navigates to a generator page.
  * Section title and all tile copy come from i18n so language stays consistent.
@@ -25,12 +22,6 @@ function WorkoutTypesSection() {
   const mainHint = t(`${NS}.main.actionHint`);
   const mainTag = t(`${NS}.main.tag`);
   const mainAriaLabel = `${mainTitle}. ${mainDesc}. ${mainHint}`;
-
-  const staminaTitle = t(`${NS}.stamina.title`);
-  const staminaDesc = t(`${NS}.stamina.description`);
-  const staminaHint = t(`${NS}.stamina.actionHint`);
-  const staminaTag = t(`${NS}.stamina.tag`);
-  const staminaAriaLabel = `${staminaTitle}. ${staminaDesc}. ${staminaHint}`;
 
   return (
     <section className="workout-types-section" aria-labelledby="workout-types-heading">
@@ -54,25 +45,6 @@ function WorkoutTypesSection() {
           <span className="workout-types-section__descriptor">{mainDesc}</span>
           <span className="workout-types-section__sublabel" aria-hidden="true">
             {mainHint}
-          </span>
-        </Link>
-        <Link
-          key={STAMINA_GOAL_PATH}
-          to={STAMINA_GOAL_PATH}
-          className="workout-types-section__card"
-          role="listitem"
-          aria-label={staminaAriaLabel}
-          title={`${staminaTitle} — ${staminaHint}`}
-        >
-          {staminaTag && (
-            <span className="workout-types-section__tag" aria-hidden="true">
-              {staminaTag}
-            </span>
-          )}
-          <span className="workout-types-section__title-text">{staminaTitle}</span>
-          <span className="workout-types-section__descriptor">{staminaDesc}</span>
-          <span className="workout-types-section__sublabel" aria-hidden="true">
-            {staminaHint}
           </span>
         </Link>
         {libraryPages.map((page) => (
