@@ -354,6 +354,14 @@ public class PricingController : ControllerBase
         }
     }
 
+    [HttpGet("amazon-associate-tag")]
+    [HttpOptions("amazon-associate-tag")]
+    public async Task<IActionResult> GetAmazonAssociateTag()
+    {
+        var tag = await _configService.GetAmazonAssociateIdAsync();
+        return Ok(new { tag });
+    }
+
     [HttpGet("free-workouts-remaining")]
     public async Task<IActionResult> GetFreeWorkoutsRemaining([FromQuery] string deviceId)
     {

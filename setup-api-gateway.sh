@@ -194,6 +194,14 @@ aws apigatewayv2 create-route \
     --region $REGION > /dev/null 2>&1 || echo "Route GET /api/email-verification/check-email already exists or failed"
 echo "✅ Route: GET /api/email-verification/check-email"
 
+# GET /amazon-associate-tag (frontend fetches affiliate ID from SSM)
+aws apigatewayv2 create-route \
+    --api-id "$API_ID" \
+    --route-key "GET /amazon-associate-tag" \
+    --target "integrations/$INTEGRATION_ID" \
+    --region $REGION > /dev/null 2>&1 || echo "Route GET /amazon-associate-tag already exists or failed"
+echo "✅ Route: GET /amazon-associate-tag"
+
 # POST /stripe/webhook (Stripe payment webhooks)
 aws apigatewayv2 create-route \
     --api-id "$API_ID" \

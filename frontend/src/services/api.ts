@@ -252,6 +252,17 @@ export async function trackAffiliateClick(
   }
 }
 
+/**
+ * Fetch Amazon associate tag from backend (reads from SSM /aiworkoutnow/amazon-associate-id).
+ * Used by amazonAffiliate.ts to build all affiliate links.
+ */
+export async function getAmazonAssociateTag(): Promise<string> {
+  const res = await fetch(`${API_BASE_URL}/amazon-associate-tag`);
+  if (!res.ok) return '';
+  const json = await res.json();
+  return (json?.tag as string)?.trim() || '';
+}
+
 // Pricing Plans API
 export interface PricingPlan {
   planId: string;

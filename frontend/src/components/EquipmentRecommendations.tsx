@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { AffiliateProduct } from '../seo/workoutPlanLibrary';
+import { buildAmazonSearchUrl } from '../utils/amazonAffiliate';
 import './EquipmentRecommendations.css';
 
 interface EquipmentRecommendationsProps {
@@ -7,17 +8,13 @@ interface EquipmentRecommendationsProps {
   title?: string;
 }
 
-const AMAZON_SEARCH_BASE = 'https://www.amazon.com/s?k=';
-
-/** Always returns a valid external Amazon URL (search). Never returns "#" or empty. */
+/** Always returns a valid external Amazon URL with affiliate tag. Never returns "#" or empty. */
 function getAmazonHref(product: AffiliateProduct): string {
   const placeholder = (product.amazonUrlPlaceholder || '').trim();
   if (placeholder.startsWith('https://') || placeholder.startsWith('http://')) {
     return placeholder;
   }
-  const query = encodeURIComponent(product.name || 'fitness equipment');
-  const url = `${AMAZON_SEARCH_BASE}${query}`;
-  return url;
+  return buildAmazonSearchUrl(product.name || 'fitness equipment');
 }
 
 export default function EquipmentRecommendations({

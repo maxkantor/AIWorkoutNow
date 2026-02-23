@@ -107,6 +107,13 @@ aws ssm put-parameter \
   --value "admin@yourdomain.com" \
   --type String \
   --overwrite
+
+# Amazon Associates ID (for affiliate links)
+aws ssm put-parameter \
+  --name /aiworkoutnow/amazon-associate-id \
+  --value "your-associate-id-20" \
+  --type SecureString \
+  --overwrite
 ```
 
 **Important**: Verify your SES email addresses in the AWS SES console before sending emails.
@@ -127,6 +134,7 @@ chmod +x deploy-lambda.sh
    - `POST /generate-workout` → Lambda function
    - `POST /contact` → Lambda function
    - `GET /token-balance` → Lambda function
+   - `GET /amazon-associate-tag` → Lambda function (reads affiliate ID from SSM)
    - `POST /admin/login` → Lambda function
    - `GET /admin/stats` → Lambda function (with JWT auth)
    - `POST /admin/send-email` → Lambda function (with JWT auth)

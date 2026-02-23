@@ -1,49 +1,32 @@
 using AIWorkoutNow.Api.Models;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using Amazon.SimpleSystemsManagement;
-using Amazon.SimpleSystemsManagement.Model;
-using System.Text.Json;
 
 namespace AIWorkoutNow.Api.Services;
 
 public class AmazonAffiliateService : IAmazonAffiliateService
 {
     private readonly IAmazonDynamoDB _dynamoDB;
-    private readonly string _associateId;
+    private readonly IConfigService _configService;
     private readonly string _affiliateClicksTable;
     private readonly string _region;
+    private string? _cachedAssociateId;
 
-    public AmazonAffiliateService(IAmazonDynamoDB dynamoDB)
+    public AmazonAffiliateService(IAmazonDynamoDB dynamoDB, IConfigService configService)
     {
         _dynamoDB = dynamoDB;
-        
-        // Get Associate ID from SSM Parameter Store or environment variable
-        _associateId = GetAssociateId().Result;
+        _configService = configService;
         _region = Environment.GetEnvironmentVariable("AWS_REGION") ?? "us-east-1";
-        
         var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
         _affiliateClicksTable = $"{tablePrefix}-AffiliateClicks";
     }
 
-    private async Task<string> GetAssociateId()
+    private string GetAssociateId()
     {
-        try
-        {
-            using var ssmClient = new Amazon.SimpleSystemsManagement.AmazonSimpleSystemsManagementClient();
-            var request = new Amazon.SimpleSystemsManagement.Model.GetParameterRequest
-            {
-                Name = "/aiworkoutnow/amazon-associate-id",
-                WithDecryption = true
-            };
-            var response = await ssmClient.GetParameterAsync(request);
-            return response.Parameter.Value;
-        }
-        catch
-        {
-            // Fallback to environment variable
-            return Environment.GetEnvironmentVariable("AMAZON_ASSOCIATE_ID") ?? "your-associate-id-20";
-        }
+        if (_cachedAssociateId != null) return _cachedAssociateId;
+        var tag = _configService.GetAmazonAssociateIdAsync().Result;
+        _cachedAssociateId = !string.IsNullOrEmpty(tag) ? tag : "aiworkoutnow-20";
+        return _cachedAssociateId;
     }
 
     public string GenerateAffiliateLink(string asin, string? linkText = null)
@@ -52,7 +35,7 @@ public class AmazonAffiliateService : IAmazonAffiliateService
         if (!string.IsNullOrEmpty(asin) && asin.StartsWith("B", StringComparison.OrdinalIgnoreCase))
         {
             var baseUrl = "https://www.amazon.com";
-            var link = $"{baseUrl}/dp/{asin}?tag={_associateId}";
+            var link = $"{baseUrl}/dp/{asin}?tag={GetAssociateId()}";
             
             if (!string.IsNullOrEmpty(linkText))
             {
@@ -72,7 +55,7 @@ public class AmazonAffiliateService : IAmazonAffiliateService
         // Format: https://www.amazon.com/s?k={keywords}&tag={ASSOCIATE_ID}
         var baseUrl = "https://www.amazon.com";
         var encodedKeywords = Uri.EscapeDataString(searchKeywords);
-        var link = $"{baseUrl}/s?k={encodedKeywords}&tag={_associateId}";
+        var link = $"{baseUrl}/s?k={encodedKeywords}&tag={GetAssociateId()}";
         
         if (!string.IsNullOrEmpty(linkText))
         {

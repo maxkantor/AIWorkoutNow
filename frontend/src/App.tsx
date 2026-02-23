@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect } from 'react';
+import { initAffiliateTag } from './utils/amazonAffiliate';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import i18n, { SUPPORTED_LANGS } from './i18n';
 import { isAdminRoute } from './i18n/isAdminRoute';
@@ -114,6 +115,10 @@ function TrailingSlashRedirect({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  useEffect(() => {
+    initAffiliateTag();
+  }, []);
+
   return (
     <Layout>
       <ScrollToTop />

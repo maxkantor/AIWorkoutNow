@@ -1,19 +1,41 @@
 /**
  * Centralized Amazon Associates affiliate link builder.
- * Use VITE_AMAZON_ASSOCIATE_TAG env var or fallback to default.
+ * Fetches tag from backend API (SSM /aiworkoutnow/amazon-associate-id).
  */
 
-const DEFAULT_AFFILIATE_TAG = 'aiworkoutnow-20';
+import { getAmazonAssociateTag } from '../services/api';
 
+const FALLBACK_TAG = 'aiworkoutnow-20';
+let cachedTag: string | null = null;
+let initPromise: Promise<void> | null = null;
+
+/**
+ * Fetch affiliate tag from API and cache it. Call early (e.g. App mount).
+ */
+export async function initAffiliateTag(): Promise<void> {
+  if (initPromise) return initPromise;
+  initPromise = (async () => {
+    try {
+      const tag = await getAmazonAssociateTag();
+      if (tag) cachedTag = tag;
+    } catch {
+      // Keep fallback on error
+    }
+  })();
+  return initPromise;
+}
+
+/**
+ * Get the cached affiliate tag. Returns fallback until initAffiliateTag() completes.
+ */
 export function getAffiliateTag(): string {
-  const env = (import.meta as any).env;
-  return (env?.VITE_AMAZON_ASSOCIATE_TAG as string)?.trim() || DEFAULT_AFFILIATE_TAG;
+  return cachedTag || FALLBACK_TAG;
 }
 
 /**
  * Build an Amazon search URL with affiliate tag.
  * @param query - Search query (e.g., "Resistance Bands Set")
- * @param affiliateTag - Optional override; uses getAffiliateTag() if not provided
+ * @param affiliateTag - Optional override; uses cached tag if not provided
  */
 export function buildAmazonSearchUrl(query: string, affiliateTag?: string): string {
   const tag = affiliateTag ?? getAffiliateTag();

@@ -15,6 +15,7 @@ public interface IConfigService
     Task<string> GetStripeSecretKeyAsync();
     Task<string> GetStripeWebhookSecretAsync();
     Task<string> GetStripePublishableKeyAsync();
+    Task<string> GetAmazonAssociateIdAsync();
     string GetApiBaseUrl();
     string GetFrontendBaseUrl();
 }

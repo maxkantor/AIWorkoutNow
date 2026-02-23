@@ -102,6 +102,25 @@ public class ConfigService : IConfigService
         }
     }
 
+    public async Task<string> GetAmazonAssociateIdAsync()
+    {
+        var tablePrefix = Environment.GetEnvironmentVariable("TABLE_PREFIX") ?? "AIWorkoutNow";
+        var ssm = new Amazon.SimpleSystemsManagement.AmazonSimpleSystemsManagementClient();
+        try
+        {
+            var response = await ssm.GetParameterAsync(new Amazon.SimpleSystemsManagement.Model.GetParameterRequest
+            {
+                Name = "/aiworkoutnow/amazon-associate-id",
+                WithDecryption = true
+            });
+            return response.Parameter.Value ?? "";
+        }
+        catch
+        {
+            return Environment.GetEnvironmentVariable("AMAZON_ASSOCIATE_ID") ?? "";
+        }
+    }
+
     public string GetApiBaseUrl()
     {
         return Environment.GetEnvironmentVariable("API_BASE_URL") ?? "https://api.aiworkoutnow.com";
