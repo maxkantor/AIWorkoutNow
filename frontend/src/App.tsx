@@ -30,6 +30,7 @@ const PaymentCancel = lazy(() => import('./pages/PaymentCancel'));
 const Platform = lazy(() => import('./pages/Platform'));
 const Blog = lazy(() => import('./pages/Blog'));
 const BlogPost = lazy(() => import('./pages/BlogPost'));
+const Sitemap = lazy(() => import('./pages/Sitemap'));
 const ProgrammaticPage = lazy(() => import('./pages/ProgrammaticPage'));
 import Layout from './components/Layout';
 import OptionalAnalytics from './components/OptionalAnalytics';
@@ -135,6 +136,7 @@ function App() {
           <Route path="/platform" element={<Platform />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
+          <Route path="/sitemap" element={<Sitemap />} />
 
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/login" element={<AdminLogin />} />
