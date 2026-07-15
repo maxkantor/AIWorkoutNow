@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { saveWorkout } from '../utils/storage';
 import { getDeviceId } from '../utils/storage';
 import AffiliateRecommendations from './AffiliateRecommendations';
+import ExerciseImageGallery from './ExerciseImageGallery';
 import type { WorkoutPreferences } from '../services/api';
 import './WorkoutDisplay.css';
 
@@ -49,6 +50,7 @@ function WorkoutDisplay({ workout, preferences }: WorkoutDisplayProps) {
                     <span className="exercise-specs">{exercise.duration}</span>
                   )}
                 </div>
+                {exercise.name && <ExerciseImageGallery exerciseName={exercise.name} />}
                 {exercise.instructions && (
                   <p className="exercise-instructions">{exercise.instructions}</p>
                 )}

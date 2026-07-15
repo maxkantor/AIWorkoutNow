@@ -8,6 +8,14 @@ frontend:
     build:
       commands:
         - echo "VITE_API_URL=https://vs86hpajvb.execute-api.us-east-1.amazonaws.com" > .env
+        - |
+          if [ -n "${VITE_GSC_TOKEN}" ]; then
+            echo "VITE_GSC_TOKEN=${VITE_GSC_TOKEN}" >> .env
+          fi
+        - |
+          if [ -n "${VITE_GA4_ID}" ]; then
+            echo "VITE_GA4_ID=${VITE_GA4_ID}" >> .env
+          fi
         - npm run build
   artifacts:
     baseDirectory: frontend/dist

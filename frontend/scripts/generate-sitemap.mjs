@@ -116,6 +116,20 @@ Disallow: /admin/
 Disallow: /payment-success
 Disallow: /payment-cancel
 
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /payment-success
+Disallow: /payment-cancel
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /payment-success
+Disallow: /payment-cancel
+
 Sitemap: ${siteUrl}/sitemap.xml
 `;
 

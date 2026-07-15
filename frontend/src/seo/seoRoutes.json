@@ -19,6 +19,8 @@
     { "path": "/workout-generator/weight-loss", "changefreq": "monthly", "priority": 0.9 },
     { "path": "/workout-generator/beginners", "changefreq": "monthly", "priority": 0.9 },
     { "path": "/workout-generator/women", "changefreq": "monthly", "priority": 0.9 },
-    { "path": "/workout-generator/men", "changefreq": "monthly", "priority": 0.9 }
+    { "path": "/workout-generator/men", "changefreq": "monthly", "priority": 0.9 },
+    { "path": "/workout-plans/endurance", "changefreq": "monthly", "priority": 0.9 },
+    { "path": "/sitemap", "changefreq": "monthly", "priority": 0.3 }
   ]
 }

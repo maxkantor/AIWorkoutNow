@@ -37,6 +37,7 @@ function Footer() {
               <li><Link to="/contact">{t('footer.links.contact')}</Link></li>
               <li><Link to="/faq">{t('footer.links.faq')}</Link></li>
               <li><Link to="/platform">{t('footer.links.platform')}</Link></li>
+              <li><Link to="/sitemap">{t('footer.links.sitemap', { defaultValue: 'Sitemap' })}</Link></li>
             </ul>
           </nav>
         </div>

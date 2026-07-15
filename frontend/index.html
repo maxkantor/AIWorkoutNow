@@ -7,6 +7,8 @@
     <!-- Default title (routes override via react-helmet-async) -->
     <title>AIWorkoutNow.com — AI Workout Generator (No Signup)</title>
     <meta name="description" content="Generate a personalized AI workout plan in seconds. No signup. Pay once. Instant access." />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <link rel="canonical" href="https://aiworkoutnow.com/" />
 
     <!-- Open Graph / Facebook (must be in static HTML for crawlers) -->
     <meta property="og:type" content="website" />
@@ -45,6 +47,51 @@
     <link rel="preload" as="image" href="/images/hero-bg.png" fetchpriority="high" />
     <!-- Preload promo video so hipmachine.mp4 loads reliably -->
     <link rel="preload" as="video" href="/images/hipmachine.mp4" type="video/mp4" fetchpriority="low" />
+
+    <!-- Structured data (static for crawlers that don't wait for JS) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://aiworkoutnow.com/#website",
+          "url": "https://aiworkoutnow.com/",
+          "name": "AIWorkoutNow",
+          "description": "Generate a personalized AI workout plan in seconds. No signup. Pay once. Instant access.",
+          "publisher": { "@id": "https://aiworkoutnow.com/#organization" },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://aiworkoutnow.com/ai-workout-generator",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://aiworkoutnow.com/#organization",
+          "name": "AIWorkoutNow",
+          "url": "https://aiworkoutnow.com/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://aiworkoutnow.com/images/og-image.png"
+          }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "AIWorkoutNow AI Workout Generator",
+          "applicationCategory": "HealthApplication",
+          "operatingSystem": "Web",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "description": "3 free workouts, no signup required"
+          },
+          "url": "https://aiworkoutnow.com/"
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
