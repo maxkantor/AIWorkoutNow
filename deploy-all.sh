@@ -78,9 +78,9 @@ else
     echo "Creating new function..."
     aws lambda create-function \
         --function-name aiworkoutnow-api \
-        --runtime provided.al2023 \
+        --runtime dotnet10 \
         --role "$ROLE_ARN" \
-        --handler bootstrap \
+        --handler "AIWorkoutNow.Api::AIWorkoutNow.Api.LambdaEntryPoint::FunctionHandlerAsync" \
         --zip-file fileb://deployment-package.zip \
         --timeout 30 \
         --memory-size 512 \

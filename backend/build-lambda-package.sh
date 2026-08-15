@@ -34,7 +34,7 @@ if [ -f "$ZIP_PATH" ]; then
     rm -f "$ZIP_PATH"
 fi
 
-# Publish for Lambda (framework-dependent for dotnet8 runtime - smaller package)
+# Publish for Lambda (framework-dependent for dotnet10 runtime - smaller package)
 echo "📦 Publishing .NET application..."
 dotnet publish -c Release -r linux-arm64 --self-contained false -o publish-lambda
 
@@ -43,7 +43,7 @@ if [ ! -d "publish-lambda" ]; then
     exit 1
 fi
 
-# Create zip package (cross-platform) - dotnet8 runtime, no bootstrap needed
+# Create zip package (cross-platform) - dotnet10 runtime, no bootstrap needed
 echo "📦 Creating deployment package..."
 cd publish-lambda
 

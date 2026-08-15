@@ -7,8 +7,8 @@ set -e
 FUNCTION_NAME="aiworkoutnow-api"
 REGION="us-east-1"
 ROLE_ARN="arn:aws:iam::YOUR_ACCOUNT_ID:role/AIWorkoutNow-LambdaExecutionRole"
-# Handler for ASP.NET Core Lambda with hosting package
-HANDLER="bootstrap"
+# Handler for ASP.NET Core Lambda on the managed .NET 10 runtime
+HANDLER="AIWorkoutNow.Api::AIWorkoutNow.Api.LambdaEntryPoint::FunctionHandlerAsync"
 
 echo "Building .NET Lambda function..."
 
@@ -16,7 +16,7 @@ cd AIWorkoutNow.Api
 dotnet publish -c Release -r linux-x64 --self-contained false
 
 echo "Creating deployment package..."
-cd bin/Release/net8.0/linux-x64/publish
+cd bin/Release/net10.0/linux-x64/publish
 zip -r ../../../../../../deployment-package.zip .
 
 cd ../../../../../../
@@ -34,7 +34,7 @@ else
     echo "Function does not exist, creating..."
     aws lambda create-function \
         --function-name $FUNCTION_NAME \
-        --runtime provided.al2023 \
+        --runtime dotnet10 \
         --role $ROLE_ARN \
         --handler $HANDLER \
         --zip-file fileb://deployment-package.zip \

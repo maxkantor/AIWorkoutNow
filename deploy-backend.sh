@@ -88,11 +88,11 @@ if aws lambda get-function --function-name $FUNCTION_NAME --region $REGION &>/de
         --region $REGION \
         --output json > /dev/null
     
-    # Update runtime, handler, and environment (framework-dependent dotnet8)
+    # Update runtime, handler, and environment (framework-dependent dotnet10)
     aws lambda update-function-configuration \
         --function-name $FUNCTION_NAME \
         --region $REGION \
-        --runtime dotnet8 \
+        --runtime dotnet10 \
         --handler "AIWorkoutNow.Api::AIWorkoutNow.Api.LambdaEntryPoint::FunctionHandlerAsync" \
         --environment "Variables={TABLE_PREFIX=AIWorkoutNow}" \
         --timeout 30 \
@@ -104,7 +104,7 @@ else
     echo "Creating new Lambda function..."
     aws lambda create-function \
         --function-name $FUNCTION_NAME \
-        --runtime dotnet8 \
+        --runtime dotnet10 \
         --role "$ROLE_ARN" \
         --handler "AIWorkoutNow.Api::AIWorkoutNow.Api.LambdaEntryPoint::FunctionHandlerAsync" \
         --zip-file fileb://lambda-deployment.zip \

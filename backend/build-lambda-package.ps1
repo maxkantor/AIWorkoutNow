@@ -23,7 +23,7 @@ if (Test-Path $zipFile) {
     Remove-Item -Path $zipFile -Force
 }
 
-# Publish for Lambda (framework-dependent for dotnet8 runtime - smaller package)
+# Publish for Lambda (framework-dependent for dotnet10 runtime - smaller package)
 Write-Host "Publishing .NET application..." -ForegroundColor Cyan
 Push-Location $projectDir
 
@@ -35,7 +35,7 @@ try {
         exit 1
     }
 
-    # Create zip package (dotnet8 runtime - no bootstrap needed)
+    # Create zip package (dotnet10 runtime - no bootstrap needed)
     Write-Host "Creating deployment package..." -ForegroundColor Cyan
     Compress-Archive -Path "publish-lambda\*" -DestinationPath $zipFile -Force
 

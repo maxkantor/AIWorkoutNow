@@ -1,4 +1,4 @@
-// This file is for Lambda deployment with provided.al2023 runtime
+// This file is for Lambda deployment with the managed .NET 10 runtime (dotnet10)
 // Uses Amazon.Lambda.AspNetCoreServer.Hosting for Lambda Runtime Interface Client
 
 using Amazon.DynamoDBv2;
@@ -20,7 +20,7 @@ builder.Logging.AddFilter("Microsoft.AspNetCore.Routing.EndpointMiddleware", Log
 builder.Logging.AddFilter("Microsoft.AspNetCore.Cors.Infrastructure", LogLevel.Warning);
 builder.Logging.AddFilter("Microsoft.AspNetCore.Mvc.Infrastructure", LogLevel.Warning);
 
-// CRITICAL: Use Lambda hosting for provided.al2023 runtime
+// CRITICAL: Use Lambda hosting for the managed .NET 10 runtime
 // This integrates with Lambda Runtime Interface Client
 builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
 

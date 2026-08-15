@@ -75,11 +75,11 @@ try {
             --region $Region `
             --output json | Out-Null
         
-        # Update runtime, handler, and environment (framework-dependent dotnet8)
+        # Update runtime, handler, and environment (framework-dependent dotnet10)
         aws lambda update-function-configuration `
             --function-name $FunctionName `
             --region $Region `
-            --runtime dotnet8 `
+            --runtime dotnet10 `
             --handler "AIWorkoutNow.Api::AIWorkoutNow.Api.LambdaEntryPoint::FunctionHandlerAsync" `
             --environment "Variables={TABLE_PREFIX=AIWorkoutNow}" `
             --timeout 30 `
@@ -91,7 +91,7 @@ try {
         Write-Host "Creating new Lambda function..." -ForegroundColor Yellow
         aws lambda create-function `
             --function-name $FunctionName `
-            --runtime dotnet8 `
+            --runtime dotnet10 `
             --role $RoleArn `
             --handler "AIWorkoutNow.Api::AIWorkoutNow.Api.LambdaEntryPoint::FunctionHandlerAsync" `
             --zip-file "fileb://$ZipPath" `

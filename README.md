@@ -1,11 +1,11 @@
 # AIWorkoutNow - AI-Powered Workout Generator SaaS
 
-A production-ready, serverless SaaS application that generates personalized AI workouts. Built with React, .NET 8 Lambda, DynamoDB, and AWS services.
+A production-ready, serverless SaaS application that generates personalized AI workouts. Built with React, .NET 10 Lambda, DynamoDB, and AWS services.
 
 ## 🏗️ Architecture
 
 - **Frontend**: React SPA with Vite, TypeScript, React Router
-- **Backend**: .NET 8 Lambda functions with API Gateway HTTP API
+- **Backend**: .NET 10 Lambda functions with API Gateway HTTP API
 - **Database**: Amazon DynamoDB (6 tables)
 - **Authentication**: JWT with bcrypt password hashing
 - **AI**: OpenAI GPT-4 for workout generation
@@ -24,7 +24,7 @@ AIWorkoutNow/
 │   │   ├── services/        # API client
 │   │   └── utils/           # Utilities (storage, etc.)
 │   └── package.json
-├── backend/                  # .NET 8 Lambda API
+├── backend/                  # .NET 10 Lambda API
 │   └── AIWorkoutNow.Api/
 │       ├── Controllers/     # API endpoints
 │       ├── Models/          # Data models
@@ -39,7 +39,7 @@ AIWorkoutNow/
 ### Prerequisites
 
 - Node.js 18+ and npm
-- .NET 8 SDK
+- .NET 10 SDK
 - AWS CLI configured
 - AWS Account with appropriate permissions
 - OpenAI API key
