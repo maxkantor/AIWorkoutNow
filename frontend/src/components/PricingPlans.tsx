@@ -235,6 +235,9 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
                   getCta(plan.tokenCount)
                 )}
               </button>
+              <p className="mt-2 text-center text-xs text-slate-500">
+                Secure payment powered by Stripe
+              </p>
 
             </article>
           ))}
@@ -296,6 +299,9 @@ function PricingPlans({ showHeader = true, vertical = false }: PricingPlansProps
               >
                 {checkoutLoading === plan.planId ? t('pricing.processing') : getCta(plan.tokenCount)}
               </button>
+              <p className="mt-2 text-center text-xs text-slate-500">
+                Secure payment powered by Stripe
+              </p>
 
             </article>
           ))}

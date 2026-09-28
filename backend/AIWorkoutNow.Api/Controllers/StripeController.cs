@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Cors;
 using AIWorkoutNow.Api.Services;
 using AIWorkoutNow.Api.Models;
+using Stripe;
+using Stripe.Checkout;
 
 namespace AIWorkoutNow.Api.Controllers;
 
@@ -130,13 +132,8 @@ public class StripeController : ControllerBase
             
             Console.WriteLine($"[StripeController] Stripe secret key retrieved (length: {stripeSecretKey.Length})");
 
-            // Create Stripe checkout session
-            // Note: This is a simplified version. In production, use Stripe.NET SDK
-            var stripeApiUrl = "https://api.stripe.com/v1/checkout/sessions";
-            
-            using var httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Authorization = 
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", stripeSecretKey);
+            StripeConfiguration.ApiKey = stripeSecretKey;
+            var isProduction = stripeSecretKey.StartsWith("sk_live_", StringComparison.Ordinal);
 
             var frontendBaseUrl = _configService.GetFrontendBaseUrl();
             // CRITICAL: Persist deviceId through Stripe redirect so credits always attach to the correct device,
@@ -145,74 +142,65 @@ public class StripeController : ControllerBase
             var successUrl = $"{frontendBaseUrl}/payment-success?session_id={{CHECKOUT_SESSION_ID}}&deviceId={deviceIdParam}";
             var cancelUrl = $"{frontendBaseUrl}/?deviceId={deviceIdParam}"; // Redirect directly to home, no cancellation screen
 
-            // Create checkout session with amount directly (no need for pre-created products/prices)
-            var amountInCents = (int)(plan.Price * 100); // Convert to cents
-            
-            var formData = new List<KeyValuePair<string, string>>
+            var amountInCents = (long)(plan.Price * 100);
+            var checkoutMetadata = StripeCheckoutIdentity.BuildFulfillmentMetadata(
+                isProduction,
+                plan,
+                request.DeviceId);
+
+            var options = new SessionCreateOptions
             {
-                new("mode", "payment"),
-                new("success_url", successUrl),
-                new("cancel_url", cancelUrl),
-                new("payment_method_types[]", "card"),
-                new("line_items[0][price_data][currency]", plan.Currency.ToLower()),
-                new("line_items[0][price_data][unit_amount]", amountInCents.ToString()),
-                new("line_items[0][price_data][product_data][name]", plan.Name),
-                new("line_items[0][quantity]", "1"),
-                new("metadata[deviceId]", request.DeviceId),
-                new("metadata[planId]", plan.PlanId),
-                new("metadata[site]", "aiworkoutnow"),  // Enables HybridRace webhook to ignore our events
-                new("allow_promotion_codes", "true"),
-                // CRITICAL: Ensure customer email and name are collected
-                new("billing_address_collection", "required"), // collect address
-                new("customer_creation", "always"), // Always create a customer record
-                new("phone_number_collection[enabled]", "true") // collect phone
+                Mode = "payment",
+                SuccessUrl = successUrl,
+                CancelUrl = cancelUrl,
+                PaymentMethodTypes = new List<string> { "card" },
+                AllowPromotionCodes = true,
+                BillingAddressCollection = "required",
+                CustomerCreation = "always",
+                PhoneNumberCollection = new SessionPhoneNumberCollectionOptions { Enabled = true },
+                Metadata = checkoutMetadata,
+                PaymentIntentData = new SessionPaymentIntentDataOptions
+                {
+                    Metadata = checkoutMetadata,
+                },
+                BrandingSettings = StripeCheckoutIdentity.CreateBrandingSettings(frontendBaseUrl),
+                LineItems = new List<SessionLineItemOptions>
+                {
+                    new()
+                    {
+                        Quantity = 1,
+                        PriceData = new SessionLineItemPriceDataOptions
+                        {
+                            Currency = plan.Currency.ToLowerInvariant(),
+                            UnitAmount = amountInCents,
+                            ProductData = new SessionLineItemPriceDataProductDataOptions
+                            {
+                                Name = StripeCheckoutIdentity.WorkoutPackProductName(plan),
+                                Description = StripeCheckoutIdentity.WorkoutPackDescription(plan),
+                            },
+                        },
+                    },
+                },
             };
-            
-            // Add description if available
-            if (!string.IsNullOrEmpty(plan.MicroCopy))
+
+            Session session;
+            try
             {
-                formData.Add(new("line_items[0][price_data][product_data][description]", plan.MicroCopy));
+                var sessionService = new SessionService();
+                session = await sessionService.CreateAsync(options);
+            }
+            catch (StripeException ex)
+            {
+                Console.WriteLine($"[StripeController] Stripe API error: {ex.Message}");
+                return StatusCode(500, new { message = "Failed to create checkout session", error = ex.Message });
             }
 
-            var content = new FormUrlEncodedContent(formData);
-            Console.WriteLine($"[StripeController] Calling Stripe API: {stripeApiUrl}");
-            var response = await httpClient.PostAsync(stripeApiUrl, content);
-            var responseContent = await response.Content.ReadAsStringAsync();
-
-            Console.WriteLine($"[StripeController] Stripe API response status: {response.StatusCode}");
-            
-            if (!response.IsSuccessStatusCode)
-            {
-                Console.WriteLine($"[StripeController] Stripe API error: {responseContent}");
-                return StatusCode(500, new { message = "Failed to create checkout session", error = responseContent });
-            }
-            
             Console.WriteLine("[StripeController] Stripe checkout session created successfully");
 
-            // Parse response to get session URL
-            var sessionData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(responseContent);
-            var sessionId = sessionData?["id"]?.ToString();
-            var sessionUrl = sessionData?["url"]?.ToString();
-
-            // CRITICAL FIX: Get actual session creation date from Stripe response
-            DateTime purchaseDate = DateTime.UtcNow; // Fallback
-            if (sessionData != null && sessionData.ContainsKey("created"))
-            {
-                try
-                {
-                    var createdValue = sessionData["created"];
-                    if (createdValue is System.Text.Json.JsonElement createdElement)
-                    {
-                        var createdUnix = createdElement.GetInt64();
-                        purchaseDate = DateTimeOffset.FromUnixTimeSeconds(createdUnix).UtcDateTime;
-                        Console.WriteLine($"[StripeController] CreateCheckoutSession - Using session creation date as purchase date: {purchaseDate}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[StripeController] Error parsing created timestamp: {ex.Message}, using current time");
-                }
-            }
+            var sessionId = session.Id;
+            var sessionUrl = session.Url;
+            var purchaseDate = session.Created;
+            Console.WriteLine($"[StripeController] CreateCheckoutSession - Using session creation date as purchase date: {purchaseDate}");
             
             // Save purchase record
             var purchase = new UserPurchase
@@ -255,29 +243,30 @@ public class StripeController : ControllerBase
             // Verify webhook signature (simplified - use Stripe.NET in production)
             // For now, we'll process the event
 
-            var eventData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(json);
-            var eventType = eventData?["type"]?.ToString();
-            var eventObject = eventData?["data"] as Dictionary<string, object>;
-            var sessionObject = eventObject?["object"] as Dictionary<string, object>;
+            using var eventDoc = System.Text.Json.JsonDocument.Parse(json);
+            var root = eventDoc.RootElement;
+            var eventType = root.TryGetProperty("type", out var typeEl) ? typeEl.GetString() : null;
+            if (!root.TryGetProperty("data", out var dataEl) || !dataEl.TryGetProperty("object", out var sessionEl))
+            {
+                return Ok();
+            }
 
             if (eventType == "checkout.session.completed")
             {
                 Console.WriteLine("[StripeController] Processing checkout.session.completed event");
-                var sessionId = sessionObject?["id"]?.ToString();
-                var metadata = sessionObject?["metadata"] as Dictionary<string, object>;
-                var site = metadata?["site"]?.ToString();
-                
-                // Skip events from other sites (prevents processing HybridRace purchases)
-                if (!string.IsNullOrEmpty(site) && !string.Equals(site, "aiworkoutnow", StringComparison.OrdinalIgnoreCase))
+                var sessionId = sessionEl.TryGetProperty("id", out var idEl) ? idEl.GetString() : null;
+                var metadata = ExtractWebhookMetadata(sessionEl);
+                if (!StripeAppIsolation.IsAIWorkoutNowSession(metadata))
                 {
-                    Console.WriteLine($"[StripeController] Ignoring event for other site: {site}");
+                    var app = metadata.GetValueOrDefault("app") ?? metadata.GetValueOrDefault("site") ?? "(none)";
+                    Console.WriteLine($"[StripeController] Ignoring checkout.session.completed for non-AIWorkoutNow session (app/site={app})");
                     return Ok();
                 }
-                
-                var deviceId = metadata?["deviceId"]?.ToString();
-                var planId = metadata?["planId"]?.ToString();
-                var paymentIntentId = sessionObject?["payment_intent"]?.ToString() ?? "";
-                var paymentStatus = sessionObject?["payment_status"]?.ToString();
+
+                var deviceId = metadata.GetValueOrDefault("deviceId");
+                var planId = metadata.GetValueOrDefault("planId");
+                var paymentIntentId = sessionEl.TryGetProperty("payment_intent", out var piEl) ? piEl.GetString() ?? "" : "";
+                var paymentStatus = sessionEl.TryGetProperty("payment_status", out var psEl) ? psEl.GetString() : null;
 
                 if (!string.Equals(paymentStatus, "paid", StringComparison.OrdinalIgnoreCase))
                 {
@@ -298,22 +287,10 @@ public class StripeController : ControllerBase
 
                     // CRITICAL FIX: Get actual purchase date from Stripe session (created timestamp)
                     DateTime purchaseDate = DateTime.UtcNow; // Fallback
-                    if (sessionObject != null && sessionObject.ContainsKey("created"))
+                    if (sessionEl.TryGetProperty("created", out var createdEl) && createdEl.TryGetInt64(out var createdUnix))
                     {
-                        try
-                        {
-                            var createdValue = sessionObject["created"];
-                            if (createdValue is System.Text.Json.JsonElement createdElement)
-                            {
-                                var createdUnix = createdElement.GetInt64();
-                                purchaseDate = DateTimeOffset.FromUnixTimeSeconds(createdUnix).UtcDateTime;
-                                Console.WriteLine($"[StripeController] Using purchase date from Stripe session: {purchaseDate}");
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"[StripeController] Error parsing created timestamp: {ex.Message}, using current time");
-                        }
+                        purchaseDate = DateTimeOffset.FromUnixTimeSeconds(createdUnix).UtcDateTime;
+                        Console.WriteLine($"[StripeController] Using purchase date from Stripe session: {purchaseDate}");
                     }
                     
                     // If purchase not found (e.g., table doesn't exist), create it from session data
@@ -1009,6 +986,23 @@ public class StripeController : ControllerBase
             Console.WriteLine($"[StripeController] Stack trace: {ex.StackTrace}");
             return StatusCode(500, new { message = "Failed to verify payment", error = ex.Message });
         }
+    }
+
+    private static Dictionary<string, string> ExtractWebhookMetadata(System.Text.Json.JsonElement sessionEl)
+    {
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (!sessionEl.TryGetProperty("metadata", out var metadataElement)
+            || metadataElement.ValueKind != System.Text.Json.JsonValueKind.Object)
+        {
+            return result;
+        }
+
+        foreach (var prop in metadataElement.EnumerateObject())
+        {
+            result[prop.Name] = prop.Value.ToString();
+        }
+
+        return result;
     }
 }
 
